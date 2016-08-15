@@ -185,10 +185,9 @@ begin
 
 	process (CLK_n)
 	begin
-		if CLK_n'event and CLK_n = '0' then
+		if falling_edge(CLK_n) and CEN = '1' then
 			Wait_s <= WAIT_n;
 			if TState = "011" and BUSAK_n_i = '1' then
---				DI_Reg <= to_x01(D);
 				DI_Reg <= Din;
 			end if;
 		end if;
@@ -205,7 +204,7 @@ begin
     begin
         if Reset_s = '0' then
             WR_n_i <= '1';
-        elsif CLK_n'event and CLK_n = '0' then
+        elsif falling_edge(CLK_n) and CEN = '1' then
             if (IORQ = '0') then
                 if TState = "010" then
                     WR_n_i <= not Write;
@@ -226,7 +225,7 @@ begin
     begin
         if Reset_s = '0' then
             Req_Inhibit <= '0';
-        elsif CLK_n'event and CLK_n = '1' then
+        elsif rising_edge(CLK_n) and CEN = '1' then
             if MCycle = "001" and TState = "010" and wait_s = '1' then
                 Req_Inhibit <= '1';
             else
@@ -239,7 +238,7 @@ begin
     begin
         if Reset_s = '0' then
             MReq_Inhibit <= '0';
-        elsif CLK_n'event and CLK_n = '0' then
+        elsif falling_edge(CLK_n) and CEN = '1' then
             if MCycle = "001" and TState = "010" then
                 MReq_Inhibit <= '1';
             else
@@ -254,7 +253,7 @@ begin
             RD <= '0';
             IORQ_n_i <= '1';
             MREQ <= '0';
-        elsif CLK_n'event and CLK_n = '0' then
+        elsif falling_edge(CLK_n) and CEN = '1' then
 
             if MCycle = "001" then
                 if TState = "001" then

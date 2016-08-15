@@ -168,7 +168,6 @@ architecture behavior of de2_top is
 	signal clock_master_s	: std_logic;
 	signal clock_mem_s		: std_logic;
 	signal clock_audio_s		: std_logic;
-	signal clock_cpu_s		: std_logic;
 	signal clk_cnt_q			: unsigned(1 downto 0);
 	signal clk_en_10m7_q		: std_logic;
 	signal clk_en_5m37_q		: std_logic;
@@ -274,7 +273,8 @@ begin
 	pll: entity work.pll1
 	port map (
 		inclk0		=> CLOCK_50,
-		c0				=> clock_master_s,		-- 21.428571 
+		c0				=> clock_mem_s,			-- 42.857143
+		c1				=> clock_master_s,		-- 21.428571 
 		locked		=> pll_locked_s
 	);
 
@@ -286,20 +286,19 @@ begin
 
 	-- Power-on reset
 	por_b : entity work.cv_por	port map (
-		clk_i			=> clock_master_s,
+		clock_i		=> clock_master_s,
 		por_n_o		=> por_n_s
 	);
 
 	vg: entity work.colecovision
 	generic map (
-		num_maq				=> 1,
+		num_maq_g			=> 1,
 		is_pal_g				=> 0,
 		compat_rgb_g		=> 0
 	)
 	port map (
-		clk_i					=> clock_master_s,
+		clock_i				=> clock_master_s,
 		clk_en_10m7_i		=> clk_en_10m7_q,
-		clk_cpu				=> clock_cpu_s,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,
 		-- Controller Interface
@@ -438,19 +437,19 @@ begin
 	port map (
 		clk_i				=> clock_mem_s,
 		-- Porta 0
-		porta0_addr_i	=> "01000" & vram_addr_s,
-		porta0_ce_i		=> vram_ce_s,
-		porta0_oe_i		=> vram_oe_s,
-		porta0_we_i		=> vram_we_s,
-		porta0_d_i		=> vram_di_s,-- (others => '0'),
-		porta0_d_o		=> vram_do_s,-- open,
+		porta0_addr_i	=> sram_addr_s,
+		porta0_ce_i		=> sram_ce_s,
+		porta0_oe_i		=> sram_oe_s,
+		porta0_we_i		=> sram_we_s,
+		porta0_d_i		=> ram_di_s,
+		porta0_d_o		=> sram_data_o_s,
 		-- Porta 1
-		porta1_addr_i	=> sram_addr_s,
-		porta1_ce_i		=> sram_ce_s,
-		porta1_oe_i		=> sram_oe_s,
-		porta1_we_i		=> sram_we_s,
-		porta1_d_i		=> ram_di_s,
-		porta1_d_o		=> sram_data_o_s,
+		porta1_addr_i	=> "01000" & vram_addr_s,
+		porta1_ce_i		=> vram_ce_s,
+		porta1_oe_i		=> vram_oe_s,
+		porta1_we_i		=> vram_we_s,
+		porta1_d_i		=> vram_di_s,-- (others => '0'),
+		porta1_d_o		=> vram_do_s,-- open,
 		-- Output to SRAM in board
 		sram_addr_o		=> SRAM_ADDR,
 		sram_data_io	=> SRAM_DQ,
@@ -536,7 +535,7 @@ begin
 
 	VGA_HS		<= rgb_hsync_n_s	when dblscan_en_s = '0'		else vga_hsync_n_s;
 	VGA_VS		<= rgb_vsync_n_s	when dblscan_en_s = '0'		else vga_vsync_n_s;
-	VGA_BLANK	<= '0';
+	VGA_BLANK	<= '1';
 	VGA_CLK		<= clock_master_s;
 
 	-----------------------------------------------------------------------------
