@@ -11,7 +11,7 @@ use ieee.numeric_std.all;
 -- Generic top-level for Altera DE1 board
 entity de1_top is
 	generic (
-		usar_sdram		: boolean	:= TRUE
+		usar_sdram		: boolean	:= FALSE
 	);
 	port (
 		-- Clocks
@@ -120,7 +120,6 @@ architecture behavior of de1_top is
 	signal clock_master_s	: std_logic;
 	signal clock_mem_s		: std_logic;
 	signal clock_sdram_s		: std_logic;
-	signal clock_cpu_s		: std_logic;
 	signal clk_cnt_q			: unsigned(1 downto 0);
 	signal clk_en_10m7_q		: std_logic;
 	signal clk_en_5m37_q		: std_logic;
@@ -240,20 +239,19 @@ begin
 
 	-- Power-on reset
 	por_b : entity work.cv_por	port map (
-		clk_i			=> clock_master_s,
+		clock_i		=> clock_master_s,
 		por_n_o		=> por_n_s
 	);
 
 	vg: entity work.colecovision
 	generic map (
-		num_maq				=> 1,
+		num_maq_g			=> 1,
 		is_pal_g				=> 0,
 		compat_rgb_g		=> 0
 	)
 	port map (
-		clk_i					=> clock_master_s,
+		clock_i				=> clock_master_s,
 		clk_en_10m7_i		=> clk_en_10m7_q,
-		clk_cpu				=> clock_cpu_s,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,
 		-- Controller Interface

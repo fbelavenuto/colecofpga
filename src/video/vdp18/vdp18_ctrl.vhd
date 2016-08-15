@@ -55,7 +55,7 @@ use work.vdp18_pack.access_t;
 entity vdp18_ctrl is
 
 	port (
-		clk_i         : in  std_logic;
+		clock_i        : in  std_logic;
 		clk_en_5m37_i : in  boolean;
 		reset_i       : in  boolean;
 		opmode_i      : in  opmode_t;
@@ -266,14 +266,14 @@ begin
   -- Purpose:
   --   Track the vertical position with flags.
   --
-  vert_flags: process (clk_i, reset_i)
+  vert_flags: process (clock_i, reset_i)
   begin
     if reset_i then
       vert_active_q     <= false;
       sprite_active_q   <= false;
       sprite_line_act_q <= false;
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif clock_i'event and clock_i = '1' then
       if clk_en_5m37_i then
         -- line-local sprite processing
         if sprite_active_q then
@@ -337,12 +337,12 @@ begin
   -- Purpose:
   --   Track the horizontal position.
   --
-  hor_flags: process (clk_i, reset_i)
+  hor_flags: process (clock_i, reset_i)
   begin
     if reset_i then
       hor_active_q     <= false;
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif clock_i'event and clock_i = '1' then
       if clk_en_5m37_i then
         if not reg_blank_i and
            num_pix_i = -1  then
@@ -364,10 +364,10 @@ begin
   --
   -----------------------------------------------------------------------------
 
-	vram_ctrl: process (clk_i)
+	vram_ctrl: process (clock_i)
 		variable read_b_v	: boolean;
 	begin
-		if rising_edge(clk_i) then
+		if rising_edge(clock_i) then
 			if clk_en_5m37_i then
 				vram_ce_o	<= '0';
 				vram_oe_o	<= '0';

@@ -53,7 +53,7 @@ use ieee.std_logic_1164.all;
 
 entity cv_por is
 	port (
-		clk_i		: in  std_logic;
+		clock_i	: in  std_logic;
 		por_n_o	: out std_logic
 	);
 end entity;
@@ -91,9 +91,9 @@ begin
 	-- Purpose:
 	--   Generate a power-on reset for 4 clock cycles.
 	--
-	por_cnt: process (clk_i)
+	por_cnt: process (clock_i)
 	begin
-		if clk_i'event and clk_i = '1' then
+		if rising_edge(clock_i) then
 			if por_cnt_q = "11" then
 				por_n_q   <= '1';
 			else

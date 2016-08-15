@@ -57,7 +57,7 @@ entity vdp18_hor_vert is
     is_pal_g      : integer := 0
   );
   port (
-    clk_i         : in  std_logic;
+    clock_i       : in  std_logic;
     clk_en_5m37_i : in  boolean;
     reset_i       : in  boolean;
     opmode_i      : in  opmode_t;
@@ -135,7 +135,7 @@ begin
   -- Purpose:
   --   Implements the horizontal and vertical counters.
   --
-  counters: process (clk_i, reset_i, first_line_s)
+  counters: process (clock_i, reset_i, first_line_s)
   begin
     if reset_i then
       cnt_hor_q  <= hv_first_pix_text_c;
@@ -145,7 +145,7 @@ begin
       hblank_q   <= false;
       vblank_q   <= false;
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif clock_i'event and clock_i = '1' then
       if clk_en_5m37_i then
         -- The horizontal counter ---------------------------------------------
         if cnt_hor_q = last_pix_s then

@@ -48,3 +48,4 @@ greybox_tmp
 /ROMs/loader/*.lk
 /ROMs/loader/*.map
 /ROMs/loader/*.noi
+/ROMs/bootrom.zip

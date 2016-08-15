@@ -53,7 +53,7 @@ use work.vdp18_pack.opmode_t;
 entity vdp18_cpuio is
 
   port (
-    clk_i         : in  std_logic;
+    clock_i       : in  std_logic;
     clk_en_10m7_i : in  boolean;
     clk_en_acc_i  : in  boolean;
     reset_i       : in  boolean;
@@ -154,7 +154,7 @@ begin
   -- Purpose:
   --   Implements the sequential elements.
   --
-  seq: process (clk_i, reset_i)
+  seq: process (clock_i, reset_i)
     variable incr_addr_v  : boolean;
   begin
     if reset_i then
@@ -166,7 +166,7 @@ begin
       wrvram_sched_q <= false;
       wrvram_q       <= false;
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif clock_i'event and clock_i = '1' then
       -- default assignments
       incr_addr_v  := incr_addr_s;
 
@@ -274,7 +274,7 @@ begin
   -- Purpose:
   --   Implements the register interface.
   --
-  reg_if: process (clk_i, reset_i)
+  reg_if: process (clock_i, reset_i)
     variable reg_addr_v : unsigned(0 to 2);
   begin
     if reset_i then
@@ -289,7 +289,7 @@ begin
 		ctrl_reg_q(3) <= X"2C";
 		ctrl_reg_q(7) <= X"F7";
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif clock_i'event and clock_i = '1' then
       if clk_en_10m7_i then
         -- Temporary register -------------------------------------------------
         if write_tmp_s then

@@ -65,8 +65,8 @@ entity sn76489_top is
     clock_div_16_g : integer := 1
   );
   port (
-    clock_i    : in  std_logic;
-    clock_en_i : in  std_logic;
+    clock_i    : in  std_logic;						-- Normally 3.58 MHz
+    clock_en_i : in  std_logic;						-- For high clocks 
     res_n_i    : in  std_logic;
     ce_n_i     : in  std_logic;
     we_n_i     : in  std_logic;
@@ -75,12 +75,7 @@ entity sn76489_top is
     aout_o     : out signed(0 to 7)
   );
 
-end sn76489_top;
-
-
-library ieee;
-use ieee.numeric_std.all;
---use work.sn76489_comp_pack.all;
+end entity;
 
 architecture struct of sn76489_top is
 
@@ -199,4 +194,4 @@ begin
 
   aout_o <= tone1_s + tone2_s + tone3_s + noise_s;
 
-end struct;
+end architecture;

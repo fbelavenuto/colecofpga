@@ -54,7 +54,7 @@ use work.vdp18_pack.hv_t;
 entity vdp18_pattern is
 
   port (
-    clk_i         : in  std_logic;
+    clock_i       : in  std_logic;
     clk_en_5m37_i : in  boolean;
     clk_en_acc_i  : in  boolean;
     reset_i       : in  boolean;
@@ -98,7 +98,7 @@ begin
   --    * pattern color register
   --    * pattern counter
   --
-  seq: process (clk_i, reset_i)
+  seq: process (clock_i, reset_i)
   begin
     if reset_i then
       pat_cnt_q   <= (others => '0');
@@ -107,7 +107,7 @@ begin
       pat_shift_q <= (others => '0');
       pat_col_q   <= (others => '0');
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif clock_i'event and clock_i = '1' then
       if clk_en_5m37_i then
         -- shift pattern with every pixel clock
         pat_shift_q(0 to 6) <= pat_shift_q(1 to 7);

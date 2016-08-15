@@ -50,7 +50,7 @@ use ieee.std_logic_1164.all;
 entity cv_ctrl is
 
   port (
-    clk_i           : in  std_logic;
+    clock_i         : in  std_logic;
     clk_en_3m58_i   : in  std_logic;
     reset_n_i       : in  std_logic;
     ctrl_en_key_n_i : in  std_logic;
@@ -83,13 +83,13 @@ begin
   -- Purpose:
   --   Implements the R/S flip-flop which selects the controller function.
   --
-  seq: process (clk_i, reset_n_i)
+  seq: process (clock_i, reset_n_i)
     variable ctrl_en_v : std_logic_vector(1 downto 0);
   begin
     if reset_n_i = '0' then
       sel_q <= '0';
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif clock_i'event and clock_i = '1' then
       if clk_en_3m58_i = '1' then
         ctrl_en_v := ctrl_en_key_n_i & ctrl_en_joy_n_i;
         case ctrl_en_v is

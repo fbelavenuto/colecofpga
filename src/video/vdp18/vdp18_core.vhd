@@ -81,7 +81,7 @@ entity vdp18_core is
   );
   port (
     -- Global Interface -------------------------------------------------------
-    clk_i         : in  std_logic;
+    clock_i         : in  std_logic;
     clk_en_10m7_i : in  std_logic;
     reset_n_i     : in  std_logic;
     -- CPU Interface ----------------------------------------------------------
@@ -198,7 +198,7 @@ begin
   -----------------------------------------------------------------------------
   clk_gen_b : vdp18_clk_gen
     port map (
-      clk_i         => clk_i,
+      clock_i         => clock_i,
       clk_en_10m7_i => clk_en_10m7_i,
       reset_i       => reset_s,
       clk_en_5m37_o => clk_en_5m37_s,
@@ -215,7 +215,7 @@ begin
       is_pal_g => is_pal_g
     )
     port map (
-      clk_i         => clk_i,
+      clock_i         => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
       reset_i       => reset_s,
       opmode_i      => opmode_s,
@@ -237,7 +237,7 @@ begin
   -----------------------------------------------------------------------------
   ctrl_b : vdp18_ctrl
     port map (
-      clk_i         => clk_i,
+      clock_i         => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
       reset_i       => reset_s,
       opmode_i      => opmode_s,
@@ -264,7 +264,7 @@ begin
   -----------------------------------------------------------------------------
   cpu_io_b : vdp18_cpuio
     port map (
-      clk_i         => clk_i,
+      clock_i         => clock_i,
       clk_en_10m7_i => clk_en_10m7_s,
       clk_en_acc_i  => clk_en_acc_s,
       reset_i       => reset_s,
@@ -331,7 +331,7 @@ begin
   -----------------------------------------------------------------------------
   pattern_b : vdp18_pattern
     port map (
-      clk_i         => clk_i,
+      clock_i         => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
       clk_en_acc_i  => clk_en_acc_s,
       reset_i       => reset_s,
@@ -354,7 +354,7 @@ begin
   -----------------------------------------------------------------------------
   sprite_b : vdp18_sprite
     port map (
-      clk_i         => clk_i,
+      clock_i         => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
       clk_en_acc_i  => clk_en_acc_s,
       reset_i       => reset_s,
@@ -387,7 +387,7 @@ begin
       compat_rgb_g  => compat_rgb_g
     )
     port map (
-      clk_i         => clk_i,
+      clock_i         => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
       reset_i       => reset_s,
       vert_active_i => vert_active_s,

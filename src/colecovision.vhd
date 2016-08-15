@@ -8,14 +8,13 @@ use ieee.numeric_std.all;
 entity colecovision is
 
 	generic (
-		num_maq			: integer := 0;
+		num_maq_g		: integer := 0;
 		is_pal_g			: integer := 0;
 		compat_rgb_g	: integer := 0
 	);
 	port (
-		clk_i				: in  std_logic;
+		clock_i				: in  std_logic;
 		clk_en_10m7_i	: in  std_logic;
-		clk_cpu			: out std_logic;
 		reset_i			: in  std_logic;			-- Reset, tbem acionado quando por_n_i for 0
 		por_n_i			: in  std_logic;			-- Power-on Reset
 		-- Controller Interface ---------------------------------------------------
@@ -117,7 +116,7 @@ architecture behave of colecovision is
 
 	-- machine id
 	signal machine_id_cs_s	: std_logic;
-	constant machine_id_c	: std_logic_vector(7 downto 0)		:= std_logic_vector(to_unsigned(num_maq, 8));
+	constant machine_id_c	: std_logic_vector(7 downto 0)		:= std_logic_vector(to_unsigned(num_maq_g, 8));
 
 	-- Config port
 	signal cfg_port_cs_s		: std_logic;
@@ -169,12 +168,12 @@ begin
 		Mode			=> 0
 	)
 	port map (
-		CLK_n			=> clk_i,
+		CLK_n			=> clock_i,
 		CLK_EN_SYS	=> clk_en_cpu_s,
 		RESET_n		=> reset_n_s,
 		A				=> cpu_addr_s,
-		D_i			=> d_to_cpu_s,
-		D_o			=> d_from_cpu_s,
+		Din			=> d_to_cpu_s,
+		Dout			=> d_from_cpu_s,
 		WAIT_n		=> '1',
 		INT_n			=> '1',
 		NMI_n			=> nmi_n_s,
@@ -198,7 +197,7 @@ begin
 		compat_rgb_g	=> compat_rgb_g
 	)
 	port map (
-		clk_i				=> clk_i,
+		clock_i			=> clock_i,
 		clk_en_10m7_i	=> clk_en_10m7_i,
 		reset_n_i		=> por_n_i,
 		csr_n_i			=> vdp_r_n_s,
@@ -230,7 +229,7 @@ begin
 		clock_div_16_g	=> 1
 	)
 	port map (
-		clock_i		=> clk_i,
+		clock_i		=> clock_i,
 		clock_en_i	=> clk_en_3m58_s,
 		res_n_i		=> reset_n_s,
 		ce_n_i		=> psg_we_n_s,
@@ -248,7 +247,7 @@ begin
 	-----------------------------------------------------------------------------
 	ctrl_b : entity work.cv_ctrl
 	port map (
-		clk_i					=> clk_i,
+		clock_i					=> clock_i,
 		clk_en_3m58_i		=> clk_en_3m58_s,
 		reset_n_i			=> reset_n_s,
 		ctrl_en_key_n_i	=> ctrl_en_key_n_s,
@@ -290,7 +289,6 @@ begin
 	-- Glue
 	reset_n_s		<= not reset_i;
 	clk_en_cpu_s	<= clk_en_3m58_s and psg_ready_s and not m1_wait_q;
-	clk_cpu			<= clk_en_3m58_s;
 
 	-----------------------------------------------------------------------------
 	-- Process clk_cnt
@@ -299,11 +297,11 @@ begin
 	--   Implements the counter which is used to generate the clock enable
 	--   for the 3.58 MHz clock.
 	--
-	clk_cnt: process (por_n_i, clk_i)
+	clk_cnt: process (por_n_i, clock_i)
 	begin
 		if por_n_i = '0' then
 			clk_cnt_q     <= (others => '0');
-		elsif rising_edge(clk_i) then
+		elsif rising_edge(clock_i) then
 			if clk_en_10m7_i = '1' then
 				if clk_cnt_q = 0 then
 					clk_cnt_q <= "10";
@@ -322,11 +320,11 @@ begin
 	-- Purpose:
 	--   Implements flip-flop U8A which asserts a wait states controlled by M1.
 	--
-	m1_wait: process (clk_i, reset_n_s, m1_n_s)
+	m1_wait: process (clock_i, reset_n_s, m1_n_s)
 	begin
 		if reset_n_s = '0' or m1_n_s = '1' then
 			m1_wait_q   <= '0';
-		elsif rising_edge(clk_i) then
+		elsif rising_edge(clock_i) then
 			if clk_en_3m58_s = '1' then
 				m1_wait_q <= not m1_wait_q;
 			end if;

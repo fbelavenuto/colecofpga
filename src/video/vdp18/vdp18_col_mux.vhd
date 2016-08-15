@@ -53,7 +53,7 @@ entity vdp18_col_mux is
     compat_rgb_g  : integer := 0
   );
   port (
-    clk_i         : in  std_logic;
+    clock_i       : in  std_logic;
     clk_en_5m37_i : in  boolean;
     reset_i       : in  boolean;
     vert_active_i : in  boolean;
@@ -138,7 +138,7 @@ begin
   --   Converts the color information to simple RGB and saves these in
   --   output registers.
   --
-  rgb_reg: process (clk_i, reset_i)
+  rgb_reg: process (clock_i, reset_i)
     variable col_v       : natural range 0 to 15;
     variable rgb_r_v,
              rgb_g_v,
@@ -150,7 +150,7 @@ begin
       rgb_g_o   <= (others => '0');
       rgb_b_o   <= (others => '0');
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif clock_i'event and clock_i = '1' then
       if clk_en_5m37_i then
         -- select requested RGB table
         if compat_rgb_g = 1 then

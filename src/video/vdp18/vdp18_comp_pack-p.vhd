@@ -19,7 +19,7 @@ package vdp18_comp_pack is
 
   component vdp18_clk_gen
     port (
-      clk_i         : in  std_logic;
+      clock_i       : in  std_logic;
       clk_en_10m7_i : in  std_logic;
       reset_i       : in  boolean;
       clk_en_5m37_o : out boolean;
@@ -33,7 +33,7 @@ package vdp18_comp_pack is
       is_pal_g      : integer := 0
     );
     port (
-      clk_i         : in  std_logic;
+      clock_i       : in  std_logic;
       clk_en_5m37_i : in  boolean;
       reset_i       : in  boolean;
       opmode_i      : in  opmode_t;
@@ -48,7 +48,7 @@ package vdp18_comp_pack is
 
   component vdp18_ctrl
     port (
-      clk_i         : in  std_logic;
+      clock_i       : in  std_logic;
       clk_en_5m37_i : in  boolean;
       reset_i       : in  boolean;
       opmode_i      : in  opmode_t;
@@ -72,7 +72,7 @@ package vdp18_comp_pack is
 
   component vdp18_cpuio
     port (
-      clk_i         : in  std_logic;
+      clock_i       : in  std_logic;
       clk_en_10m7_i : in  boolean;
       clk_en_acc_i  : in  boolean;
       reset_i       : in  boolean;
@@ -133,7 +133,7 @@ package vdp18_comp_pack is
 
   component vdp18_pattern
     port (
-      clk_i         : in  std_logic;
+      clock_i       : in  std_logic;
       clk_en_5m37_i : in  boolean;
       clk_en_acc_i  : in  boolean;
       reset_i       : in  boolean;
@@ -153,7 +153,7 @@ package vdp18_comp_pack is
 
   component vdp18_sprite
     port (
-      clk_i         : in  std_logic;
+      clock_i       : in  std_logic;
       clk_en_5m37_i : in  boolean;
       clk_en_acc_i  : in  boolean;
       reset_i       : in  boolean;
@@ -183,7 +183,7 @@ package vdp18_comp_pack is
       compat_rgb_g  : integer := 0
     );
     port (
-      clk_i         : in  std_logic;
+      clock_i       : in  std_logic;
       clk_en_5m37_i : in  boolean;
       reset_i       : in  boolean;
       vert_active_i : in  boolean;

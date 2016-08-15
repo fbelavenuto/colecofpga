@@ -50,7 +50,7 @@ use ieee.std_logic_1164.all;
 entity vdp18_clk_gen is
 
   port (
-    clk_i         : in  std_logic;
+    clock_i       : in  std_logic;
     clk_en_10m7_i : in  std_logic;
     reset_i       : in  boolean;
     clk_en_5m37_o : out boolean;
@@ -77,13 +77,13 @@ begin
   --   Implements the sequential elements.
   --   * clock counter
   --
-  seq: process (clk_i, reset_i)
+  seq: process (clock_i, reset_i)
     variable cnt_v : integer range -256 to 255;
   begin
     if reset_i then
       cnt_q     <= (others => '0');
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif clock_i'event and clock_i = '1' then
       if clk_en_10m7_i = '1' then
         if cnt_q = 11 then
           -- wrap after counting 12 clocks
