@@ -165,27 +165,27 @@ begin
 	-- CPU
 	cpu: entity work.T80a
 	generic map (
-		Mode			=> 0
+		mode_g		=> 0
 	)
 	port map (
-		CLK_n			=> clock_i,
-		CLK_EN_SYS	=> clk_en_cpu_s,
-		RESET_n		=> reset_n_s,
-		A				=> cpu_addr_s,
-		Din			=> d_to_cpu_s,
-		Dout			=> d_from_cpu_s,
-		WAIT_n		=> '1',
-		INT_n			=> '1',
-		NMI_n			=> nmi_n_s,
-		BUSRQ_n		=> '1',
-		M1_n			=> m1_n_s,
-		MREQ_n		=> mreq_n_s,
-		IORQ_n		=> iorq_n_s,
-		RD_n			=> rd_n_s,
-		WR_n			=> wr_n_s,
-		RFSH_n		=> rfsh_n_s,
-		HALT_n		=> open,
-		BUSAK_n		=> open
+		clock_i		=> clock_i,
+		clock_en_i	=> clk_en_cpu_s,
+		reset_n_i	=> reset_n_s,
+		address_o	=> cpu_addr_s,
+		data_i		=> d_to_cpu_s,
+		data_o		=> d_from_cpu_s,
+		wait_n_i		=> '1',
+		int_n_i		=> '1',
+		nmi_n_i		=> nmi_n_s,
+		m1_n_o		=> m1_n_s,
+		mreq_n_o		=> mreq_n_s,
+		iorq_n_o		=> iorq_n_s,
+		rd_n_o		=> rd_n_s,
+		wr_n_o		=> wr_n_s,
+		refresh_n_o	=> rfsh_n_s,
+		halt_n_o		=> open,
+		busrq_n_i	=> '1',
+		busak_n_o	=> open
 	);
 
 	-----------------------------------------------------------------------------

@@ -65,6 +65,9 @@
 --  +k01 : 2010.10.25  by KdL
 --         Added RstKeyLock and swioRESET_n
 --
+--  2016.08 by Fabio Belavenuto: Refactoring signal names
+--
+--
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -73,219 +76,211 @@ use work.T80_Pack.all;
 
 entity T80a is
 	generic(
-		Mode : integer := 0 -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
+		mode_g		: integer				:= 0		-- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
 	);
 	port(
-		RESET_n     : in    std_logic;
-		CLK_n       : in    std_logic;
-		CLK_EN_SYS	: in    std_logic;
-		WAIT_n      : in    std_logic;
-		INT_n       : in    std_logic;
-		NMI_n       : in    std_logic;
-		BUSRQ_n     : in    std_logic;
-		M1_n        : out   std_logic;
-		MREQ_n      : out   std_logic;
-		IORQ_n      : out   std_logic;
-		RD_n        : out   std_logic;
-		WR_n        : out   std_logic;
-		RFSH_n      : out   std_logic;
-		HALT_n      : out   std_logic;
-		BUSAK_n     : out   std_logic;
-		A           : out   std_logic_vector(15 downto 0);
---		D           : inout std_logic_vector(7 downto 0)
-		Din			: in    std_logic_vector(7 downto 0);
-		Dout			: out   std_logic_vector(7 downto 0)
+		reset_n_i	: in    std_logic;
+		clock_i		: in    std_logic;
+		clock_en_i	: in    std_logic;
+		address_o	: out   std_logic_vector(15 downto 0);
+		data_i		: in    std_logic_vector(7 downto 0);
+		data_o		: out   std_logic_vector(7 downto 0);
+		wait_n_i		: in    std_logic;
+		int_n_i		: in    std_logic;
+		nmi_n_i		: in    std_logic;
+		m1_n_o		: out   std_logic;
+		mreq_n_o		: out   std_logic;
+		iorq_n_o		: out   std_logic;
+		rd_n_o		: out   std_logic;
+		wr_n_o		: out   std_logic;
+		refresh_n_o	: out   std_logic;
+		halt_n_o		: out   std_logic;
+		busrq_n_i	: in    std_logic;
+		busak_n_o	: out   std_logic
 	);
 end T80a;
 
 architecture rtl of T80a is
 
-    signal CEN          : std_logic;
-    signal Reset_s      : std_logic;
-    signal IntCycle_n   : std_logic;
-    signal IORQ         : std_logic;
-    signal NoRead       : std_logic;
-    signal Write        : std_logic;
-    signal MREQ         : std_logic;
-    signal MReq_Inhibit : std_logic;
-    signal IReq_Inhibit : std_logic;                -- 0247a
-    signal Req_Inhibit  : std_logic;
-    signal RD           : std_logic;
-    signal MREQ_n_i     : std_logic;
-    signal IORQ_n_i     : std_logic;
-    signal RD_n_i       : std_logic;
-    signal WR_n_i       : std_logic;
-    signal WR_n_j       : std_logic;                -- 0247a
-    signal RFSH_n_i     : std_logic;
-    signal BUSAK_n_i    : std_logic;
-    signal A_i          : std_logic_vector(15 downto 0);
-    signal DO           : std_logic_vector(7 downto 0);
-    signal DI_Reg       : std_logic_vector (7 downto 0);    -- Input synchroniser
-    signal Wait_s       : std_logic;
-    signal MCycle       : std_logic_vector(2 downto 0);
-    signal TState       : std_logic_vector(2 downto 0);
+    signal reset_s				: std_logic;
+    signal int_cycle_n_s		: std_logic;
+    signal iorq_s					: std_logic;
+    signal noread_s				: std_logic;
+    signal write_s				: std_logic;
+    signal mreq_s					: std_logic;
+    signal mreq_inhibit_s		: std_logic;
+    signal ireq_inhibit_n_s	: std_logic;											-- 0247a
+    signal req_inhibit_s		: std_logic;
+    signal rd_s					: std_logic;
+    signal mreq_n_s				: std_logic;
+    signal iorq_n_s				: std_logic;
+    signal rd_n_s					: std_logic;
+    signal wr_n_s					: std_logic;
+    signal wr_n_j_s				: std_logic;											-- 0247a
+    signal rfsh_n_s				: std_logic;
+    signal busak_n_s				: std_logic;
+    signal address_s				: std_logic_vector(15 downto 0);
+    signal data_out_s			: std_logic_vector(7 downto 0);
+    signal data_r					: std_logic_vector (7 downto 0);					-- Input synchroniser
+    signal wait_s					: std_logic;
+    signal m_cycle_s				: std_logic_vector(2 downto 0);
+    signal t_state_s				: std_logic_vector(2 downto 0);
 
 begin
 
-	--CEN		<= '1';
-	CEN		<= CLK_EN_SYS;
+	mreq_n_s		<= not mreq_s	or (req_inhibit_s and mreq_inhibit_s);
+	rd_n_s		<= not rd_s		or req_inhibit_s;
+	wr_n_j_s		<= wr_n_s;																	-- 0247a (why ???)
 
-	BUSAK_n	<= BUSAK_n_i;
-	MREQ_n_i	<= not MREQ or (Req_Inhibit and MReq_Inhibit);
-	RD_n_i	<= not RD or Req_Inhibit;
-	WR_n_j	<= WR_n_i;                               -- 0247a
+	busak_n_o	<= busak_n_s;
+	mreq_n_o		<= mreq_n_s								when busak_n_s = '1' else 'Z';
+	iorq_n_o		<= iorq_n_s or ireq_inhibit_n_s	when busak_n_s = '1' else 'Z';	-- 0247a
+	rd_n_o		<= rd_n_s								when busak_n_s = '1' else 'Z';
+	wr_n_o		<= wr_n_j_s								when busak_n_s = '1' else 'Z';	-- 0247a
+	refresh_n_o	<= rfsh_n_s								when busak_n_s = '1' else 'Z';
+	address_o	<= address_s							when busak_n_s = '1' else (others => 'Z');
+	data_o		<= data_out_s;
 
-	MREQ_n	<= MREQ_n_i when BUSAK_n_i = '1' else 'Z';
-	IORQ_n	<= IORQ_n_i or IReq_Inhibit when BUSAK_n_i = '1' else 'Z';   -- 0247a
-	RD_n		<= RD_n_i when BUSAK_n_i = '1' else 'Z';
-	WR_n		<= WR_n_j when BUSAK_n_i = '1' else 'Z';           -- 0247a
-	RFSH_n	<= RFSH_n_i when BUSAK_n_i = '1' else 'Z';
-	A			<= A_i when BUSAK_n_i = '1' else (others => 'Z');
---	D			<= DO when Write = '1' and BUSAK_n_i = '1' else (others => 'Z');
-	Dout		<= DO;
-
-	process (RESET_n, CLK_n)
+	process (reset_n_i, clock_i)
 	begin
-		if RESET_n = '0' then
-			Reset_s <= '0';
-		elsif CLK_n'event and CLK_n = '1' then
-			Reset_s <= '1';
+		if reset_n_i = '0' then
+			reset_s <= '0';
+		elsif rising_edge(clock_i) then
+			reset_s <= '1';
 		end if;
 	end process;
 
 	u0 : T80
 		generic map(
-			Mode => Mode,
-			IOWait => 1
+			Mode		=> mode_g,
+			IOWait	=> 1
 		)
 		port map(
-			CEN			=> CEN,
-			M1_n			=> M1_n,
-			IORQ			=> IORQ,
-			NoRead		=> NoRead,
-			Write			=> Write,
-			RFSH_n		=> RFSH_n_i,
-			HALT_n		=> HALT_n,
-			WAIT_n		=> Wait_s,
-			INT_n			=> INT_n,
-			NMI_n			=> NMI_n,
-			RESET_n		=> Reset_s,
-			BUSRQ_n		=> BUSRQ_n,
-			BUSAK_n		=> BUSAK_n_i,
-			CLK_n			=> CLK_n,
-			A				=> A_i,
---			DInst			=> D,
-			DInst			=> Din,
-			DI 			=> DI_Reg,
-			DO				=> DO,
-			MC				=> MCycle,
-			TS				=> TState,
-			IntCycle_n	=> IntCycle_n
+			CEN			=> clock_en_i,
+			M1_n			=> m1_n_o,
+			IORQ			=> iorq_s,
+			NoRead		=> noread_s,
+			Write			=> write_s,
+			RFSH_n		=> rfsh_n_s,
+			HALT_n		=> halt_n_o,
+			WAIT_n		=> wait_s,
+			INT_n			=> int_n_i,
+			NMI_n			=> nmi_n_i,
+			RESET_n		=> reset_s,
+			BUSRQ_n		=> busrq_n_i,
+			BUSAK_n		=> busak_n_s,
+			CLK_n			=> clock_i,
+			A				=> address_s,
+			DInst			=> data_i,
+			DI 			=> data_r,
+			DO				=> data_out_s,
+			MC				=> m_cycle_s,
+			TS				=> t_state_s,
+			IntCycle_n	=> int_cycle_n_s
 		);
 
-	process (CLK_n)
+	process (clock_i)
 	begin
-		if falling_edge(CLK_n) and CEN = '1' then
-			Wait_s <= WAIT_n;
-			if TState = "011" and BUSAK_n_i = '1' then
-				DI_Reg <= Din;
+		if falling_edge(clock_i) and clock_en_i = '1' then
+			wait_s <= wait_n_i;
+			if t_state_s = "011" and busak_n_s = '1' then
+				data_r <= data_i;
 			end if;
 		end if;
 	end process;
 
-    process (CLK_n)     -- 0247a
-    begin
-        if CLK_n'event and CLK_n = '1' then
-            IReq_Inhibit <= not IORQ;
-        end if;
-    end process;
+	process (clock_i)		-- 0247a
+	begin
+		if rising_edge(clock_i) then
+			ireq_inhibit_n_s <= not iorq_s;
+		end if;
+	end process;
 
-    process (Reset_s,CLK_n) -- 0247a
-    begin
-        if Reset_s = '0' then
-            WR_n_i <= '1';
-        elsif falling_edge(CLK_n) and CEN = '1' then
-            if (IORQ = '0') then
-                if TState = "010" then
-                    WR_n_i <= not Write;
-                elsif Tstate = "011" then
-                    WR_n_i <= '1';
-                end if;
-            else
-                if TState = "001" and IORQ_n_i = '0' then
-                    WR_n_i <= not Write;
-                elsif Tstate = "011" then
-                    WR_n_i <= '1';
-                end if;
-            end if;
-        end if;
-    end process;
+	process (reset_s,clock_i)	-- 0247a
+	begin
+		if reset_s = '0' then
+			wr_n_s <= '1';
+		elsif falling_edge(clock_i) and clock_en_i = '1' then
+			if iorq_s = '0' then
+				if t_state_s = "010" then
+					wr_n_s <= not write_s;
+				elsif t_state_s = "011" then
+					wr_n_s <= '1';
+				end if;
+			else
+				if t_state_s = "001" and iorq_n_s = '0' then
+					wr_n_s <= not write_s;
+				elsif t_state_s = "011" then
+					wr_n_s <= '1';
+				end if;
+			end if;
+		end if;
+	end process;
 
-    process (Reset_s,CLK_n) -- 0247a
-    begin
-        if Reset_s = '0' then
-            Req_Inhibit <= '0';
-        elsif rising_edge(CLK_n) and CEN = '1' then
-            if MCycle = "001" and TState = "010" and wait_s = '1' then
-                Req_Inhibit <= '1';
-            else
-                Req_Inhibit <= '0';
-            end if;
-        end if;
-    end process;
+	process (reset_s,clock_i)		-- 0247a
+	begin
+		if reset_s = '0' then
+			req_inhibit_s <= '0';
+		elsif rising_edge(clock_i) and clock_en_i = '1' then
+			if m_cycle_s = "001" and t_state_s = "010" and wait_s = '1' then
+				req_inhibit_s <= '1';
+			else
+				req_inhibit_s <= '0';
+			end if;
+		end if;
+	end process;
 
-    process (Reset_s,CLK_n)
-    begin
-        if Reset_s = '0' then
-            MReq_Inhibit <= '0';
-        elsif falling_edge(CLK_n) and CEN = '1' then
-            if MCycle = "001" and TState = "010" then
-                MReq_Inhibit <= '1';
-            else
-                MReq_Inhibit <= '0';
-            end if;
-        end if;
-    end process;
+	process (reset_s,clock_i)
+	begin
+		if reset_s = '0' then
+			mreq_inhibit_s <= '0';
+		elsif falling_edge(clock_i) and clock_en_i = '1' then
+			if m_cycle_s = "001" and t_state_s = "010" then
+				mreq_inhibit_s <= '1';
+			else
+				mreq_inhibit_s <= '0';
+			end if;
+		end if;
+	end process;
 
-    process(Reset_s,CLK_n)  -- 0247a
-    begin
-        if Reset_s = '0' then
-            RD <= '0';
-            IORQ_n_i <= '1';
-            MREQ <= '0';
-        elsif falling_edge(CLK_n) and CEN = '1' then
-
-            if MCycle = "001" then
-                if TState = "001" then
-                    RD <= IntCycle_n;
-                    MREQ <= IntCycle_n;
-                    IORQ_n_i <= IntCycle_n;
-                end if;
-                if TState = "011" then
-                    RD <= '0';
-                    IORQ_n_i <= '1';
-                    MREQ <= '1';
-                end if;
-                if TState = "100" then
-                    MREQ <= '0';
-                end if;
-            else
-                if TState = "001" and NoRead = '0' then
-                    IORQ_n_i <= not IORQ;
-                    MREQ <= not IORQ;
-                    if IORQ = '0' then
-                      RD <= not Write;
-                    elsif IORQ_n_i = '0' then
-                      RD <= not Write;
-                    end if;
-                end if;
-                if TState = "011" then
-                    RD <= '0';
-                    IORQ_n_i <= '1';
-                    MREQ <= '0';
-                end if;
-            end if;
-        end if;
-    end process;
+	process(reset_s,clock_i)	-- 0247a
+	begin
+		if reset_s = '0' then
+			rd_s		<= '0';
+			iorq_n_s	<= '1';
+			mreq_s	<= '0';
+		elsif falling_edge(clock_i) and clock_en_i = '1' then
+			if m_cycle_s = "001" then
+				if t_state_s = "001" then
+					rd_s		<= int_cycle_n_s;
+					mreq_s	<= int_cycle_n_s;
+					iorq_n_s	<= int_cycle_n_s;
+				end if;
+				if t_state_s = "011" then
+					rd_s		<= '0';
+					iorq_n_s	<= '1';
+					mreq_s	<= '1';
+				end if;
+				if t_state_s = "100" then
+					mreq_s	<= '0';
+				end if;
+			else
+				if t_state_s = "001" and noread_s = '0' then
+					iorq_n_s <= not iorq_s;
+					mreq_s <= not iorq_s;
+					if iorq_s = '0' then
+						rd_s <= not write_s;
+					elsif iorq_n_s = '0' then
+						rd_s <= not write_s;
+					end if;
+				end if;
+				if t_state_s = "011" then
+					rd_s		<= '0';
+					iorq_n_s	<= '1';
+					mreq_s	<= '0';
+				end if;
+			end if;
+		end if;
+	end process;
 
 end;
