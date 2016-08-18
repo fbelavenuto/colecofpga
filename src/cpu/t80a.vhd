@@ -179,7 +179,7 @@ begin
 			IntCycle_n	=> int_cycle_n_s
 		);
 
-	process (clock_i)
+	process (clock_i, clock_en_i)
 	begin
 		if falling_edge(clock_i) and clock_en_i = '1' then
 			wait_s <= wait_n_i;
@@ -196,7 +196,7 @@ begin
 		end if;
 	end process;
 
-	process (reset_s,clock_i)	-- 0247a
+	process (reset_s, clock_i, clock_en_i)	-- 0247a
 	begin
 		if reset_s = '0' then
 			wr_n_s <= '1';
@@ -217,7 +217,7 @@ begin
 		end if;
 	end process;
 
-	process (reset_s,clock_i)		-- 0247a
+	process (reset_s, clock_i, clock_en_i)		-- 0247a
 	begin
 		if reset_s = '0' then
 			req_inhibit_s <= '0';
@@ -230,7 +230,7 @@ begin
 		end if;
 	end process;
 
-	process (reset_s,clock_i)
+	process (reset_s, clock_i, clock_en_i)
 	begin
 		if reset_s = '0' then
 			mreq_inhibit_s <= '0';
@@ -243,7 +243,7 @@ begin
 		end if;
 	end process;
 
-	process(reset_s,clock_i)	-- 0247a
+	process(reset_s, clock_i, clock_en_i)	-- 0247a
 	begin
 		if reset_s = '0' then
 			rd_s		<= '0';

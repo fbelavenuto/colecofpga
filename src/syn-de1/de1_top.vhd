@@ -252,6 +252,7 @@ begin
 	port map (
 		clock_i				=> clock_master_s,
 		clk_en_10m7_i		=> clk_en_10m7_q,
+		clock_cpu_en_o		=> open,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,
 		-- Controller Interface

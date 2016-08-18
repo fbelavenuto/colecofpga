@@ -13,8 +13,9 @@ entity colecovision is
 		compat_rgb_g	: integer := 0
 	);
 	port (
-		clock_i				: in  std_logic;
+		clock_i			: in  std_logic;
 		clk_en_10m7_i	: in  std_logic;
+		clock_cpu_en_o	: out std_logic;
 		reset_i			: in  std_logic;			-- Reset, tbem acionado quando por_n_i for 0
 		por_n_i			: in  std_logic;			-- Power-on Reset
 		-- Controller Interface ---------------------------------------------------
@@ -334,6 +335,8 @@ begin
 	-----------------------------------------------------------------------------
 	-- Misc outputs
 	-----------------------------------------------------------------------------
+	clock_cpu_en_o	<= clk_en_3m58_s;
+
 	bios_addr_o		<= cpu_addr_s(12 downto 0);
 	bios_ce_o		<= not bios_ce_n_s;
 	bios_we_o		<= not (wr_n_s or bios_ce_n_s)	when loader_q = '1'	else '0';

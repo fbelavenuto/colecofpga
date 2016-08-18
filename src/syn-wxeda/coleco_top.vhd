@@ -1,6 +1,6 @@
 --
 
--- a-ltera message_off 10540 10541
+-- altera message_off 10540 10541
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -169,14 +169,14 @@ begin
 
 	vg: entity work.colecovision
 	generic map (
-		num_maq			=> 5,
+		num_maq_g		=> 5,
 		is_pal_g			=> 0,
 		compat_rgb_g	=> 0
 	)
 	port map (
-		clk_i					=> clock_master_s,
+		clock_i				=> clock_master_s,
 		clk_en_10m7_i		=> clk_en_10m7_q,
-		clk_cpu				=> open,
+		clock_cpu_en_o		=> open,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,
 		-- Controller Interface

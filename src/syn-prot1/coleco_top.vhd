@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Prototipo 1 - com controles SNES
+-- Prototipo 1 - com controles SNES e SD-RAM
 -- Para a placa EP2C5 chinesa
 
 entity coleco_top is
@@ -169,14 +169,14 @@ begin
 
 	vg: entity work.colecovision
 	generic map (
-		num_maq			=> 2,
+		num_maq_g		=> 2,
 		is_pal_g			=> 0,
 		compat_rgb_g	=> 0
 	)
 	port map (
-		clk_i					=> clock_master_s,
+		clock_i				=> clock_master_s,
 		clk_en_10m7_i		=> clk_en_10m7_q,
-		clk_cpu				=> open,
+		clock_cpu_en_o		=> open,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,
 		-- Controller Interface

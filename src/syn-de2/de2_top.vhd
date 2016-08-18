@@ -195,10 +195,10 @@ architecture behavior of de2_top is
 	signal cart_oe_s			: std_logic;
 	signal cart_ce_s			: std_logic;
 	signal cart_we_s			: std_logic;
-	signal cart_en_80_n_s	: std_logic;
-	signal cart_en_A0_n_s	: std_logic;
-	signal cart_en_C0_n_s	: std_logic;
-	signal cart_en_E0_n_s	: std_logic;
+--	signal cart_en_80_n_s	: std_logic;
+--	signal cart_en_A0_n_s	: std_logic;
+--	signal cart_en_C0_n_s	: std_logic;
+--	signal cart_en_E0_n_s	: std_logic;
 
 	-- Memoria RAM
 	signal ram_addr_s			: std_logic_vector(12 downto 0);		-- 8K
@@ -299,6 +299,7 @@ begin
 	port map (
 		clock_i				=> clock_master_s,
 		clk_en_10m7_i		=> clk_en_10m7_q,
+		clock_cpu_en_o		=> open,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,
 		-- Controller Interface
@@ -335,10 +336,10 @@ begin
 		-- Cartridge ROM Interface
 		cart_multcart_o	=> cart_multcart_s,
 		cart_addr_o			=> cart_addr_s,
-		cart_en_80_n_o		=> cart_en_80_n_s,
-		cart_en_a0_n_o		=> cart_en_A0_n_s,
-		cart_en_c0_n_o		=> cart_en_C0_n_s,
-		cart_en_e0_n_o		=> cart_en_E0_n_s,
+		cart_en_80_n_o		=> open,--cart_en_80_n_s,
+		cart_en_a0_n_o		=> open,--cart_en_A0_n_s,
+		cart_en_c0_n_o		=> open,--cart_en_C0_n_s,
+		cart_en_e0_n_o		=> open,--cart_en_E0_n_s,
 		cart_ce_o			=> cart_ce_s,
 		cart_oe_o			=> cart_oe_s,
 		cart_we_o			=> cart_we_s,
