@@ -68,17 +68,17 @@ void main(void)
 	}
 
 	select = 0;
-	if (macid == 1) {
-		maxln = 12;
+	if (macid < 3) {
+		maxln = 12;		// Placas DE-1 e DE-2
 	} else {
-		maxln = 15;
+		maxln = 15;		// Prototipos
 	}
 
 	page = CFG_PAGE;
 	pf_lseek(page * 27 * maxln);
 	do {
 		cls();
-		if (macid == 1) {
+		if (macid < 3) {		// DE-1 e DE-2
 		//                         11111111112222222222333
 		//                12345678901234567890123456789012
 			print_at(0,1,"  L-Fire:Load  R-Fire:Restart");
@@ -90,7 +90,7 @@ void main(void)
 		//                         11111111112222222222333
 		//                12345678901234567890123456789012
 		print_at(0, 3,   "     U/D:Select   L/R:Page");
-		if (macid == 1) {
+		if (macid < 3) {
 			print_at(1,20,"<ESC>Reset <U/D>Sel <L/R>Page");
 			print_at(1,22,"<Q>* <W># <Z>L-Fire <X>R-Fire");
 		}

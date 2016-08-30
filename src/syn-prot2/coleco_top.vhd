@@ -164,10 +164,10 @@ begin
 		locked	=> pll_locked_s
 	);
 
-
+	-- The Machine
 	vg: work.colecovision
 	generic map (
-		num_maq_g		=> 3,
+		num_maq_g		=> 4,
 		is_pal_g			=> 0,
 		compat_rgb_g	=> 0
 	)
@@ -433,7 +433,7 @@ begin
 	process (por_n_s, btn_scanlines_s)
 	begin
 		if por_n_s = '0' then
-			scanlines_en_s <= '1';
+			scanlines_en_s <= '0';
 		elsif falling_edge(btn_scanlines_s) then
 			scanlines_en_s <= not scanlines_en_s;
 		end if;

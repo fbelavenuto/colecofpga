@@ -169,7 +169,7 @@ begin
 
 	vg: entity work.colecovision
 	generic map (
-		num_maq_g		=> 2,
+		num_maq_g		=> 3,
 		is_pal_g			=> 0,
 		compat_rgb_g	=> 0
 	)
