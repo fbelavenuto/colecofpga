@@ -72,7 +72,7 @@ set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_clk_gen.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_addr_mux.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/dblscan.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/debounce.vhd
-set_global_assignment -name QIP_FILE ../../src/rom/loaderrom.qip
+set_global_assignment -name QIP_FILE ../../src/altera/loaderrom.qip
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpSRAM_5128.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd

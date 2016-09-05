@@ -4,4 +4,4 @@
 4 = Prototipo 2 (SRAM e SNES)
 5 = WXEDA
 6 = Prototipo EP4C10?
-7 = 
+7 = ZX-Uno

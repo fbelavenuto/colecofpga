@@ -363,7 +363,7 @@ set_global_assignment -name QIP_FILE "../../src/syn-de1/pll1.qip"
 set_global_assignment -name QIP_FILE "../../src/syn-de1/pll2.qip"
 set_global_assignment -name VHDL_FILE ../../src/altera/cv_por.vhd
 set_global_assignment -name VHDL_FILE ../../src/colecovision.vhd
-set_global_assignment -name QIP_FILE ../../src/rom/loaderrom.qip
+set_global_assignment -name QIP_FILE ../../src/altera/loaderrom.qip
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpSRAM_25616.vhd

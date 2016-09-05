@@ -128,7 +128,7 @@ set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to btn_scanlines_i
 set_global_assignment -name VHDL_FILE "../../src/syn-prot1/coleco_top.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-prot1/pll1.qip"
 set_global_assignment -name VHDL_FILE ../../src/colecovision.vhd
-set_global_assignment -name QIP_FILE ../../src/rom/loaderrom.qip
+set_global_assignment -name QIP_FILE ../../src/altera/loaderrom.qip
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpSDRAM16Mb.vhd
