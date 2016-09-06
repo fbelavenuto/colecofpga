@@ -86,7 +86,7 @@ end entity;
 use std.textio.all;
 -- pragma translate_on
 
-architecture behave of colecovision is
+architecture Behavior of colecovision is
 
 	-- Clock
 	signal clk_cnt_q			: unsigned(1 downto 0);

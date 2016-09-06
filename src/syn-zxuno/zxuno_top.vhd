@@ -44,7 +44,7 @@ entity zxuno_top is
 		joy_right_i			: in    std_logic;
 		joy_fire1_i			: in    std_logic;
 		joy_fire2_i			: in    std_logic;
-		joy_fire3_i			: in    std_logic;
+--		joy_fire3_i			: in    std_logic;
 
 		-- Audio
 		dac_l_o				: out   std_logic								:= '0';
@@ -61,7 +61,7 @@ entity zxuno_top is
 		vga_stdnb_o			: out   std_logic								:= '1';
 
 		-- GPIO
-		gpio_io				: inout std_logic_vector(35 downto 6)	:= (others => 'Z');
+--		gpio_io				: inout std_logic_vector(35 downto 6)	:= (others => 'Z');
 
 		-- Debug
 		led_o					: out   std_logic								:= '0'
@@ -132,6 +132,7 @@ architecture behavior of zxuno_top is
 	signal vram_we_s			: std_logic;
 
 	-- Audio
+	signal audio_signed_s	: signed(7 downto 0);
 	signal audio_s				: std_logic_vector(7 downto 0);
 	signal audio_dac_s		: std_logic;
 
@@ -184,6 +185,7 @@ begin
 		CLK_OUT2	=> clock_mem_s					-- 42.857
 	);
 
+	-- The Colecovision
 	vg: entity work.colecovision
 	generic map (
 		num_maq_g			=> 7,
@@ -239,8 +241,8 @@ begin
 		cart_we_o			=> cart_we_s,
 		cart_data_i			=> cart_do_s,
 		-- Audio Interface
-		audio_o				=> audio_s,
-		audio_signed_o		=> open,
+		audio_o				=> open,
+		audio_signed_o		=> audio_signed_s,
 		-- RGB Video Interface
 		col_o					=> rgb_col_s,
 		rgb_r_o				=> open,
@@ -285,6 +287,8 @@ begin
 	);
 
 	-- Audio
+	audio_s <= std_logic_vector(unsigned(audio_signed_s + 128));
+
 	audioout: entity work.dac
 	generic map (
 		msbi_g		=> 7
@@ -432,7 +436,8 @@ begin
 	-- Purpose:
 	--   Maps the gamepad signals to the controller buses of the console.
 	--
-	pad_ctrl: process (ctrl_p5_s, ctrl_p8_s, ps2_keys_s, ps2_joy_s)
+	pad_ctrl: process (ctrl_p5_s, ctrl_p8_s, ps2_keys_s, ps2_joy_s, joy_up_i,
+				joy_down_i, joy_left_i, joy_right_i, joy_fire1_i, joy_fire2_i)
 		variable key_v : natural range cv_keys_t'range;
 	begin
 		-- quadrature device not implemented
@@ -506,15 +511,15 @@ begin
 
 			elsif ctrl_p5_s(idx) = '1' and ctrl_p8_s(idx) = '0' then
 				-- joystick and left button enabled -----------------------------------
-				ctrl_p1_s(idx) <= not ps2_joy_s(0);	-- up
-				ctrl_p2_s(idx) <= not ps2_joy_s(1); -- down
-				ctrl_p3_s(idx) <= not ps2_joy_s(2); -- left
-				ctrl_p4_s(idx) <= not ps2_joy_s(3); -- right
+				ctrl_p1_s(idx) <= not ps2_joy_s(0) and joy_up_i;		-- up
+				ctrl_p2_s(idx) <= not ps2_joy_s(1) and joy_down_i;		-- down
+				ctrl_p3_s(idx) <= not ps2_joy_s(2) and joy_left_i;		-- left
+				ctrl_p4_s(idx) <= not ps2_joy_s(3) and joy_right_i;	-- right
 		  
 				if (idx = 1) then
-					ctrl_p6_s(idx) <= not ps2_joy_s(4); -- button left (4)
+					ctrl_p6_s(idx) <= not ps2_joy_s(4) and joy_fire1_i; -- button left (4)
 				else
-					ctrl_p6_s(idx) <= not ps2_keys_s(0); -- button right(0)
+					ctrl_p6_s(idx) <= not ps2_keys_s(0) and joy_fire2_i; -- button right(0)
 				end if;
 			
 			else

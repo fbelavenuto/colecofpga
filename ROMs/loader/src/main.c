@@ -101,7 +101,7 @@ void main()
 		pcart += 512;
 	}
 	vdp_putstring("OK");
-	// Desativar loader e iniciar bios
+	// Disable loader and start BIOS
 	*cp++=0x3e;		// LD A, 2
 	*cp++=0x02;
 	*cp++=0xd3;		// OUT (0x52), A

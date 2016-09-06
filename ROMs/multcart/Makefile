@@ -22,7 +22,7 @@ all: MULTCART.ROM
 MULTCART.ROM: MULTCART.ihx
 	$(H2B) -e ROM $<
 	fillfile $@ 16384
-	$(CP) /y $@ f:\
+#	$(CP) /y $@ f:\
 
 multcart.ihx: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS)

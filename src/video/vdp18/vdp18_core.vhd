@@ -81,7 +81,7 @@ entity vdp18_core is
   );
   port (
     -- Global Interface -------------------------------------------------------
-    clock_i         : in  std_logic;
+    clock_i       : in  std_logic;
     clk_en_10m7_i : in  std_logic;
     reset_n_i     : in  std_logic;
     -- CPU Interface ----------------------------------------------------------
