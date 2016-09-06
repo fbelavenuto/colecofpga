@@ -78,15 +78,13 @@ port
   CLK_IN1           : in     std_logic;
   -- Clock out ports
   CLK_OUT1          : out    std_logic;
-  CLK_OUT2          : out    std_logic;
-  -- Status and control signals
-  LOCKED            : out    std_logic
+  CLK_OUT2          : out    std_logic
  );
 end pll1;
 
 architecture xilinx of pll1 is
   attribute CORE_GENERATION_INFO : string;
-  attribute CORE_GENERATION_INFO of xilinx : architecture is "pll1,clk_wiz_v3_6,{component_name=pll1,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=false,use_inclk_switchover=false,use_dyn_reconfig=false,feedback_source=FDBK_AUTO,primtype_sel=PLL_BASE,num_out_clk=2,clkin1_period=20.000,clkin2_period=20.000,use_power_down=false,use_reset=false,use_locked=true,use_inclk_stopped=false,use_status=false,use_freeze=false,use_clk_valid=false,feedback_type=SINGLE,clock_mgr_type=AUTO,manual_override=false}";
+  attribute CORE_GENERATION_INFO of xilinx : architecture is "pll1,clk_wiz_v3_6,{component_name=pll1,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=false,use_inclk_switchover=false,use_dyn_reconfig=false,feedback_source=FDBK_AUTO,primtype_sel=PLL_BASE,num_out_clk=2,clkin1_period=20.000,clkin2_period=20.000,use_power_down=false,use_reset=false,use_locked=false,use_inclk_stopped=false,use_status=false,use_freeze=false,use_clk_valid=false,feedback_type=SINGLE,clock_mgr_type=MANUAL,manual_override=false}";
   -- Input clock buffering / unused connectors
   signal clkin1      : std_logic;
   -- Output clock buffering / unused connectors
@@ -99,6 +97,7 @@ architecture xilinx of pll1 is
   signal clkout4_unused   : std_logic;
   signal clkout5_unused   : std_logic;
   -- Unused status signals
+  signal locked_unused    : std_logic;
 
 begin
 
@@ -142,8 +141,7 @@ begin
     CLKOUT3             => clkout3_unused,
     CLKOUT4             => clkout4_unused,
     CLKOUT5             => clkout5_unused,
-    -- Status and control signals
-    LOCKED              => LOCKED,
+    LOCKED              => locked_unused,
     RST                 => '0',
     -- Input clock control
     CLKFBIN             => clkfbout_buf,

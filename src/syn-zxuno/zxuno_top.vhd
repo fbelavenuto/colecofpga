@@ -73,12 +73,6 @@ use work.vdp18_col_pack.all;
 
 architecture behavior of zxuno_top is
 
-	-- Sinais internos
-	signal pll_locked_s		: std_logic;
-	signal reset_s				: std_logic;
-	signal soft_reset_s		: std_logic;
-	signal por_n_s				: std_logic;
-
 	-- Clocks
 	signal clock_master_s	: std_logic;
 	signal clock_mem_s		: std_logic;
@@ -86,6 +80,12 @@ architecture behavior of zxuno_top is
 	signal clk_cnt_q			: unsigned(1 downto 0);
 	signal clk_en_10m7_q		: std_logic;
 	signal clk_en_5m37_q		: std_logic;
+
+	-- Resets
+	signal por_cnt_s			: unsigned(7 downto 0)				:= (others => '1');
+	signal por_n_s				: std_logic;
+	signal reset_s				: std_logic;
+	signal soft_reset_s		: std_logic;
 
 	-- SRAM
 	signal sram_addr_s		: std_logic_vector(18 downto 0);		-- 512K
@@ -181,8 +181,7 @@ begin
 	port map (
 		CLK_IN1	=> clock_50_i,					-- 50.000
 		CLK_OUT1	=> clock_master_s,			-- 21.429
-		CLK_OUT2	=> clock_mem_s,				-- 42.857
-		LOCKED	=> pll_locked_s
+		CLK_OUT2	=> clock_mem_s					-- 42.857
 	);
 
 	vg: entity work.colecovision
@@ -319,9 +318,17 @@ begin
 	);
 
 	-- Glue logic
+	process(clock_master_s)
+	begin
+		if rising_edge(clock_master_s) then
+			if por_cnt_s /= 0 then
+				por_cnt_s <= por_cnt_s - 1;
+			end if;
+		end if;
+	end process;
 
-	por_n_s		<= pll_locked_s;
-	reset_s		<= not pll_locked_s or soft_reset_s;
+	por_n_s		<= '0' when por_cnt_s /= 0		else '1';
+	reset_s		<= not por_n_s or soft_reset_s;
 
 	-----------------------------------------------------------------------------
 	-- Process clk_cnt
