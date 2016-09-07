@@ -284,10 +284,10 @@ begin
       sprite_5th_q     <= false;
       sprite_5th_num_q <= (others => '0');
       int_n_q          <= '1';
---		ctrl_reg_q(1) <= X"C0";
---		ctrl_reg_q(2) <= X"02";
---		ctrl_reg_q(3) <= X"2C";
---		ctrl_reg_q(7) <= X"F7";
+		ctrl_reg_q(1) <= X"C0";
+		ctrl_reg_q(2) <= X"02";
+		ctrl_reg_q(3) <= X"2C";
+		ctrl_reg_q(7) <= X"F7";
 
     elsif clock_i'event and clock_i = '1' then
       if clk_en_10m7_i then

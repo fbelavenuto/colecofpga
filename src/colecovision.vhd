@@ -386,15 +386,15 @@ begin
 	ctrl_r_n_s			<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 5) = "111"		else '1';	-- Controller read    => E0 to FF
 
 	-- Write I/O port 52
-	process (por_n_i, reset_i, clk_en_3m58_s)
+	process (por_n_i, reset_i, clock_i)
 	begin
 		if por_n_i = '0' then
 			multcart_q <= '1';
 			loader_q	  <= '1';
 		elsif reset_i = '1' then
 			multcart_q <= '1';
-		elsif rising_edge(clk_en_3m58_s) then
-			if cfg_port_cs_s = '1' then
+		elsif rising_edge(clock_i) then
+			if clk_en_3m58_s = '1' and cfg_port_cs_s = '1' then
 				multcart_q <= d_from_cpu_s(1);
 				loader_q	  <= d_from_cpu_s(0);
 			end if;
@@ -402,12 +402,12 @@ begin
 	end process;
 
 	-- Write I/O port 54
-	process (por_n_i, clk_en_3m58_s)
+	process (por_n_i, clock_i)
 	begin
 		if por_n_i = '0' then
 			cfg_page_r <= (others => '0');
-		elsif rising_edge(clk_en_3m58_s) then
-			if cfg_page_cs_s = '1' and wr_n_s = '0' then
+		elsif rising_edge(clock_i) then
+			if clk_en_3m58_s = '1' and cfg_page_cs_s = '1' and wr_n_s = '0' then
 				cfg_page_r <= d_from_cpu_s;
 			end if;
 		end if;

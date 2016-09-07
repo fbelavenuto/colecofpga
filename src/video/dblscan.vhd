@@ -206,12 +206,12 @@ begin
 			if clk_en_12m_i = '1' then
 
 				hsync_n_o <= '1';
-				if (hpos_o_s < 8) then								-- 8
+				if (hpos_o_s < 32) then								-- 8
 					hsync_n_o <= '0';
 				end if;
 
 				blank_o <= '0';
-				if hpos_o_s < 56 or hpos_o_s > 295 then		-- 56 295
+				if hpos_o_s < 56 or hpos_o_s > 295 then		-- <56  >295
 					blank_o <= '1';
 				end if;
 

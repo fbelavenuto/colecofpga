@@ -163,14 +163,14 @@ begin
         end if;
 
         -- Horizontal sync ----------------------------------------------------
-        if    cnt_hor_q = -56 then		-- -64		-44
+        if    cnt_hor_q = -64 then		-- -64		-44		-56
           hsync_n_o <= '0';
-        elsif cnt_hor_q = -30 then		-- -38		-18
+        elsif cnt_hor_q = -38 then		-- -38		-18		-30
           hsync_n_o <= '1';
         end if;
-        if    cnt_hor_q = -69 then		-- -72		-62
+        if    cnt_hor_q = -72 then		-- -72		-62		-69
           hblank_q  <= true;
-        elsif cnt_hor_q = -11 then		-- -14		-4
+        elsif cnt_hor_q = -14 then		-- -14		-4			-11
           hblank_q  <= false;
         end if;
 

@@ -242,11 +242,11 @@ begin
 	);
 
 	-- Loader
-	lr: 	 work.loaderrom
+	lr: entity work.loaderrom
 	port map (
-		clock		=> clock_master_s,
-		address	=> bios_addr_s,
-		q			=> loader_data_s
+		clk		=> clock_master_s,
+		addr		=> bios_addr_s,
+		data		=> loader_data_s
 	);
 
 	-- Audio
@@ -266,9 +266,9 @@ begin
 	audio_dac_l_o	<= audio_dac_s;
 	audio_dac_r_o	<= audio_dac_s;
 
-	btndbl: work.debounce
+	btndbl: entity work.debounce
 	generic map (
-		counter_size_g	=> 5
+		counter_size_g	=> 16
 	)
 	port map (
 		clk_i				=> clock_master_s,
@@ -276,16 +276,15 @@ begin
 		result_o			=> btn_dblscan_s
 	);
 
-	btnscl: work.debounce
+	btnscl: entity work.debounce
 	generic map (
-		counter_size_g	=> 5
+		counter_size_g	=> 16
 	)
 	port map (
 		clk_i				=> clock_master_s,
 		button_i			=> keys_n_i(2),
 		result_o			=> btn_scanlines_s
 	);
-
 
 	-- Glue Logic
 	reset_s		<= not pll_locked_s or not keys_n_i(0) or soft_reset_s;
@@ -428,7 +427,7 @@ begin
 
 	-- Controle
 	-- PS/2 keyboard interface
-	ps2if_inst : work.colecoKeyboard
+	ps2if_inst : entity work.colecoKeyboard
 	port map (
 		clk		=> clock_master_s,
 		reset		=> reset_s,
@@ -544,9 +543,9 @@ begin
 	end process pad_ctrl;	 
 
 	-- Double Scanner
-	process (btn_dblscan_s, reset_s)
+	process (por_n_s, btn_dblscan_s)
 	begin
-		if reset_s = '1' then
+		if por_n_s = '0' then
 			dblscan_en_s <= '1';
 		elsif falling_edge(btn_dblscan_s) then
 			dblscan_en_s <= not dblscan_en_s;
@@ -554,9 +553,9 @@ begin
 	end process;
 	
 	-- Scanlines
-	process (btn_scanlines_s, reset_s)
+	process (por_n_s, btn_scanlines_s)
 	begin
-		if reset_s = '1' then
+		if por_n_s = '0' then
 			scanlines_en_s <= '0';
 		elsif falling_edge(btn_scanlines_s) then
 			scanlines_en_s <= not scanlines_en_s;
@@ -611,7 +610,7 @@ begin
 	-----------------------------------------------------------------------------
 	-- VGA Scan Doubler
 	-----------------------------------------------------------------------------
-	dblscan_b : work.dblscan
+	dblscan_b : entity work.dblscan
 	port map (
 		clk_6m_i			=> clock_master_s,
 		clk_en_6m_i		=> clk_en_5m37_q,

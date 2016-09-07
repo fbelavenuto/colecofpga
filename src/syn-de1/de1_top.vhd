@@ -238,7 +238,8 @@ begin
 	end generate;
 
 	-- Power-on reset
-	por_b : entity work.cv_por	port map (
+	por_b : entity work.cv_por
+	port map (
 		clock_i		=> clock_master_s,
 		por_n_o		=> por_n_s
 	);
@@ -360,11 +361,11 @@ begin
 	end process clk_cnt;
 
 	-- Loader
-	lr: 	 work.loaderrom
+	lr: entity work.loaderrom
 	port map (
-		clock		=> clock_master_s,
-		address	=> bios_addr_s,
-		q			=> loader_data_s
+		clk		=> clock_master_s,
+		addr		=> bios_addr_s,
+		data		=> loader_data_s
 	);
 
 	-- Cartucho
@@ -456,7 +457,7 @@ begin
 	end generate;
 
 	-- Audio
-	audioout: 	 work.Audio_WM8731
+	audioout: entity work.Audio_WM8731
 	port map (
 		clock_i			=> CLOCK_24(0),
 		reset_i			=> reset_s,
@@ -473,9 +474,9 @@ begin
 		i2c_scl_io		=> I2C_SCLK
 	);
 
-	btndbl: work.debounce
+	btndbl: entity work.debounce
 	generic map (
-		counter_size_g	=> 10
+		counter_size_g	=> 16
 	)
 	port map (
 		clk_i				=> clock_master_s,
@@ -484,10 +485,10 @@ begin
 	);
 
 	-- VGA
-	process (btn_dblscan_s, reset_s)
+	process (por_n_s, btn_dblscan_s)
 	begin
-		if reset_s = '1' then
-			dblscan_en_s <= '0';
+		if por_n_s = '0' then
+			dblscan_en_s <= '1';
 		elsif falling_edge(btn_dblscan_s) then
 			dblscan_en_s <= not dblscan_en_s;
 		end if;
@@ -534,7 +535,7 @@ begin
 	-----------------------------------------------------------------------------
 	-- VGA Scan Doubler
 	-----------------------------------------------------------------------------
-	dblscan_b : work.dblscan
+	dblscan_b : entity work.dblscan
 	port map (
 		clk_6m_i			=> clock_master_s,
 		clk_en_6m_i		=> clk_en_5m37_q,
@@ -551,7 +552,8 @@ begin
 
 	-- Controle
 	-- PS/2 keyboard interface
-	ps2if_inst : 	 work.colecoKeyboard port map (
+	ps2if_inst : entity work.colecoKeyboard
+	port map (
 		clk		=> clock_master_s,
 		reset		=> reset_s,
 		-- inputs from PS/2 port
@@ -574,6 +576,15 @@ begin
 		-- quadrature device not implemented
 		ctrl_p7_s          <= "11";
 		ctrl_p9_s          <= "11";
+
+		--------------------------------------------------------------------
+		-- soft reset to get to cart menu : use ps2 ESC key in keys(8)
+		if ps2_keys_s(8) = '1' then
+			soft_reset_s <= '1';
+		else
+			soft_reset_s <= '0';
+		end if;
+		------------------------------------------------------------------------
 
 		for idx in 1 to 2 loop -- was 2
 			if ctrl_p5_s(idx) = '0' and ctrl_p8_s(idx) = '1' then
@@ -631,15 +642,6 @@ begin
 					ctrl_p6_s(idx) <= not ps2_joy_s(4);
 				end if;
 		  
-				--------------------------------------------------------------------
-				-- soft reset to get to cart menu : use ps2 ESC key in keys(8)
-				if ps2_keys_s(8) = '1' then
-					soft_reset_s <= '1';
-				else
-					soft_reset_s <= '0';
-				end if;
-				------------------------------------------------------------------------
-
 			elsif ctrl_p5_s(idx) = '1' and ctrl_p8_s(idx) = '0' then
 				-- joystick and left button enabled -----------------------------------
 				ctrl_p1_s(idx) <= not ps2_joy_s(0);	-- up
@@ -677,25 +679,25 @@ begin
 	--D_display		<= "00000000" & std_logic_vector(audio_s);
 	D_display	<= D_cpu_addr;
 
-	ld3: 	 work.seg7
+	ld3: entity work.seg7
 	port map(
 		D		=> D_display(15 downto 12),
 		Q		=> HEX3
 	);
 
-	ld2: 	 work.seg7
+	ld2: entity work.seg7
 	port map(
 		D		=> D_display(11 downto 8),
 		Q		=> HEX2
 	);
 
-	ld1: 	 work.seg7
+	ld1: entity work.seg7
 	port map(
 		D		=> D_display(7 downto 4),
 		Q		=> HEX1
 	);
 
-	ld0: 	 work.seg7
+	ld0: entity work.seg7
 	port map(
 		D		=> D_display(3 downto 0),
 		Q		=> HEX0

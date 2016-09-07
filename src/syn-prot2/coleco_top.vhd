@@ -5,7 +5,6 @@ use ieee.numeric_std.all;
 -- Prototipo 2 - com controles SNES e SRAM
 -- Para a placa EP2C5 chinesa
 
-
 entity coleco_top is
 	port (
 		-- Clock
@@ -157,7 +156,8 @@ architecture behavior of coleco_top is
 begin
 
 	-- PLL
-	pll: work.pll1 port map (
+	pll: entity work.pll1
+	port map (
 		inclk0	=> clock_50_i,
 		c0			=> clock_master_s,		-- 21.428571
 		c1			=> clock_mem_s,			-- 42.857143
@@ -165,7 +165,7 @@ begin
 	);
 
 	-- The Machine
-	vg: work.colecovision
+	vg: entity work.colecovision
 	generic map (
 		num_maq_g		=> 4,
 		is_pal_g			=> 0,
@@ -266,11 +266,11 @@ begin
 	);
 
 	-- Loader
-	lr: 	 work.loaderrom
+	lr: entity work.loaderrom
 	port map (
-		clock		=> clock_master_s,
-		address	=> bios_addr_s,
-		q			=> loader_data_s
+		clk		=> clock_master_s,
+		addr		=> bios_addr_s,
+		data		=> loader_data_s
 	);
 
 	-- Audio
@@ -287,9 +287,9 @@ begin
 		dac_o		=> audio_dac_o
 	);
 
-	btndbl: work.debounce
+	btndbl: entity work.debounce
 	generic map (
-		counter_size_g	=> 5
+		counter_size_g	=> 16
 	)
 	port map (
 		clk_i				=> clock_master_s,
@@ -297,9 +297,9 @@ begin
 		result_o			=> btn_dblscan_s
 	);
 
-	btnscl: work.debounce
+	btnscl: entity work.debounce
 	generic map (
-		counter_size_g	=> 5
+		counter_size_g	=> 16
 	)
 	port map (
 		clk_i				=> clock_master_s,
@@ -340,7 +340,7 @@ begin
 	-----------------------------------------------------------------------------
 	-- VGA Scan Doubler
 	-----------------------------------------------------------------------------
-	dblscan_b : work.dblscan
+	dblscan_b : entity work.dblscan
 	port map (
 		clk_6m_i			=> clock_master_s,
 		clk_en_6m_i		=> clk_en_5m37_q,
@@ -422,7 +422,7 @@ begin
 	-- Double Scanner
 	process (por_n_s, btn_dblscan_s)
 	begin
-		if por_n_s = '1' then
+		if por_n_s = '0' then
 			dblscan_en_s <= '1';
 		elsif falling_edge(btn_dblscan_s) then
 			dblscan_en_s <= not dblscan_en_s;

@@ -352,22 +352,23 @@ set_global_assignment -name EDA_NATIVELINK_SIMULATION_SETUP_SCRIPT simulation/mo
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name SDC_FILE coleco_de1.out.sdc
+set_global_assignment -name VHDL_FILE "../../src/syn-de1/de1_top.vhd"
+set_global_assignment -name QIP_FILE "../../src/syn-de1/pll1.qip"
+set_global_assignment -name QIP_FILE "../../src/syn-de1/pll2.qip"
+set_global_assignment -name VHDL_FILE ../../src/altera/cv_por.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80a.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80_reg.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80_pack.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80_mcode.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80_alu.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80.vhd
-set_global_assignment -name VHDL_FILE "../../src/syn-de1/de1_top.vhd"
-set_global_assignment -name QIP_FILE "../../src/syn-de1/pll1.qip"
-set_global_assignment -name QIP_FILE "../../src/syn-de1/pll2.qip"
-set_global_assignment -name VHDL_FILE ../../src/altera/cv_por.vhd
 set_global_assignment -name VHDL_FILE ../../src/colecovision.vhd
-set_global_assignment -name QIP_FILE ../../src/altera/loaderrom.qip
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpSRAM_25616.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpSDRAM64Mb.vhd
+set_global_assignment -name VHDL_FILE ../../src/rom/loaderrom.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/debounce.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/seg7.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/cv_ctrl.vhd

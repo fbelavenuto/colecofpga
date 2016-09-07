@@ -6,7 +6,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-
 entity zxuno_top is
 	port (
 		-- Clocks
@@ -57,8 +56,8 @@ entity zxuno_top is
 		vga_b_o				: out   std_logic_vector(2 downto 0)	:= (others => '0');
 		vga_csync_n_o		: out   std_logic								:= '1';
 		vga_vsync_n_o		: out   std_logic								:= '1';
-		vga_stdn_o			: out   std_logic								:= '0';
-		vga_stdnb_o			: out   std_logic								:= '1';
+		vga_ntsc_o			: out   std_logic								:= '1';
+		vga_pal_o			: out   std_logic								:= '0';
 
 		-- GPIO
 --		gpio_io				: inout std_logic_vector(35 downto 6)	:= (others => 'Z');
@@ -181,7 +180,7 @@ begin
 	pll_1: entity work.pll1
 	port map (
 		CLK_IN1	=> clock_50_i,					-- 50.000
-		CLK_OUT1	=> clock_master_s,			-- 21.429
+		CLK_OUT1	=> clock_master_s,			-- 21.429 (21,47727 MHz)
 		CLK_OUT2	=> clock_mem_s					-- 42.857
 	);
 
@@ -408,25 +407,23 @@ begin
 					vga_b_v		: std_logic_vector(7 downto 0);
 	begin
 		if rising_edge(clock_master_s) then
-			if clk_en_10m7_q = '1' then
-				rgb_col_v := to_integer(unsigned(rgb_col_s));
-				rgb_r_v	:= full_rgb_table_c(rgb_col_v)(r_c);
-				rgb_g_v	:= full_rgb_table_c(rgb_col_v)(g_c);
-				rgb_b_v	:= full_rgb_table_c(rgb_col_v)(b_c);
-				vga_r_v	:= std_logic_vector(to_unsigned(rgb_r_v, 8));
-				vga_g_v	:= std_logic_vector(to_unsigned(rgb_g_v, 8));
-				vga_b_v	:= std_logic_vector(to_unsigned(rgb_b_v, 8));
-				vga_r_o	<= vga_r_v(7 downto 5);
-				vga_g_o	<= vga_g_v(7 downto 5);
-				vga_b_o	<= vga_b_v(7 downto 5);
-			end if;
+			rgb_col_v := to_integer(unsigned(rgb_col_s));
+			rgb_r_v	:= full_rgb_table_c(rgb_col_v)(r_c);
+			rgb_g_v	:= full_rgb_table_c(rgb_col_v)(g_c);
+			rgb_b_v	:= full_rgb_table_c(rgb_col_v)(b_c);
+			vga_r_v	:= std_logic_vector(to_unsigned(rgb_r_v, 8));
+			vga_g_v	:= std_logic_vector(to_unsigned(rgb_g_v, 8));
+			vga_b_v	:= std_logic_vector(to_unsigned(rgb_b_v, 8));
+			vga_r_o	<= vga_r_v(7 downto 5);
+			vga_g_o	<= vga_g_v(7 downto 5);
+			vga_b_o	<= vga_b_v(7 downto 5);
 		end if;
 	end process vga_col;
 
 	vga_csync_n_o	<= rgb_hsync_n_s and rgb_vsync_n_s;
 	vga_vsync_n_o	<= '1';
-	vga_stdn_o		<= '0';
-	vga_stdnb_o		<= '1';
+	vga_ntsc_o		<= '1';
+	vga_pal_o		<= '0';
 
 	-- Controle
 
@@ -443,6 +440,15 @@ begin
 		-- quadrature device not implemented
 		ctrl_p7_s          <= "11";
 		ctrl_p9_s          <= "11";
+
+		--------------------------------------------------------------------
+		-- soft reset to get to cart menu : use ps2 ESC key in keys(8)
+		if ps2_keys_s(8) = '1' then
+			soft_reset_s <= '1';
+		else
+			soft_reset_s <= '0';
+		end if;
+		------------------------------------------------------------------------
 
 		for idx in 1 to 2 loop -- was 2
 			if ctrl_p5_s(idx) = '0' and ctrl_p8_s(idx) = '1' then
@@ -499,15 +505,6 @@ begin
 				else
 					ctrl_p6_s(idx) <= not ps2_joy_s(4);
 				end if;
-		  
-				--------------------------------------------------------------------
-				-- soft reset to get to cart menu : use ps2 ESC key in keys(8)
-				if ps2_keys_s(8) = '1' then
-					soft_reset_s <= '1';
-				else
-					soft_reset_s <= '0';
-				end if;
-				------------------------------------------------------------------------
 
 			elsif ctrl_p5_s(idx) = '1' and ctrl_p8_s(idx) = '0' then
 				-- joystick and left button enabled -----------------------------------

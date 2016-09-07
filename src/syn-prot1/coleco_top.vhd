@@ -244,9 +244,9 @@ begin
 	-- Loader
 	lr: 	 work.loaderrom
 	port map (
-		clock		=> clock_master_s,
-		address	=> bios_addr_s,
-		q			=> loader_data_s
+		clk		=> clock_master_s,
+		addr		=> bios_addr_s,
+		data		=> loader_data_s
 	);
 
 	-- Audio
@@ -265,7 +265,7 @@ begin
 
 	btndbl: work.debounce
 	generic map (
-		counter_size_g	=> 5
+		counter_size_g	=> 16
 	)
 	port map (
 		clk_i				=> clock_master_s,
@@ -275,7 +275,7 @@ begin
 
 	btnscl: work.debounce
 	generic map (
-		counter_size_g	=> 5
+		counter_size_g	=> 16
 	)
 	port map (
 		clk_i				=> clock_master_s,

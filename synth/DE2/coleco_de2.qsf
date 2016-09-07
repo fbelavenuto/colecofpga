@@ -537,16 +537,17 @@ set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to GPIO_1[23]
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to GPIO_1[22]
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to GPIO_1[21]
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to GPIO_1[20]
+set_global_assignment -name SDC_FILE coleco_de2.out.sdc
 set_global_assignment -name VHDL_FILE "../../src/syn-de2/de2_top.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-de2/pll1.qip"
 set_global_assignment -name QIP_FILE "../../src/syn-de2/pll2.qip"
 set_global_assignment -name VHDL_FILE ../../src/altera/cv_por.vhd
 set_global_assignment -name VHDL_FILE ../../src/colecovision.vhd
-set_global_assignment -name QIP_FILE ../../src/altera/loaderrom.qip
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpSRAM_25616.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpSDRAM64Mb.vhd
+set_global_assignment -name VHDL_FILE ../../src/rom/loaderrom.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/debounce.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/seg7.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/cv_ctrl.vhd
