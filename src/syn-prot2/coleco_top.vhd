@@ -1,17 +1,55 @@
+-------------------------------------------------------------------------------
+--
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
+--
+-- All rights reserved
+--
+-- Redistribution and use in source and synthezised forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+--
+-- Redistributions of source code must retain the above copyright notice,
+-- this list of conditions and the following disclaimer.
+--
+-- Redistributions in synthesized form must reproduce the above copyright
+-- notice, this list of conditions and the following disclaimer in the
+-- documentation and/or other materials provided with the distribution.
+--
+-- Neither the name of the author nor the names of other contributors may
+-- be used to endorse or promote products derived from this software without
+-- specific prior written permission.
+--
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+-- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+-- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+-- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+-- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+-- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-- POSSIBILITY OF SUCH DAMAGE.
+--
+-- Please report bugs to the author, but before you do so, please
+-- make sure that this is not a derivative work and that
+-- you have the latest version of this file.
+--
+-------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Prototipo 2 - com controles SNES e SRAM
+-- Prototype 2 - with SRAM and SNES controller - WORKING!
 -- Para a placa EP2C5 chinesa
 
 entity coleco_top is
 	port (
 		-- Clock
-		clock_50_i			: in    std_logic;								-- Entrada 50 MHz
+		clock_50_i			: in    std_logic;
 
 		-- Botões
-		btn_reset_n_i		: in    std_logic;								-- /RESET externo
+		btn_reset_n_i		: in    std_logic;
 		btn_dblscan_i		: in    std_logic;
 		btn_scanlines_i	: in    std_logic;
 
@@ -65,7 +103,7 @@ architecture behavior of coleco_top is
 	signal clk_en_5m37_q		: std_logic;
 	signal clk_en_3m58_s		: std_logic;
 
-	-- ROM bios e loader
+	-- ROM bios and loader
 	signal bios_loader_s		: std_logic;
 	signal bios_addr_s		: std_logic_vector(12 downto 0);		-- 8K
 	signal bios_data_s		: std_logic_vector(7 downto 0);
@@ -74,7 +112,7 @@ architecture behavior of coleco_top is
 	signal bios_oe_s			: std_logic;
 	signal bios_we_s			: std_logic;
 
-	-- Cartucho
+	-- Cartridge
 	signal cart_multcart_s	: std_logic;
 	signal cart_addr_s		: std_logic_vector(14 downto 0);		-- 32K
 	signal cart_do_s			: std_logic_vector(7 downto 0);
@@ -87,7 +125,7 @@ architecture behavior of coleco_top is
 	signal spi_data_in_s		: std_logic_vector(7 downto 0);
 	signal spi_data_out_s	: std_logic_vector(7 downto 0);
 
-	-- Memoria RAM
+	-- RAM memory
 	signal ram_addr_s			: std_logic_vector(12 downto 0);		-- 8K
 	signal ram_do_s			: std_logic_vector(7 downto 0);
 	signal ram_di_s			: std_logic_vector(7 downto 0);
@@ -95,7 +133,7 @@ architecture behavior of coleco_top is
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
 
-	-- Memoria VRAM
+	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
 	signal vram_do_s			: std_logic_vector(7 downto 0);
 	signal vram_di_s			: std_logic_vector(7 downto 0);
@@ -164,7 +202,7 @@ begin
 		locked	=> pll_locked_s
 	);
 
-	-- The Machine
+	-- The Colecovision
 	vg: entity work.colecovision
 	generic map (
 		num_maq_g		=> 4,
@@ -274,8 +312,6 @@ begin
 	);
 
 	-- Audio
-	audio_s <= std_logic_vector(unsigned(audio_signed_s + 128));
-
 	audioout: entity work.dac
 	generic map (
 		msbi_g		=> 7
@@ -287,6 +323,7 @@ begin
 		dac_o		=> audio_dac_o
 	);
 
+	-- Scandoubler button
 	btndbl: entity work.debounce
 	generic map (
 		counter_size_g	=> 16
@@ -297,6 +334,7 @@ begin
 		result_o			=> btn_dblscan_s
 	);
 
+	-- Scanline button
 	btnscl: entity work.debounce
 	generic map (
 		counter_size_g	=> 16
@@ -357,6 +395,8 @@ begin
 	);
 
 	-- Glue Logic
+	audio_s <= std_logic_vector(unsigned(audio_signed_s + 128));
+
 	por_n_s		<= pll_locked_s and btn_reset_n_i;
 	reset_s		<= not por_n_s or soft_reset_s;
 
@@ -503,7 +543,7 @@ begin
 		ctrl_p7_s          <= "11";
 		ctrl_p9_s          <= "11";
 
-		-- Se START e SEL do controle 1 estiverem apertados, reseta
+		-- RESET if the START and SEL buttons of controller 1 are pressed together
 		if but_start_s(0) = '0' and but_sel_s(0) = '0' then
 			soft_reset_s <= '1';
 		else
@@ -516,7 +556,7 @@ begin
 
 				key_v := cv_key_none_c;
 
-				if but_tl_s(idx-1) = '0' then				-- botao TL apertado, numerais de 1 a 6
+				if but_tl_s(idx-1) = '0' then				-- TL button pressed, numbers 1 at 6
 					if    but_y_s(idx-1) = '0' then
 						-- KEY 1
 						key_v := cv_key_1_c;
@@ -536,7 +576,7 @@ begin
 						-- KEY 6
 						key_v := cv_key_6_c;
 					end if;
-				elsif but_tr_s(idx-1) = '0' then			-- botao TR apertado, 7 a 0, * e #
+				elsif but_tr_s(idx-1) = '0' then			-- TR button pressed, 7 at 0, * and #
 					if    but_y_s(idx-1) = '0' then
 						-- KEY 7
 						key_v := cv_key_7_c;
@@ -563,8 +603,8 @@ begin
 				ctrl_p3_s(idx) <= cv_keys_c(key_v)(3);
 				ctrl_p4_s(idx) <= cv_keys_c(key_v)(4);
 
-				if but_tl_s(idx-1) = '1' and but_tr_s(idx-1) = '1' then	-- Somente aciona tiro 2 se TL e TR nao estiverem apertados
-					ctrl_p6_s(idx) <= but_a_s(idx-1) and (but_x_s(idx-1) or autofire_cnt_q(19));	-- Botao A ou X(auto-fire) aciona tiro 2
+				if but_tl_s(idx-1) = '1' and but_tr_s(idx-1) = '1' then	-- fire 2 only if the TL and TR buttons are not pressed
+					ctrl_p6_s(idx) <= but_a_s(idx-1) and (but_x_s(idx-1) or autofire_cnt_q(19));	-- A button or X(auto-fire) button is fire 2
 				else
 					ctrl_p6_s(idx) <= '1';
 				end if;
@@ -575,8 +615,8 @@ begin
 				ctrl_p2_s(idx) <= but_down_s(idx-1);
 				ctrl_p3_s(idx) <= but_left_s(idx-1);
 				ctrl_p4_s(idx) <= but_right_s(idx-1);
-				if but_tl_s(idx-1) = '1' and but_tr_s(idx-1) = '1' then	-- Somente aciona tiro 1 se TL e TR nao estiverem apertados
-					ctrl_p6_s(idx) <= but_b_s(idx-1) and (but_y_s(idx-1) or autofire_cnt_q(19));	-- botao B ou Y(auto-fire) aciona tiro 1
+				if but_tl_s(idx-1) = '1' and but_tr_s(idx-1) = '1' then	-- fire 1 only if the TL and TR buttons are not pressed
+					ctrl_p6_s(idx) <= but_b_s(idx-1) and (but_y_s(idx-1) or autofire_cnt_q(19));	-- B button or Y(auto-fire) button is fire 1
 				else
 					ctrl_p6_s(idx) <= '1';
 				end if;

@@ -3,9 +3,7 @@ RM = rm -f
 CC = sdcc
 AS = sdasz80
 LD = sdcc
-MKBIN = makebin
 H2B = hex2bin
-MIF = srec_cat
 
 SDIR = src
 IDIR = inc
@@ -17,20 +15,22 @@ LDFLAGS = -mz80 --code-loc 0x8100 --data-loc 0x7000 --no-std-crt0
 _OBJS = crt0.rel mmc.rel pff.rel coleco.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
-all: MULTCART.ROM
+all: dir MULTCART.ROM
 
 MULTCART.ROM: MULTCART.ihx
 	$(H2B) -e ROM $<
 	fillfile $@ 16384
-#	$(CP) /y $@ f:\
 
 multcart.ihx: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
-.PHONY: clean
+.PHONY: clean dir
 
 clean:
-	$(RM) $(ODIR)/* *.map *.lk *.noi *.bin *.ihx *.mif
+	$(RM) $(ODIR)/* *.map *.lk *.noi *.bin *.ihx
+
+dir:
+	if not exist obj mkdir obj
 
 $(ODIR)/%.rel: $(SDIR)/%.s
 	$(AS) -o $@ $<

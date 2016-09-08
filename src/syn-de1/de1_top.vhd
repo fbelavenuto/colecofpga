@@ -1,3 +1,41 @@
+-------------------------------------------------------------------------------
+--
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
+--
+-- All rights reserved
+--
+-- Redistribution and use in source and synthezised forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+--
+-- Redistributions of source code must retain the above copyright notice,
+-- this list of conditions and the following disclaimer.
+--
+-- Redistributions in synthesized form must reproduce the above copyright
+-- notice, this list of conditions and the following disclaimer in the
+-- documentation and/or other materials provided with the distribution.
+--
+-- Neither the name of the author nor the names of other contributors may
+-- be used to endorse or promote products derived from this software without
+-- specific prior written permission.
+--
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+-- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+-- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+-- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+-- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+-- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-- POSSIBILITY OF SUCH DAMAGE.
+--
+-- Please report bugs to the author, but before you do so, please
+-- make sure that this is not a derivative work and that
+-- you have the latest version of this file.
+--
+-------------------------------------------------------------------------------
+
 --
 -- Terasic DE1 top-level
 --
@@ -110,7 +148,7 @@ use work.vdp18_col_pack.all;
 
 architecture behavior of de1_top is
 
-	-- Sinais internos
+	-- Resets
 	signal pll_locked_s		: std_logic;
 	signal reset_s				: std_logic;
 	signal soft_reset_s		: std_logic;
@@ -140,7 +178,7 @@ architecture behavior of de1_top is
 	signal bios_oe_s			: std_logic;
 	signal bios_we_s			: std_logic;
 
-	-- Cartucho
+	-- Cartridge
 	signal cart_multcart_s	: std_logic;
 	signal cart_addr_s		: std_logic_vector(14 downto 0);		-- 32K
 	signal cart_do_s			: std_logic_vector(7 downto 0);
@@ -152,7 +190,7 @@ architecture behavior of de1_top is
 	signal cart_en_C0_n_s	: std_logic;
 	signal cart_en_E0_n_s	: std_logic;
 
-	-- Memoria RAM
+	-- RAM memory
 	signal ram_addr_s			: std_logic_vector(12 downto 0);		-- 8K
 	signal ram_do_s			: std_logic_vector(7 downto 0);
 	signal ram_di_s			: std_logic_vector(7 downto 0);
@@ -160,7 +198,7 @@ architecture behavior of de1_top is
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
 
-	-- Memoria VRAM
+	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
 	signal vram_do_s			: std_logic_vector(7 downto 0);
 	signal vram_di_s			: std_logic_vector(7 downto 0);
@@ -185,7 +223,7 @@ architecture behavior of de1_top is
 	signal ps2_keys_s			: std_logic_vector(15 downto 0);
 	signal ps2_joy_s			: std_logic_vector(15 downto 0);
 
-	-- Controle
+	-- Controller
 	signal ctrl_p1_s			: std_logic_vector( 2 downto 1);
 	signal ctrl_p2_s			: std_logic_vector( 2 downto 1);
 	signal ctrl_p3_s			: std_logic_vector( 2 downto 1);
@@ -223,8 +261,8 @@ begin
 	pll_1: entity work.pll1
 	port map (
 		inclk0	=> CLOCK_50,
-		c0			=> clock_mem_s,			-- 42.857143
-		c1			=> clock_master_s,		-- 21.428571 
+		c0			=> clock_mem_s,			-- 42.857143 MHz
+		c1			=> clock_master_s,		-- 21.428571 MHz
 		locked	=> pll_locked_s
 	);
 
@@ -244,6 +282,7 @@ begin
 		por_n_o		=> por_n_s
 	);
 
+	-- The colecovision
 	vg: entity work.colecovision
 	generic map (
 		num_maq_g			=> 1,
@@ -318,6 +357,135 @@ begin
 		D_cpu_addr			=> D_cpu_addr
 	 );
 
+	-- SRAM IS61WV25616BLL
+	usarsram: if usar_sdram = false generate
+		sram0: entity work.dpSRAM_25616
+		port map (
+			clk_i				=> clock_mem_s,
+			-- Port 0
+			porta0_addr_i	=> sram_addr_s,
+			porta0_ce_i		=> sram_ce_s,
+			porta0_oe_i		=> sram_oe_s,
+			porta0_we_i		=> sram_we_s,
+			porta0_d_i		=> ram_di_s,
+			porta0_d_o		=> sram_data_o_s,
+			-- Port 1
+			porta1_addr_i	=> "01000" & vram_addr_s,
+			porta1_ce_i		=> vram_ce_s,
+			porta1_oe_i		=> vram_oe_s,
+			porta1_we_i		=> vram_we_s,
+			porta1_d_i		=> vram_di_s,-- (others => '0'),
+			porta1_d_o		=> vram_do_s,-- open,
+			-- SRAM in board
+			sram_addr_o		=> SRAM_ADDR,
+			sram_data_io	=> SRAM_DQ,
+			sram_ub_o		=> SRAM_UB_N,
+			sram_lb_o		=> SRAM_LB_N,
+			sram_ce_n_o		=> SRAM_CE_N,
+			sram_oe_n_o		=> SRAM_OE_N,
+			sram_we_n_o		=> SRAM_WE_N
+		);
+	end generate;
+
+	-- SDRAM
+	usarsdram: if usar_sdram = true generate
+		sdram0: entity work.dpSDRAM64Mb
+		generic map (
+			freq_g			=> 100
+		)
+		port map (
+			clock_i			=> clock_sdram_s,
+			reset_i			=> reset_s,
+			refresh_i		=> '1',
+			-- Port 0
+			port0_cs_i		=> vram_ce_s,
+			port0_oe_i		=> vram_oe_s,
+			port0_we_i		=> vram_we_s,
+			port0_addr_i	=> "000001000" & vram_addr_s,
+			port0_data_i	=> vram_di_s,
+			port0_data_o	=> vram_do_s,
+			-- Port 1
+			port1_cs_i		=> sram_ce_s,
+			port1_oe_i		=> sram_oe_s,
+			port1_we_i		=> sram_we_s,
+			port1_addr_i	=> "0000" & sram_addr_s,
+			port1_data_i	=> ram_di_s,
+			port1_data_o	=> sram_data_o_s,
+			-- SDRAM in board
+			mem_cke_o		=> DRAM_CKE,
+			mem_cs_n_o		=> DRAM_CS_N,
+			mem_ras_n_o		=> DRAM_RAS_N,
+			mem_cas_n_o		=> DRAM_CAS_N,
+			mem_we_n_o		=> DRAM_WE_N,
+			mem_udq_o		=> DRAM_UDQM,
+			mem_ldq_o		=> DRAM_LDQM,
+			mem_ba_o(1)		=> DRAM_BA_1,
+			mem_ba_o(0)		=> DRAM_BA_0,
+			mem_addr_o		=> DRAM_ADDR,
+			mem_data_io		=> DRAM_DQ
+		);
+	end generate;
+
+	-- Audio
+	audioout: entity work.Audio_WM8731
+	port map (
+		clock_i			=> CLOCK_24(0),
+		reset_i			=> reset_s,
+		psg_i				=> audio_s,
+
+		i2s_xck_o		=> AUD_XCK,
+		i2s_bclk_o		=> AUD_BCLK,
+		i2s_adclrck_o	=> AUD_ADCLRCK,
+		i2s_adcdat_i	=> AUD_ADCDAT,
+		i2s_daclrck_o	=> AUD_DACLRCK,
+		i2s_dacdat_o	=> AUD_DACDAT,
+
+		i2c_sda_io		=> I2C_SDAT,
+		i2c_scl_io		=> I2C_SCLK
+	);
+
+	-- Key debounce
+	btndbl: entity work.debounce
+	generic map (
+		counter_size_g	=> 16
+	)
+	port map (
+		clk_i				=> clock_master_s,
+		button_i			=> KEY(1),
+		result_o			=> btn_dblscan_s
+	);
+
+	-- VGA Scandoubler
+	dblscan_b : entity work.dblscan
+	port map (
+		clk_6m_i			=> clock_master_s,
+		clk_en_6m_i		=> clk_en_5m37_q,
+		clk_12m_i		=> clock_master_s,
+		clk_en_12m_i	=> clk_en_10m7_q,
+		col_i				=> rgb_col_s,
+		col_o				=> vga_col_s,
+		hsync_n_i		=> rgb_hsync_n_s,
+		vsync_n_i		=> rgb_vsync_n_s,
+		hsync_n_o		=> vga_hsync_n_s,
+		vsync_n_o		=> vga_vsync_n_s,
+		blank_o			=> open
+	);
+
+	-- Controller
+	-- PS/2 keyboard interface
+	ps2if_inst : entity work.colecoKeyboard
+	port map (
+		clk		=> clock_master_s,
+		reset		=> reset_s,
+		-- inputs from PS/2 port
+		ps2_clk	=> PS2_CLK,
+		ps2_data	=> PS2_DAT,
+		-- user outputs
+		keys		=> ps2_keys_s,
+		joy		=> ps2_joy_s
+	);
+
+	-- Glue logic
 	reset_s		<= not pll_locked_s or not KEY(0) or soft_reset_s;
 
 	-----------------------------------------------------------------------------
@@ -368,9 +536,6 @@ begin
 		data		=> loader_data_s
 	);
 
-	-- Cartucho
-	-- cart_multcart_s bios_loader_s
-
 	-- RAM
 	sram_addr_s	<= "000000" & bios_addr_s		when bios_ce_s = '1'																	else
 					   "000011" & ram_addr_s		when ram_ce_s = '1'																	else
@@ -387,108 +552,11 @@ begin
 	ram_do_s			<= sram_data_o_s;
 	cart_do_s		<= sram_data_o_s;
 
-	-- SRAM IS61WV25616BLL
-	usarsram: if usar_sdram = false generate
-		sram0: entity work.dpSRAM_25616
-		port map (
-			clk_i				=> clock_mem_s,
-			-- Porta 0
-			porta0_addr_i	=> sram_addr_s,
-			porta0_ce_i		=> sram_ce_s,
-			porta0_oe_i		=> sram_oe_s,
-			porta0_we_i		=> sram_we_s,
-			porta0_d_i		=> ram_di_s,
-			porta0_d_o		=> sram_data_o_s,
-			-- Porta 1
-			porta1_addr_i	=> "01000" & vram_addr_s,
-			porta1_ce_i		=> vram_ce_s,
-			porta1_oe_i		=> vram_oe_s,
-			porta1_we_i		=> vram_we_s,
-			porta1_d_i		=> vram_di_s,-- (others => '0'),
-			porta1_d_o		=> vram_do_s,-- open,
-			-- Output to SRAM in board
-			sram_addr_o		=> SRAM_ADDR,
-			sram_data_io	=> SRAM_DQ,
-			sram_ub_o		=> SRAM_UB_N,
-			sram_lb_o		=> SRAM_LB_N,
-			sram_ce_n_o		=> SRAM_CE_N,
-			sram_oe_n_o		=> SRAM_OE_N,
-			sram_we_n_o		=> SRAM_WE_N
-		);
-	end generate;
-
-	-- SDRAM
-	usarsdram: if usar_sdram = true generate
-		sdram0: entity work.dpSDRAM64Mb
-		generic map (
-			freq_g			=> 100
-		)
-		port map (
-			clock_i			=> clock_sdram_s,
-			reset_i			=> reset_s,
-			refresh_i		=> '1',
-			-- Porta 0
-			port0_cs_i		=> vram_ce_s,
-			port0_oe_i		=> vram_oe_s,
-			port0_we_i		=> vram_we_s,
-			port0_addr_i	=> "000001000" & vram_addr_s,
-			port0_data_i	=> vram_di_s,
-			port0_data_o	=> vram_do_s,
-			-- Porta 1
-			port1_cs_i		=> sram_ce_s,
-			port1_oe_i		=> sram_oe_s,
-			port1_we_i		=> sram_we_s,
-			port1_addr_i	=> "0000" & sram_addr_s,
-			port1_data_i	=> ram_di_s,
-			port1_data_o	=> sram_data_o_s,
-			-- SD-RAM ports
-			mem_cke_o		=> DRAM_CKE,
-			mem_cs_n_o		=> DRAM_CS_N,
-			mem_ras_n_o		=> DRAM_RAS_N,
-			mem_cas_n_o		=> DRAM_CAS_N,
-			mem_we_n_o		=> DRAM_WE_N,
-			mem_udq_o		=> DRAM_UDQM,
-			mem_ldq_o		=> DRAM_LDQM,
-			mem_ba_o(1)		=> DRAM_BA_1,
-			mem_ba_o(0)		=> DRAM_BA_0,
-			mem_addr_o		=> DRAM_ADDR,
-			mem_data_io		=> DRAM_DQ
-		);
-	end generate;
-
-	-- Audio
-	audioout: entity work.Audio_WM8731
-	port map (
-		clock_i			=> CLOCK_24(0),
-		reset_i			=> reset_s,
-		psg_i				=> audio_s,
-
-		i2s_xck_o		=> AUD_XCK,
-		i2s_bclk_o		=> AUD_BCLK,
-		i2s_adclrck_o	=> AUD_ADCLRCK,
-		i2s_adcdat_i	=> AUD_ADCDAT,
-		i2s_daclrck_o	=> AUD_DACLRCK,
-		i2s_dacdat_o	=> AUD_DACDAT,
-
-		i2c_sda_io		=> I2C_SDAT,
-		i2c_scl_io		=> I2C_SCLK
-	);
-
-	btndbl: entity work.debounce
-	generic map (
-		counter_size_g	=> 16
-	)
-	port map (
-		clk_i				=> clock_master_s,
-		button_i			=> KEY(1),
-		result_o			=> btn_dblscan_s
-	);
-
-	-- VGA
+	-- scandoubler
 	process (por_n_s, btn_dblscan_s)
 	begin
 		if por_n_s = '0' then
-			dblscan_en_s <= '1';
+			dblscan_en_s <= '1';							-- Enabled by default
 		elsif falling_edge(btn_dblscan_s) then
 			dblscan_en_s <= not dblscan_en_s;
 		end if;
@@ -531,38 +599,6 @@ begin
 
 	VGA_HS	<= rgb_hsync_n_s	when dblscan_en_s = '0'		else vga_hsync_n_s;
 	VGA_VS	<= rgb_vsync_n_s	when dblscan_en_s = '0'		else vga_vsync_n_s;
-
-	-----------------------------------------------------------------------------
-	-- VGA Scan Doubler
-	-----------------------------------------------------------------------------
-	dblscan_b : entity work.dblscan
-	port map (
-		clk_6m_i			=> clock_master_s,
-		clk_en_6m_i		=> clk_en_5m37_q,
-		clk_12m_i		=> clock_master_s,
-		clk_en_12m_i	=> clk_en_10m7_q,
-		col_i				=> rgb_col_s,
-		col_o				=> vga_col_s,
-		hsync_n_i		=> rgb_hsync_n_s,
-		vsync_n_i		=> rgb_vsync_n_s,
-		hsync_n_o		=> vga_hsync_n_s,
-		vsync_n_o		=> vga_vsync_n_s,
-		blank_o			=> open
-	);
-
-	-- Controle
-	-- PS/2 keyboard interface
-	ps2if_inst : entity work.colecoKeyboard
-	port map (
-		clk		=> clock_master_s,
-		reset		=> reset_s,
-		-- inputs from PS/2 port
-		ps2_clk	=> PS2_CLK,
-		ps2_data	=> PS2_DAT,
-		-- user outputs
-		keys		=> ps2_keys_s,
-		joy		=> ps2_joy_s
-	);
 
 	-----------------------------------------------------------------------------
 	-- Process pad_ctrl

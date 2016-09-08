@@ -1,3 +1,40 @@
+-------------------------------------------------------------------------------
+--
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
+--
+-- All rights reserved
+--
+-- Redistribution and use in source and synthezised forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+--
+-- Redistributions of source code must retain the above copyright notice,
+-- this list of conditions and the following disclaimer.
+--
+-- Redistributions in synthesized form must reproduce the above copyright
+-- notice, this list of conditions and the following disclaimer in the
+-- documentation and/or other materials provided with the distribution.
+--
+-- Neither the name of the author nor the names of other contributors may
+-- be used to endorse or promote products derived from this software without
+-- specific prior written permission.
+--
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+-- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+-- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+-- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+-- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+-- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-- POSSIBILITY OF SUCH DAMAGE.
+--
+-- Please report bugs to the author, but before you do so, please
+-- make sure that this is not a derivative work and that
+-- you have the latest version of this file.
+--
+-------------------------------------------------------------------------------
 --
 --
 --
@@ -366,6 +403,82 @@ begin
 		D_cpu_addr			=> D_cpu_addr
 	 );
 
+	-- SRAM IS61WV25616BLL
+	sram0: entity work.dpSRAM_25616
+	port map (
+		clk_i				=> clock_mem_s,
+		-- Porta 0
+		porta0_addr_i	=> sram_addr_s,
+		porta0_ce_i		=> sram_ce_s,
+		porta0_oe_i		=> sram_oe_s,
+		porta0_we_i		=> sram_we_s,
+		porta0_d_i		=> ram_di_s,
+		porta0_d_o		=> sram_data_o_s,
+		-- Porta 1
+		porta1_addr_i	=> "01000" & vram_addr_s,
+		porta1_ce_i		=> vram_ce_s,
+		porta1_oe_i		=> vram_oe_s,
+		porta1_we_i		=> vram_we_s,
+		porta1_d_i		=> vram_di_s,-- (others => '0'),
+		porta1_d_o		=> vram_do_s,-- open,
+		-- Output to SRAM in board
+		sram_addr_o		=> SRAM_ADDR,
+		sram_data_io	=> SRAM_DQ,
+		sram_ub_o		=> SRAM_UB_N,
+		sram_lb_o		=> SRAM_LB_N,
+		sram_ce_n_o		=> SRAM_CE_N,
+		sram_oe_n_o		=> SRAM_OE_N,
+		sram_we_n_o		=> SRAM_WE_N
+	);
+
+	-- Audio
+	audioout: entity work.Audio_WM8731
+	port map (
+		clock_i			=> clock_audio_s,
+		reset_i			=> reset_s,
+		psg_i				=> audio_s,
+
+		i2s_xck_o		=> AUD_XCK,
+		i2s_bclk_o		=> AUD_BCLK,
+		i2s_adclrck_o	=> AUD_ADCLRCK,
+		i2s_adcdat_i	=> AUD_ADCDAT,
+		i2s_daclrck_o	=> AUD_DACLRCK,
+		i2s_dacdat_o	=> AUD_DACDAT,
+
+		i2c_sda_io		=> I2C_SDAT,
+		i2c_scl_io		=> I2C_SCLK
+	);
+
+	-----------------------------------------------------------------------------
+	-- VGA Scan Doubler
+	-----------------------------------------------------------------------------
+	dblscan_b : entity work.dblscan
+	port map (
+		clk_6m_i			=> clock_master_s,
+		clk_en_6m_i		=> clk_en_5m37_q,
+		clk_12m_i		=> clock_master_s,
+		clk_en_12m_i	=> clk_en_10m7_q,
+		col_i				=> rgb_col_s,
+		col_o				=> vga_col_s,
+		hsync_n_i		=> rgb_hsync_n_s,
+		vsync_n_i		=> rgb_vsync_n_s,
+		hsync_n_o		=> vga_hsync_n_s,
+		vsync_n_o		=> vga_vsync_n_s,
+		blank_o			=> open
+	);
+
+	-- Scandoubler button
+	btndbl: entity work.debounce
+	generic map (
+		counter_size_g	=> 16
+	)
+	port map (
+		clk_i				=> clock_master_s,
+		button_i			=> KEY(1),
+		result_o			=> btn_dblscan_s
+	);
+
+	-- Glue logic
 	reset_s		<= not pll_locked_s or not KEY(0) or soft_reset_s;
 
 	-----------------------------------------------------------------------------
@@ -435,61 +548,6 @@ begin
 	ram_do_s			<= sram_data_o_s;
 	cart_do_s		<= sram_data_o_s;
 
-	-- SRAM IS61WV25616BLL
-	sram0: entity work.dpSRAM_25616
-	port map (
-		clk_i				=> clock_mem_s,
-		-- Porta 0
-		porta0_addr_i	=> sram_addr_s,
-		porta0_ce_i		=> sram_ce_s,
-		porta0_oe_i		=> sram_oe_s,
-		porta0_we_i		=> sram_we_s,
-		porta0_d_i		=> ram_di_s,
-		porta0_d_o		=> sram_data_o_s,
-		-- Porta 1
-		porta1_addr_i	=> "01000" & vram_addr_s,
-		porta1_ce_i		=> vram_ce_s,
-		porta1_oe_i		=> vram_oe_s,
-		porta1_we_i		=> vram_we_s,
-		porta1_d_i		=> vram_di_s,-- (others => '0'),
-		porta1_d_o		=> vram_do_s,-- open,
-		-- Output to SRAM in board
-		sram_addr_o		=> SRAM_ADDR,
-		sram_data_io	=> SRAM_DQ,
-		sram_ub_o		=> SRAM_UB_N,
-		sram_lb_o		=> SRAM_LB_N,
-		sram_ce_n_o		=> SRAM_CE_N,
-		sram_oe_n_o		=> SRAM_OE_N,
-		sram_we_n_o		=> SRAM_WE_N
-	);
-
-	-- Audio
-	audioout: entity work.Audio_WM8731
-	port map (
-		clock_i			=> clock_audio_s,
-		reset_i			=> reset_s,
-		psg_i				=> audio_s,
-
-		i2s_xck_o		=> AUD_XCK,
-		i2s_bclk_o		=> AUD_BCLK,
-		i2s_adclrck_o	=> AUD_ADCLRCK,
-		i2s_adcdat_i	=> AUD_ADCDAT,
-		i2s_daclrck_o	=> AUD_DACLRCK,
-		i2s_dacdat_o	=> AUD_DACDAT,
-
-		i2c_sda_io		=> I2C_SDAT,
-		i2c_scl_io		=> I2C_SCLK
-	);
-
-	btndbl: entity work.debounce
-	generic map (
-		counter_size_g	=> 16
-	)
-	port map (
-		clk_i				=> clock_master_s,
-		button_i			=> KEY(1),
-		result_o			=> btn_dblscan_s
-	);
 
 	-- VGA
 	process (por_n_s, btn_dblscan_s)
@@ -541,24 +599,6 @@ begin
 	VGA_BLANK	<= '1';
 	VGA_CLK		<= clock_master_s;
 
-	-----------------------------------------------------------------------------
-	-- VGA Scan Doubler
-	-----------------------------------------------------------------------------
-	dblscan_b : entity work.dblscan
-	port map (
-		clk_6m_i			=> clock_master_s,
-		clk_en_6m_i		=> clk_en_5m37_q,
-		clk_12m_i		=> clock_master_s,
-		clk_en_12m_i	=> clk_en_10m7_q,
-		col_i				=> rgb_col_s,
-		col_o				=> vga_col_s,
-		hsync_n_i		=> rgb_hsync_n_s,
-		vsync_n_i		=> rgb_vsync_n_s,
-		hsync_n_o		=> vga_hsync_n_s,
-		vsync_n_o		=> vga_vsync_n_s,
-		blank_o			=> open
-	);
-
 	-- Controle
 	-- PS/2 keyboard interface
 	ps2if_inst : entity work.colecoKeyboard
@@ -585,6 +625,14 @@ begin
 		-- quadrature device not implemented
 		ctrl_p7_s          <= "11";
 		ctrl_p9_s          <= "11";
+
+		--------------------------------------------------------------------
+		-- soft reset to get to cart menu : use ps2 ESC key in keys(8)
+		if ps2_keys_s(8) = '1' then
+			soft_reset_s <= '1';
+		else
+			soft_reset_s <= '0';
+		end if;
 
 		for idx in 1 to 2 loop -- was 2
 			if ctrl_p5_s(idx) = '0' and ctrl_p8_s(idx) = '1' then
@@ -642,15 +690,6 @@ begin
 					ctrl_p6_s(idx) <= not ps2_joy_s(4);
 				end if;
 		  
-				--------------------------------------------------------------------
-				-- soft reset to get to cart menu : use ps2 ESC key in keys(8)
-				if ps2_keys_s(8) = '1' then
-					soft_reset_s <= '1';
-				else
-					soft_reset_s <= '0';
-				end if;
-				------------------------------------------------------------------------
-
 			elsif ctrl_p5_s(idx) = '1' and ctrl_p8_s(idx) = '0' then
 				-- joystick and left button enabled -----------------------------------
 				ctrl_p1_s(idx) <= not ps2_joy_s(0);	-- up

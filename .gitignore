@@ -97,3 +97,11 @@ greybox_tmp
 /synth/zxuno/*.drc
 /synth/zxuno/*.ut
 /synth/zxuno/*.xwbt
+/ROMs/multcart/*.ihx
+/ROMs/multcart/*.lk
+/ROMs/multcart/*.map
+/ROMs/multcart/*.noi
+/ROMs/multcart/obj
+/synth/zxuno/ipcore_dir/_xmsgs
+/synth/zxuno/ipcore_dir/*.cgc
+/synth/zxuno/ipcore_dir/*.ncf

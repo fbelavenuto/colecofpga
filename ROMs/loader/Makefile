@@ -3,9 +3,7 @@ RM = rm -f
 CC = sdcc
 AS = sdasz80
 LD = sdcc
-MKBIN = makebin
 H2B = hex2bin
-SRCAT = srec_cat
 ROMGEN = romgen
 
 SDIR = src
@@ -18,11 +16,10 @@ LDFLAGS = -mz80 --code-loc 0x0100 --data-loc 0x6000 --no-std-crt0
 _OBJS = crt0.rel main.rel joy.rel mmc.rel fat.rel vdp.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
-all: loader
+all: dir loader
 
 loader: loader.bin
 	fillfile $< 8192
-#	$(SRCAT) $< --bin -o $@.mif --mif 8
 	$(ROMGEN) $< loaderrom a r > ../../src/rom/loaderrom.vhd
 
 loader.bin: loader.ihx
@@ -30,10 +27,13 @@ loader.bin: loader.ihx
 loader.ihx: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
-.PHONY: clean
+.PHONY: clean dir
 
 clean:
 	$(RM) $(ODIR)/* *.map *.lk *.noi *.bin *.ihx
+
+dir:
+	if not exist obj mkdir obj
 
 $(ODIR)/%.rel: $(SDIR)/%.S
 	$(AS) -o $@ $<

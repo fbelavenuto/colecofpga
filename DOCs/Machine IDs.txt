@@ -1,0 +1,7 @@
+1 = DE-1
+2 = DE-2
+3 = Prototype 1 (SDRAM)
+4 = Prototype 2 (SRAM)
+5 = WXEDA
+6 = EP4C10 board
+7 = ZX-Uno

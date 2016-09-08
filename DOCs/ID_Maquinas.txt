@@ -1,7 +1,0 @@
-1 = DE-1
-2 = DE-2
-3 = Prototipo 1 (SDRAM)
-4 = Prototipo 2 (SRAM e SNES)
-5 = WXEDA
-6 = Prototipo EP4C10?
-7 = ZX-Uno

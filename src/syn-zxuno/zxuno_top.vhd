@@ -1,4 +1,41 @@
--- TOP para placa ZXUNO
+-------------------------------------------------------------------------------
+--
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
+--
+-- All rights reserved
+--
+-- Redistribution and use in source and synthezised forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+--
+-- Redistributions of source code must retain the above copyright notice,
+-- this list of conditions and the following disclaimer.
+--
+-- Redistributions in synthesized form must reproduce the above copyright
+-- notice, this list of conditions and the following disclaimer in the
+-- documentation and/or other materials provided with the distribution.
+--
+-- Neither the name of the author nor the names of other contributors may
+-- be used to endorse or promote products derived from this software without
+-- specific prior written permission.
+--
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+-- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+-- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+-- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+-- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+-- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-- POSSIBILITY OF SUCH DAMAGE.
+--
+-- Please report bugs to the author, but before you do so, please
+-- make sure that this is not a derivative work and that
+-- you have the latest version of this file.
+--
+-------------------------------------------------------------------------------
+-- ZX-Uno board TOP
 --
 --
 
@@ -93,7 +130,7 @@ architecture behavior of zxuno_top is
 	signal sram_oe_s			: std_logic;
 	signal sram_we_s			: std_logic;
 
-	-- ROM bios e loader
+	-- ROM bios and loader
 	signal bios_loader_s		: std_logic;
 	signal bios_addr_s		: std_logic_vector(12 downto 0);		-- 8K
 	signal bios_data_s		: std_logic_vector(7 downto 0);
@@ -102,7 +139,7 @@ architecture behavior of zxuno_top is
 	signal bios_oe_s			: std_logic;
 	signal bios_we_s			: std_logic;
 
-	-- Cartucho
+	-- Cartridge
 	signal cart_multcart_s	: std_logic;
 	signal cart_addr_s		: std_logic_vector(14 downto 0);		-- 32K
 	signal cart_do_s			: std_logic_vector(7 downto 0);
@@ -114,7 +151,7 @@ architecture behavior of zxuno_top is
 	signal cart_en_C0_n_s	: std_logic;
 	signal cart_en_E0_n_s	: std_logic;
 
-	-- Memoria RAM
+	-- RAM memory
 	signal ram_addr_s			: std_logic_vector(12 downto 0);		-- 8K
 	signal ram_do_s			: std_logic_vector(7 downto 0);
 	signal ram_di_s			: std_logic_vector(7 downto 0);
@@ -122,7 +159,7 @@ architecture behavior of zxuno_top is
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
 
-	-- Memoria VRAM
+	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
 	signal vram_do_s			: std_logic_vector(7 downto 0);
 	signal vram_di_s			: std_logic_vector(7 downto 0);
@@ -144,7 +181,7 @@ architecture behavior of zxuno_top is
 	signal ps2_keys_s			: std_logic_vector(15 downto 0);
 	signal ps2_joy_s			: std_logic_vector(15 downto 0);
 
-	-- Controle
+	-- Controller
 	signal ctrl_p1_s			: std_logic_vector( 2 downto 1);
 	signal ctrl_p2_s			: std_logic_vector( 2 downto 1);
 	signal ctrl_p3_s			: std_logic_vector( 2 downto 1);
@@ -169,10 +206,6 @@ architecture behavior of zxuno_top is
 
 	-- SD
 	signal sd_cs_n_s			: std_logic;
-
-	-- Debug
---	signal D_display			: std_logic_vector(15 downto 0);
---	signal D_cpu_addr			: std_logic_vector(15 downto 0);
 
 begin
 
@@ -263,21 +296,21 @@ begin
 	sram0: entity work.dpSRAM_5128
 	port map (
 		clk_i				=> clock_mem_s,
-		-- Porta 0
+		-- Port 0
 		porta0_addr_i	=> sram_addr_s,
 		porta0_ce_i		=> sram_ce_s,
 		porta0_oe_i		=> sram_oe_s,
 		porta0_we_i		=> sram_we_s,
 		porta0_data_i	=> ram_di_s,
 		porta0_data_o	=> sram_data_o_s,
-		-- Porta 1
+		-- Port 1
 		porta1_addr_i	=> "11111" & vram_addr_s,
 		porta1_ce_i		=> vram_ce_s,
 		porta1_oe_i		=> vram_oe_s,
 		porta1_we_i		=> vram_we_s,
 		porta1_data_i	=> vram_di_s,
 		porta1_data_o	=> vram_do_s,
-		-- Output to SRAM in board
+		-- SRAM in board
 		sram_addr_o		=> sram_addr_o,
 		sram_data_io	=> sram_data_io,
 		sram_ce_n_o		=> open,
@@ -286,8 +319,6 @@ begin
 	);
 
 	-- Audio
-	audio_s <= std_logic_vector(unsigned(audio_signed_s + 128));
-
 	audioout: entity work.dac
 	generic map (
 		msbi_g		=> 7
@@ -389,8 +420,10 @@ begin
 	ram_do_s			<= sram_data_o_s;
 	cart_do_s		<= sram_data_o_s;
 
+	audio_s		<= std_logic_vector(unsigned(audio_signed_s + 128));
 	dac_l_o		<= audio_dac_s;
 	dac_r_o		<= audio_dac_s;
+
 	sd_cs_n_o	<= sd_cs_n_s;
 	led_o			<= not sd_cs_n_s;
 
@@ -425,8 +458,7 @@ begin
 	vga_ntsc_o		<= '1';
 	vga_pal_o		<= '0';
 
-	-- Controle
-
+	-- Controller
 	-----------------------------------------------------------------------------
 	-- Process pad_ctrl
 	--
@@ -529,9 +561,6 @@ begin
 				ctrl_p7_s(idx) <= '1';
 			end if;
 		end loop;
-	end process pad_ctrl;	 
-
-
-	-- DEBUG
+	end process pad_ctrl;
 
 end architecture;
