@@ -11,19 +11,29 @@ The Hardware folder is the Eagle project for the prototype. In Synth folder ther
 The second prototype use SNES control to emulate all of the original joystick buttons. Holding TL button the original buttons simulate:
 
 Y      => 1
+
 X      => 2
+
 B      => 3
+
 A      => 4
+
 SELECT => 5
+
 START  => 6
 
 Holding TR button the original buttons simulate:
 
 Y      => 7
+
 X      => 8
+
 B      => 9
+
 A      => 0
+
 SELECT => *
+
 START  => #
 
 Holding START and SELECT together resets the machine, returning in the multcart menu.
