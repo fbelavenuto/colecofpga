@@ -36,7 +36,7 @@ The B button and Y (auto-fire) is the fire 1 of original joystick. The A button 
 
 For the DE-1, DE-2 and ZX-Uno boards the PS/2 keyboard emulates the original joystick:
 
-The directional keys simulate the original directional. Z key is the 'fire 1', X key is 'fire 2', 0-9 is '0-9', Q key is '*' and W key is '#'. ESC key resets the machine. For the ZX-Uno key the joystick port works for directionals and fire 1 too.
+The arrow keys simulate the original directional. Z key is the 'fire 1', X key is 'fire 2', 0-9 is '0-9', Q key is '*' and W key is '#'. ESC key resets the machine. For the ZX-Uno key the joystick port works for directionals and fire 1 too.
 
 In this circuit the BIOS ROM is loaded from the SD card as well as the ROM multcart. In the source folder 'SD_Card' contains the necessary files to the SD card. Format it to FAT16 and copy the files.
 
