@@ -239,6 +239,7 @@ architecture behavior of de2_top is
 
 	-- Memoria RAM
 	signal ram_addr_s			: std_logic_vector(12 downto 0);		-- 8K
+	signal ram_mirr_addr_s	: std_logic_vector(9 downto 0);		-- 1K (mirrored)
 	signal ram_do_s			: std_logic_vector(7 downto 0);
 	signal ram_di_s			: std_logic_vector(7 downto 0);
 	signal ram_ce_s			: std_logic;
@@ -533,13 +534,17 @@ begin
 	-- cart_multcart_s bios_loader_s
 
 	-- RAM
-	sram_addr_s	<= "000000" & bios_addr_s		when bios_ce_s = '1'																	else
-					   "000011" & ram_addr_s		when ram_ce_s = '1'																	else
-					   "0001"   & cart_addr_s		when cart_ce_s = '1' and bios_loader_s = '1'									else
-					   "0001"   & cart_addr_s		when cart_ce_s = '1' and cart_multcart_s = '1' and cart_oe_s = '1'	else
-					   "0010"   & cart_addr_s		when cart_ce_s = '1' and cart_multcart_s = '1' and cart_we_s = '1'	else
-					   "0010"   & cart_addr_s		when cart_ce_s = '1' and cart_multcart_s = '0'								else
+	ram_mirr_addr_s	<= ram_addr_s(9 downto 0);
+
+	sram_addr_s	<= "000000" & bios_addr_s			when bios_ce_s = '1'																	else
+					   "000011" & ram_addr_s			when ram_ce_s = '1'																	else	-- for 8K linear RAM
+						"000011000" & ram_mirr_addr_s	when ram_ce_s = '1'																	else	-- for 1K mirrored RAM
+					   "0001"   & cart_addr_s			when cart_ce_s = '1' and bios_loader_s = '1'									else
+					   "0001"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '1' and cart_oe_s = '1'	else
+					   "0010"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '1' and cart_we_s = '1'	else
+					   "0010"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '0'								else
 						(others => '0');
+
 	sram_ce_s	<= ram_ce_s or bios_ce_s or cart_ce_s;
 	sram_oe_s	<= ram_oe_s or bios_oe_s or cart_oe_s;
 	sram_we_s	<= ram_we_s or bios_we_s or cart_we_s;
