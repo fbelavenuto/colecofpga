@@ -536,14 +536,15 @@ begin
 	-- RAM
 	ram_mirr_addr_s	<= ram_addr_s(9 downto 0);
 
-	sram_addr_s	<= "000000" & bios_addr_s			when bios_ce_s = '1'																	else
-					   "000011" & ram_addr_s			when ram_ce_s = '1'																	else	-- for 8K linear RAM
-						"000011000" & ram_mirr_addr_s	when ram_ce_s = '1'																	else	-- for 1K mirrored RAM
-					   "0001"   & cart_addr_s			when cart_ce_s = '1' and bios_loader_s = '1'									else
-					   "0001"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '1' and cart_oe_s = '1'	else
-					   "0010"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '1' and cart_we_s = '1'	else
-					   "0010"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '0'								else
-						(others => '0');
+	sram_addr_s	<=
+		"000000" & bios_addr_s			when bios_ce_s = '1'																	else
+		"000011" & ram_addr_s			when ram_ce_s = '1'	and cart_multcart_s = '1'								else	-- 8K linear RAM
+		"000011100" & ram_mirr_addr_s	when ram_ce_s = '1'	and cart_multcart_s = '0'								else	-- 1K mirrored RAM
+		"0001"   & cart_addr_s			when cart_ce_s = '1' and bios_loader_s = '1'									else
+		"0001"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '1' and cart_oe_s = '1'	else
+		"0010"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '1' and cart_we_s = '1'	else
+		"0010"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '0'								else
+		(others => '0');
 
 	sram_ce_s	<= ram_ce_s or bios_ce_s or cart_ce_s;
 	sram_oe_s	<= ram_oe_s or bios_oe_s or cart_oe_s;

@@ -9,8 +9,8 @@
 -- This DAC requires an external RC low-pass filter:
 --
 --   dac_o 0---XXXXX---+---0 analog audio
---              3k3    |
---                    === 4n7
+--              2K2    |
+--                    === 10n
 --                     |
 --                    GND
 --

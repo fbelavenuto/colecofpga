@@ -7820,8 +7820,8 @@ Source: Cypress CYP05780611.pdf</description>
 <part name="U$1" library="fabio" deviceset="AUDIO-JACK2" device="PTH"/>
 <part name="GND4" library="supply1" deviceset="GND" device=""/>
 <part name="X3" library="fabio" deviceset="VGA" device="H"/>
-<part name="C3" library="rcl" deviceset="C-EU" device="C1206" value="4n7"/>
-<part name="R1" library="rcl" deviceset="R-EU_" device="R1206" value="3K3"/>
+<part name="C3" library="rcl" deviceset="C-EU" device="C1206" value="10n"/>
+<part name="R1" library="rcl" deviceset="R-EU_" device="R1206" value="2K2"/>
 <part name="R2" library="rcl" deviceset="R-EU_" device="R1206" value="4K"/>
 <part name="R3" library="rcl" deviceset="R-EU_" device="R1206" value="2K"/>
 <part name="R4" library="rcl" deviceset="R-EU_" device="R1206" value="1K"/>
