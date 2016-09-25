@@ -1,6 +1,5 @@
 --
--- TBBlue / ZX Spectrum Next project
--- Copyright (c) 2015 - Fabio Belavenuto & Victor Trucco
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
 --
 -- All rights reserved
 --
@@ -138,7 +137,7 @@ begin
 	end process;
 
 	-- FSM
-	process (start_i)
+	process (state_s, start_i, spi_addr_s)
 	begin
 		case state_s is
 			when IDLE =>

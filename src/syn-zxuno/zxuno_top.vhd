@@ -56,8 +56,8 @@ entity zxuno_top is
 		-- PS2
 		ps2_clk_io			: inout std_logic								:= 'Z';
 		ps2_data_io			: inout std_logic								:= 'Z';
-		ps2_mouse_clk_io  : inout std_logic								:= 'Z';
-		ps2_mouse_data_io : inout std_logic								:= 'Z';
+--		ps2_mouse_clk_io  : inout std_logic								:= 'Z';
+--		ps2_mouse_data_io : inout std_logic								:= 'Z';
 
 		-- SD Card
 		sd_cs_n_o			: out   std_logic								:= '1';
@@ -112,10 +112,9 @@ architecture behavior of zxuno_top is
 	-- Clocks
 	signal clock_master_s	: std_logic;
 	signal clock_mem_s		: std_logic;
-	signal clock_sdram_s		: std_logic;
 	signal clk_cnt_q			: unsigned(1 downto 0);
 	signal clk_en_10m7_q		: std_logic;
-	signal clk_en_5m37_q		: std_logic;
+--	signal clk_en_5m37_q		: std_logic;
 
 	-- Resets
 	signal por_cnt_s			: unsigned(7 downto 0)				:= (others => '1');
@@ -358,7 +357,7 @@ begin
 	mb: entity work.multiboot
 	port map (
 		reset_i		=> reset_s,
-		clock_i		=> clock_master_s,
+		clock_i		=> clk_en_10m7_q,
 		start_i		=> core_reload_s
 	);
 
@@ -386,7 +385,7 @@ begin
 		if por_n_s = '0' then
 			clk_cnt_q		<= (others => '0');
 			clk_en_10m7_q	<= '0';
-			clk_en_5m37_q	<= '0';
+--			clk_en_5m37_q	<= '0';
 
 		elsif rising_edge(clock_master_s) then
 	 
@@ -406,12 +405,12 @@ begin
 			end case;
 
 			-- 5.37 MHz clock enable ------------------------------------------------
-			case clk_cnt_q is
-				when "11" =>
-					clk_en_5m37_q <= '1';
-				when others =>
-					clk_en_5m37_q <= '0';
-			end case;
+--			case clk_cnt_q is
+--				when "11" =>
+--					clk_en_5m37_q <= '1';
+--				when others =>
+--					clk_en_5m37_q <= '0';
+--			end case;
 		end if;
 	end process clk_cnt;
 

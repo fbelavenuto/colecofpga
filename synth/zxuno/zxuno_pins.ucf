@@ -56,8 +56,8 @@ NET "sram_we_n_o"       LOC="P121" |IOSTANDARD = LVCMOS33;
 # Keyboard
 NET "ps2_clk_io"        LOC="P99"  |IOSTANDARD = LVCMOS33 |PULLUP |DRIVE = 8;
 NET "ps2_data_io"       LOC="P98"  |IOSTANDARD = LVCMOS33 |PULLUP |DRIVE = 8;
-NET "ps2_mouse_clk_io"  LOC="P95"  |IOSTANDARD = LVCMOS33 |PULLUP |DRIVE = 8;
-NET "ps2_mouse_data_io" LOC="P97"  |IOSTANDARD = LVCMOS33 |PULLUP |DRIVE = 8;
+#NET "ps2_mouse_clk_io"  LOC="P95"  |IOSTANDARD = LVCMOS33 |PULLUP |DRIVE = 8;
+#NET "ps2_mouse_data_io" LOC="P97"  |IOSTANDARD = LVCMOS33 |PULLUP |DRIVE = 8;
 
 # SD/MMC
 NET "sd_cs_n_o"         LOC="P59"  |IOSTANDARD = LVCMOS33 |DRIVE = 8;
@@ -118,3 +118,12 @@ NET "led_o"             LOC="P11"  |IOSTANDARD = LVCMOS33;
 #Created by Constraints Editor (xc6slx9-tqg144-2) - 2016/09/06
 NET "clock_50_i" TNM_NET = clock_50_i;
 TIMESPEC TS_clock_50_i = PERIOD "clock_50_i" 20 ns HIGH 50%;
+
+NET "clock_master_s" TNM_NET = clock_master_s;
+TIMESPEC TS_clock_master_s = PERIOD "clock_master_s" 46.560 ns HIGH 50%;
+
+NET "clock_mem_s" TNM_NET = clock_mem_s;
+TIMESPEC TS_clock_mem_s = PERIOD "clock_mem_s" 23.280 ns HIGH 50%;
+
+NET "clk_en_10m7_q" TNM_NET = clk_en_10m7_q;
+TIMESPEC TS_clk_en_10m7_q = PERIOD "clk_en_10m7_q" 93.120 ns HIGH 50%;
