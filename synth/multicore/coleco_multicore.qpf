@@ -18,13 +18,13 @@
 #
 # Quartus II 64-Bit
 # Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-# Date created = 08:36:08  July 21, 2016
+# Date created = 16:43:40  November 03, 2016
 #
 # -------------------------------------------------------------------------- #
 
 QUARTUS_VERSION = "13.0"
-DATE = "08:36:08  July 21, 2016"
+DATE = "16:43:40  November 03, 2016"
 
 # Revisions
 
-PROJECT_REVISION = "coleco_ep4c10"
+PROJECT_REVISION = "coleco_multicore"
