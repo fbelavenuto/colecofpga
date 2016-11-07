@@ -169,7 +169,7 @@ begin
               when others =>
                 null;
             end case;
-            
+
             else
 
             -- workaround for XST bug, we need this
@@ -198,7 +198,8 @@ begin
             -- sprite test interleaved with pattern accesses
             access_type_s <= AC_STST;
           end if;
-          if num_pix_plus_32_v(0 to 4) = "00000" and
+          if (num_pix_plus_32_v(0 to 4) = "00000" or 
+              num_pix_plus_32_v(0 to 5) = "000010") and
              num_pix_plus_32_v(6 to 7) /= "00"   then
             -- sprite tests before starting pattern phase
             access_type_s <= AC_STST;
@@ -232,7 +233,7 @@ begin
               null;
           end case;
         end if;
-          
+
       -- Text Mode ------------------------------------------------------------
       when OPMODE_TEXTM =>
         if vert_active_q                       and
@@ -250,8 +251,8 @@ begin
         end if;
 
       -- Unknown --------------------------------------------------------------
-      when others =>
-        null;
+--      when others =>
+--        null;
 
     end case;
 

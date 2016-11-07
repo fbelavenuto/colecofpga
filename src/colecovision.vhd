@@ -45,7 +45,7 @@ entity colecovision is
 
 	generic (
 		num_maq_g		: integer := 0;
-		is_pal_g			: integer := 0;
+		is_pal_g			: boolean := false;
 		compat_rgb_g	: integer := 0
 	);
 	port (

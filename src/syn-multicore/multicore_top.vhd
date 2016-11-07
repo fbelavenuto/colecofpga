@@ -223,7 +223,7 @@ begin
 	vg: entity work.colecovision
 	generic map (
 		num_maq_g		=> 6,
-		is_pal_g			=> 0,
+		is_pal_g			=> false,
 		compat_rgb_g	=> 0
 	)
 	port map (

@@ -74,9 +74,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity vdp18_core is
-
   generic (
-    is_pal_g      : integer := 0;
+    is_pal_g      : boolean := false;
+	 is_cvbs_g		: boolean := false;
     compat_rgb_g  : integer := 0
   );
   port (
@@ -212,10 +212,11 @@ begin
   -----------------------------------------------------------------------------
   hor_vert_b : vdp18_hor_vert
     generic map (
-      is_pal_g => is_pal_g
+      is_pal_g		=> is_pal_g,
+		is_cvbs_g	=> is_cvbs_g
     )
     port map (
-      clock_i         => clock_i,
+      clock_i       => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
       reset_i       => reset_s,
       opmode_i      => opmode_s,

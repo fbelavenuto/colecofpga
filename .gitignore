@@ -111,3 +111,4 @@ greybox_tmp
 /synth/multicore/db
 /synth/multicore/incremental_db
 /synth/multicore/output_files
+/synth/multicore/PLLJ_PLLSPE_INFO.txt

@@ -234,18 +234,18 @@ architecture behavior of de1_top is
 	signal ctrl_p7_s			: std_logic_vector( 2 downto 1);
 	signal ctrl_p8_s			: std_logic_vector( 2 downto 1);
 	signal ctrl_p9_s			: std_logic_vector( 2 downto 1);
-	signal but_a_s				: std_logic_vector( 1 downto 0);
-	signal but_b_s				: std_logic_vector( 1 downto 0);
-	signal but_x_s				: std_logic_vector( 1 downto 0);
-	signal but_y_s				: std_logic_vector( 1 downto 0);
-	signal but_start_s		: std_logic_vector( 1 downto 0);
-	signal but_sel_s			: std_logic_vector( 1 downto 0);
-	signal but_tl_s			: std_logic_vector( 1 downto 0);
-	signal but_tr_s			: std_logic_vector( 1 downto 0);
-	signal but_up_s			: std_logic_vector( 1 downto 0);
-	signal but_down_s			: std_logic_vector( 1 downto 0);
-	signal but_left_s			: std_logic_vector( 1 downto 0);
-	signal but_right_s		: std_logic_vector( 1 downto 0);
+--	signal but_up_s			: std_logic_vector( 1 downto 0);
+--	signal but_down_s			: std_logic_vector( 1 downto 0);
+--	signal but_left_s			: std_logic_vector( 1 downto 0);
+--	signal but_right_s		: std_logic_vector( 1 downto 0);
+--	signal but_a_s				: std_logic_vector( 1 downto 0);
+--	signal but_b_s				: std_logic_vector( 1 downto 0);
+--	signal but_c_s				: std_logic_vector( 1 downto 0);
+--	signal but_x_s				: std_logic_vector( 1 downto 0);
+--	signal but_y_s				: std_logic_vector( 1 downto 0);
+--	signal but_z_s				: std_logic_vector( 1 downto 0);
+--	signal but_start_s		: std_logic_vector( 1 downto 0);
+--	signal but_mode_s			: std_logic_vector( 1 downto 0);
 
 	-- SD
 	signal spi_cs_s			: std_logic;
@@ -287,7 +287,7 @@ begin
 	vg: entity work.colecovision
 	generic map (
 		num_maq_g			=> 1,
-		is_pal_g				=> 0,
+		is_pal_g				=> false,
 		compat_rgb_g		=> 0
 	)
 	port map (

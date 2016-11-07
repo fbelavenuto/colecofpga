@@ -60,22 +60,22 @@ package vdp18_col_pack is
   --
   constant full_rgb_table_c : rgb_table_t := (
   --   R    G    B
-    (  0,   0,   0),                    -- Transparent
-    (  0,   0,   0),                    -- Black
-    ( 33, 200,  66),                    -- Medium Green
-    ( 94, 220, 120),                    -- Light Green
-    ( 84,  85, 237),                    -- Dark Blue
-    (125, 118, 252),                    -- Light Blue
-    (212,  82,  77),                    -- Dark Red
-    ( 66, 235, 245),                    -- Cyan
-    (252,  85,  84),                    -- Medium Red
-    (255, 121, 120),                    -- Light Red
-    (212, 193,  84),                    -- Dark Yellow
-    (230, 206, 128),                    -- Light Yellow
-    ( 33, 176,  59),                    -- Dark Green
-    (201,  91, 186),                    -- Magenta
-    (204, 204, 204),                    -- Gray
-    (255, 255, 255)                     -- White
+    (  0,   0,   0),                    -- Transparent		RGB
+    (  0,   0,   0),                    -- Black				000
+    ( 33, 200,  66),                    -- Medium Green		162
+    ( 94, 220, 120),                    -- Light Green		263
+    ( 84,  85, 237),                    -- Dark Blue			227
+    (125, 118, 252),                    -- Light Blue			337
+    (212,  82,  77),                    -- Dark Red			622
+    ( 66, 235, 245),                    -- Cyan					277
+    (252,  85,  84),                    -- Medium Red			722
+    (255, 121, 120),                    -- Light Red			733
+    (212, 193,  84),                    -- Dark Yellow		662
+    (230, 206, 128),                    -- Light Yellow		764
+    ( 33, 176,  59),                    -- Dark Green			151
+    (201,  91, 186),                    -- Magenta				625
+    (204, 204, 204),                    -- Gray					333
+    (255, 255, 255)                     -- White				777
     );
   --
   -----------------------------------------------------------------------------

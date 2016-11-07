@@ -498,85 +498,84 @@ begin
 		end if;
 		------------------------------------------------------------------------
 
-		for idx in 1 to 2 loop -- was 2
-			if ctrl_p5_s(idx) = '0' and ctrl_p8_s(idx) = '1' then
-				-- keys and right button enabled --------------------------------------
-				-- keys not fully implemented
+		-- Joy 1
+		if ctrl_p5_s(1) = '0' and ctrl_p8_s(1) = '1' then
+			-- keys and right button enabled --------------------------------------
+			-- keys not fully implemented
 
-				key_v := cv_key_none_c;
+			key_v := cv_key_none_c;
 
-				if ps2_keys_s(13) = '1' then
-					-- KEY 1
-					key_v := cv_key_1_c;
-				elsif ps2_keys_s(7) = '1' then
-					-- KEY 2
-					key_v := cv_key_2_c;
-				elsif ps2_keys_s(12) = '1' then
-					-- KEY 3
-					key_v := cv_key_3_c;
-				elsif ps2_keys_s(2) = '1' then
-					-- KEY 4
-					key_v := cv_key_4_c;
-				elsif ps2_keys_s(3) = '1' then
-					-- KEY 5
-					key_v := cv_key_5_c;	
-				elsif ps2_keys_s(14) = '1' then
-					-- KEY 6
-					key_v := cv_key_6_c;
-				elsif ps2_keys_s(5) = '1' then
-					-- KEY 7
-					key_v := cv_key_7_c;				
-				elsif ps2_keys_s(1) = '1' then
-					-- KEY 8
-					key_v := cv_key_8_c;				
-				elsif ps2_keys_s(11) = '1' then
-					-- KEY 9
-					key_v := cv_key_9_c;
-				elsif ps2_keys_s(10) = '1' then
-					-- KEY 0
-					key_v := cv_key_0_c;
-				elsif ps2_keys_s(6) = '1' then
-					-- KEY *
-					key_v := cv_key_asterisk_c;
-				elsif ps2_keys_s(9) = '1' then
-					-- KEY #
-					key_v := cv_key_number_c;
-				end if;
-
-				ctrl_p1_s(idx) <= cv_keys_c(key_v)(1);
-				ctrl_p2_s(idx) <= cv_keys_c(key_v)(2);
-				ctrl_p3_s(idx) <= cv_keys_c(key_v)(3);
-				ctrl_p4_s(idx) <= cv_keys_c(key_v)(4);
-
-				if (idx = 1) then
-					ctrl_p6_s(idx) <= not ps2_keys_s(0); -- button right (0)
-				else
-					ctrl_p6_s(idx) <= not ps2_joy_s(4);
-				end if;
-
-			elsif ctrl_p5_s(idx) = '1' and ctrl_p8_s(idx) = '0' then
-				-- joystick and left button enabled -----------------------------------
-				ctrl_p1_s(idx) <= not ps2_joy_s(0) and joy_up_i;		-- up
-				ctrl_p2_s(idx) <= not ps2_joy_s(1) and joy_down_i;		-- down
-				ctrl_p3_s(idx) <= not ps2_joy_s(2) and joy_left_i;		-- left
-				ctrl_p4_s(idx) <= not ps2_joy_s(3) and joy_right_i;	-- right
-		  
-				if (idx = 1) then
-					ctrl_p6_s(idx) <= not ps2_joy_s(4) and joy_fire1_i; -- button left (4)
-				else
-					ctrl_p6_s(idx) <= not ps2_keys_s(0) and joy_fire2_i; -- button right(0)
-				end if;
-			
-			else
-				-- nothing active -----------------------------------------------------
-				ctrl_p1_s(idx) <= '1';
-				ctrl_p2_s(idx) <= '1';
-				ctrl_p3_s(idx) <= '1';
-				ctrl_p4_s(idx) <= '1';
-				ctrl_p6_s(idx) <= '1';
-				ctrl_p7_s(idx) <= '1';
+			if ps2_keys_s(13) = '1' then
+				-- KEY 1
+				key_v := cv_key_1_c;
+			elsif ps2_keys_s(7) = '1' then
+				-- KEY 2
+				key_v := cv_key_2_c;
+			elsif ps2_keys_s(12) = '1' then
+				-- KEY 3
+				key_v := cv_key_3_c;
+			elsif ps2_keys_s(2) = '1' then
+				-- KEY 4
+				key_v := cv_key_4_c;
+			elsif ps2_keys_s(3) = '1' then
+				-- KEY 5
+				key_v := cv_key_5_c;	
+			elsif ps2_keys_s(14) = '1' then
+				-- KEY 6
+				key_v := cv_key_6_c;
+			elsif ps2_keys_s(5) = '1' then
+				-- KEY 7
+				key_v := cv_key_7_c;				
+			elsif ps2_keys_s(1) = '1' then
+				-- KEY 8
+				key_v := cv_key_8_c;				
+			elsif ps2_keys_s(11) = '1' then
+				-- KEY 9
+				key_v := cv_key_9_c;
+			elsif ps2_keys_s(10) = '1' then
+				-- KEY 0
+				key_v := cv_key_0_c;
+			elsif ps2_keys_s(6) = '1' then
+				-- KEY *
+				key_v := cv_key_asterisk_c;
+			elsif ps2_keys_s(9) = '1' then
+				-- KEY #
+				key_v := cv_key_number_c;
 			end if;
-		end loop;
+
+			ctrl_p1_s(1) <= cv_keys_c(key_v)(1);
+			ctrl_p2_s(1) <= cv_keys_c(key_v)(2);
+			ctrl_p3_s(1) <= cv_keys_c(key_v)(3);
+			ctrl_p4_s(1) <= cv_keys_c(key_v)(4);
+			ctrl_p6_s(1) <= not ps2_keys_s(0) and joy_fire2_i; -- button right
+
+		elsif ctrl_p5_s(1) = '1' and ctrl_p8_s(1) = '0' then
+			-- joystick and left button enabled -----------------------------------
+			ctrl_p1_s(1) <= not ps2_joy_s(0) and joy_up_i;		-- up
+			ctrl_p2_s(1) <= not ps2_joy_s(1) and joy_down_i;	-- down
+			ctrl_p3_s(1) <= not ps2_joy_s(2) and joy_left_i;	-- left
+			ctrl_p4_s(1) <= not ps2_joy_s(3) and joy_right_i;	-- right
+			ctrl_p6_s(1) <= not ps2_joy_s(4) and joy_fire1_i;	-- button left
+		
+		else
+			-- nothing active -----------------------------------------------------
+			ctrl_p1_s(1) <= '1';
+			ctrl_p2_s(1) <= '1';
+			ctrl_p3_s(1) <= '1';
+			ctrl_p4_s(1) <= '1';
+			ctrl_p6_s(1) <= '1';
+			ctrl_p7_s(1) <= '1';
+		end if;
+
+		-- Joy2
+		-- nothing active -----------------------------------------------------
+		ctrl_p1_s(2) <= '1';
+		ctrl_p2_s(2) <= '1';
+		ctrl_p3_s(2) <= '1';
+		ctrl_p4_s(2) <= '1';
+		ctrl_p6_s(2) <= '1';
+		ctrl_p7_s(2) <= '1';
+
 	end process pad_ctrl;
 
 end architecture;
