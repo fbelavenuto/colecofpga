@@ -112,3 +112,6 @@ greybox_tmp
 /synth/multicore/incremental_db
 /synth/multicore/output_files
 /synth/multicore/PLLJ_PLLSPE_INFO.txt
+/src/peripheral/genesispad/tb/transcript
+/src/peripheral/genesispad/tb/*.wlf
+/src/peripheral/genesispad/tb/work

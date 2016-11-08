@@ -234,18 +234,18 @@ architecture behavior of de1_top is
 	signal ctrl_p7_s			: std_logic_vector( 2 downto 1);
 	signal ctrl_p8_s			: std_logic_vector( 2 downto 1);
 	signal ctrl_p9_s			: std_logic_vector( 2 downto 1);
---	signal but_up_s			: std_logic_vector( 1 downto 0);
---	signal but_down_s			: std_logic_vector( 1 downto 0);
---	signal but_left_s			: std_logic_vector( 1 downto 0);
---	signal but_right_s		: std_logic_vector( 1 downto 0);
---	signal but_a_s				: std_logic_vector( 1 downto 0);
---	signal but_b_s				: std_logic_vector( 1 downto 0);
---	signal but_c_s				: std_logic_vector( 1 downto 0);
---	signal but_x_s				: std_logic_vector( 1 downto 0);
---	signal but_y_s				: std_logic_vector( 1 downto 0);
---	signal but_z_s				: std_logic_vector( 1 downto 0);
---	signal but_start_s		: std_logic_vector( 1 downto 0);
---	signal but_mode_s			: std_logic_vector( 1 downto 0);
+	signal but_up_s			: std_logic;
+	signal but_down_s			: std_logic;
+	signal but_left_s			: std_logic;
+	signal but_right_s		: std_logic;
+	signal but_a_s				: std_logic;
+	signal but_b_s				: std_logic;
+	signal but_c_s				: std_logic;
+	signal but_x_s				: std_logic;
+	signal but_y_s				: std_logic;
+	signal but_z_s				: std_logic;
+	signal but_start_s		: std_logic;
+	signal but_mode_s			: std_logic;
 
 	-- SD
 	signal spi_cs_s			: std_logic;
@@ -255,6 +255,16 @@ architecture behavior of de1_top is
 	-- Debug
 	signal D_display			: std_logic_vector(15 downto 0);
 	signal D_cpu_addr			: std_logic_vector(15 downto 0);
+
+	-- Joystick (Minimig Standard)
+	alias J1_P1					: std_logic						is GPIO_1(34);
+	alias J1_P2					: std_logic						is GPIO_1(32);
+	alias J1_P3					: std_logic						is GPIO_1(30);
+	alias J1_P4					: std_logic						is GPIO_1(28);
+--	alias J1_P5					: std_logic						is GPIO_1(26);
+	alias J1_P6					: std_logic						is GPIO_1(35);
+	alias J1_P7					: std_logic						is GPIO_1(33);
+	alias J1_P9					: std_logic						is GPIO_1(29);
 
 begin
 
@@ -484,6 +494,37 @@ begin
 		-- user outputs
 		keys		=> ps2_keys_s,
 		joy		=> ps2_joy_s
+	);
+
+	-- Genesis joypad
+	joypad: entity work.genesispad
+	generic map (
+		clocks_per_1us_g	=> 0
+	)
+	port map (
+		clock_i			=> clock_master_s,
+		reset_i			=> reset_s,
+		-- Gamepad interface
+		pad_p1_i			=> J1_P1,
+		pad_p2_i			=> J1_P2,
+		pad_p3_i			=> J1_P3,
+		pad_p4_i			=> J1_P4,
+		pad_p6_i			=> J1_P6,
+		pad_p7_o			=> J1_P7,
+		pad_p9_i			=> J1_P9,
+		-- Buttons
+		but_up_o			=> but_up_s,
+		but_down_o		=> but_down_s,
+		but_left_o		=> but_left_s,
+		but_right_o		=> but_right_s,
+		but_a_o			=> but_a_s,
+		but_b_o			=> but_b_s,
+		but_c_o			=> but_c_s,
+		but_x_o			=> but_x_s,
+		but_y_o			=> but_y_s,
+		but_z_o			=> but_z_s,
+		but_start_o		=> but_start_s,
+		but_mode_o		=> but_mode_s
 	);
 
 	-- Glue logic
