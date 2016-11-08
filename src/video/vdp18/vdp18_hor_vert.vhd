@@ -54,7 +54,8 @@ use work.vdp18_pack.hv_t;
 entity vdp18_hor_vert is
 
   generic (
-    is_pal_g      : integer := 0
+    is_pal_g      : boolean := false;
+	 is_cvbs_g		: boolean := false
   );
   port (
     clock_i       : in  std_logic;
@@ -95,12 +96,12 @@ begin
   -----------------------------------------------------------------------------
   -- Prepare comparison signals for NTSC and PAL.
   --
-  is_ntsc: if is_pal_g /= 1 generate
+  is_ntsc: if not is_pal_g generate
     first_line_s <= hv_first_line_ntsc_c;
     last_line_s  <= hv_last_line_ntsc_c;
   end generate;
   --
-  is_pal: if is_pal_g = 1 generate
+  is_pal: if is_pal_g generate
     first_line_s <= hv_first_line_pal_c;
     last_line_s  <= hv_last_line_pal_c;
   end generate;
@@ -129,77 +130,99 @@ begin
   -----------------------------------------------------------------------------
 
 
-  -----------------------------------------------------------------------------
-  -- Process counters
-  --
-  -- Purpose:
-  --   Implements the horizontal and vertical counters.
-  --
-  counters: process (clock_i, reset_i, first_line_s)
-  begin
-    if reset_i then
-      cnt_hor_q  <= hv_first_pix_text_c;
-      cnt_vert_q <= first_line_s;
-      hsync_n_o  <= '1';
-      vsync_n_o  <= '1';
-      hblank_q   <= false;
-      vblank_q   <= false;
+	-----------------------------------------------------------------------------
+	-- Process counters
+	--
+	-- Purpose:
+	--   Implements the horizontal and vertical counters.
+	--
+	counters: process (clock_i, reset_i, first_line_s)
+		variable ch1_v	: integer;
+		variable ch2_v	: integer;
+		variable ch3_v	: integer;
+		variable ch4_v	: integer;
+	begin
+		if is_cvbs_g then
+			ch1_v := -64;
+			ch2_v := -38;
+			ch3_v := -72;
+			ch4_v := -14;
+		else
+			ch1_v := -56;
+			ch2_v := -30;
+			ch3_v := -69;
+			ch4_v := -11;
+		end if;
 
-    elsif clock_i'event and clock_i = '1' then
-      if clk_en_5m37_i then
-        -- The horizontal counter ---------------------------------------------
-        if cnt_hor_q = last_pix_s then
-          cnt_hor_q  <= first_pix_s;
-        else
-          cnt_hor_q <= cnt_hor_q + 1;
-        end if;
+		if reset_i then
+			cnt_hor_q  <= hv_first_pix_text_c;
+			cnt_vert_q <= first_line_s;
+			hsync_n_o  <= '1';
+			vsync_n_o  <= '1';
+			hblank_q   <= false;
+			vblank_q   <= false;
 
-        -- The vertical counter -----------------------------------------------
-        if cnt_vert_q = last_line_s then
-          cnt_vert_q <= first_line_s;
-        elsif vert_inc_s then
-          -- increment when horizontal counter is at trigger position
-          cnt_vert_q <= cnt_vert_q + 1;
-        end if;
+		elsif clock_i'event and clock_i = '1' then
+			if clk_en_5m37_i then
+				-- The horizontal counter ---------------------------------------------
+				if cnt_hor_q = last_pix_s then
+					cnt_hor_q  <= first_pix_s;
+				else
+					cnt_hor_q <= cnt_hor_q + 1;
+				end if;
 
-        -- Horizontal sync ----------------------------------------------------
-        if    cnt_hor_q = -64 then		-- -64		-44		-56
-          hsync_n_o <= '0';
-        elsif cnt_hor_q = -38 then		-- -38		-18		-30
-          hsync_n_o <= '1';
-        end if;
-        if    cnt_hor_q = -72 then		-- -72		-62		-69
-          hblank_q  <= true;
-        elsif cnt_hor_q = -14 then		-- -14		-4			-11
-          hblank_q  <= false;
-        end if;
+				-- The vertical counter -----------------------------------------------
+				if cnt_vert_q = last_line_s then
+					cnt_vert_q <= first_line_s;
+				elsif vert_inc_s then
+					-- increment when horizontal counter is at trigger position
+					cnt_vert_q <= cnt_vert_q + 1;
+				end if;
 
-        -- Vertical sync ------------------------------------------------------
-        if is_pal_g = 1 then
-          if    cnt_vert_q = 244 then
-            vsync_n_o <= '0';
-          elsif cnt_vert_q = 247 then
-            vsync_n_o <= '1';
-          end if;
-        else
-          if    cnt_vert_q = 218 then
-            vsync_n_o <= '0';
-          elsif cnt_vert_q = 221 then
-            vsync_n_o <= '1';
-          end if;
+				-- Horizontal sync ----------------------------------------------------
+				if    cnt_hor_q = ch1_v then		-- -64		-44		-56
+					hsync_n_o <= '0';
+				elsif cnt_hor_q = ch2_v then		-- -38		-18		-30
+					hsync_n_o <= '1';
+				end if;
+				if    cnt_hor_q = ch3_v then		-- -72		-62		-69
+					hblank_q  <= true;
+				elsif cnt_hor_q = ch4_v then		-- -14		-4			-11
+					hblank_q  <= false;
+				end if;
 
-          if    cnt_vert_q = 215 then
-            vblank_q  <= true;
-          elsif cnt_vert_q = first_line_s + 13 then
-            vblank_q  <= false;
-          end if;
-        end if;
+				-- Vertical sync ------------------------------------------------------
+				if is_pal_g then
+					if    cnt_vert_q = 244 then
+						vsync_n_o <= '0';
+					elsif cnt_vert_q = 247 then
+						vsync_n_o <= '1';
+					end if;
 
-      end if;
-    end if;
-  end process counters;
-  --
-  -----------------------------------------------------------------------------
+					if    cnt_vert_q = 242 then
+						vblank_q  <= true;
+					elsif cnt_vert_q = first_line_s + 13 then
+						vblank_q  <= false;
+					end if;
+
+				else
+					if    cnt_vert_q = 218 then
+						vsync_n_o <= '0';
+					elsif cnt_vert_q = 221 then
+						vsync_n_o <= '1';
+					end if;
+
+					if    cnt_vert_q = 215 then
+						vblank_q  <= true;
+					elsif cnt_vert_q = first_line_s + 13 then
+						vblank_q  <= false;
+					end if;
+				end if;
+			end if;
+		end if;
+	end process counters;
+	--
+	-----------------------------------------------------------------------------
 
 
   -- comparator for vertical line increment

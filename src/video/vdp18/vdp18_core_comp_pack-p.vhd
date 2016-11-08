@@ -13,10 +13,11 @@ use ieee.std_logic_1164.all;
 
 package vdp18_core_comp_pack is
 
-  component vdp18_core
-    generic (
-      is_pal_g      : integer := 0;
-      compat_rgb_g  : integer := 0
+	component vdp18_core
+	generic (
+		is_pal_g			: boolean := false;
+		is_cvbs_g		: boolean := false;
+		compat_rgb_g	: integer := 0
     );
     port (
       clock_i       : in  std_logic;

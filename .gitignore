@@ -105,3 +105,13 @@ greybox_tmp
 /synth/zxuno/ipcore_dir/_xmsgs
 /synth/zxuno/ipcore_dir/*.cgc
 /synth/zxuno/ipcore_dir/*.ncf
+/synth/ep4c10/PLLJ_PLLSPE_INFO.txt
+/src/peripheral/pll1.qip
+/synth/multicore/*.qws
+/synth/multicore/db
+/synth/multicore/incremental_db
+/synth/multicore/output_files
+/synth/multicore/PLLJ_PLLSPE_INFO.txt
+/src/peripheral/genesispad/tb/transcript
+/src/peripheral/genesispad/tb/*.wlf
+/src/peripheral/genesispad/tb/work

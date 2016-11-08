@@ -375,6 +375,7 @@ set_global_assignment -name VHDL_FILE ../../src/peripheral/ps2kbd_pkg.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/ps2kbd.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/cv_keys_pack.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keyboard.vhd
+set_global_assignment -name VHDL_FILE ../../src/peripheral/genesispad/genesispad.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/spi.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/Audio_WM8731.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/i2s_intf.vhd

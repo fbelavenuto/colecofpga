@@ -28,10 +28,11 @@ package vdp18_comp_pack is
     );
   end component;
 
-  component vdp18_hor_vert
-    generic (
-      is_pal_g      : integer := 0
-    );
+	component vdp18_hor_vert
+	generic (
+		is_pal_g 		: boolean := false;
+		is_cvbs_g		: boolean := false
+	);
     port (
       clock_i       : in  std_logic;
       clk_en_5m37_i : in  boolean;
