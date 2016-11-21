@@ -115,3 +115,9 @@ greybox_tmp
 /src/peripheral/genesispad/tb/transcript
 /src/peripheral/genesispad/tb/*.wlf
 /src/peripheral/genesispad/tb/work
+/DOCs/Coleco_s700a/src/tb_vdp18
+/BINs
+/synth/zxuno/*.cmd
+/synth/zxuno/*.iaf
+/synth/zxuno/ipcore_dir/*.log
+/synth/zxuno/ipcore_dir/*.sym
