@@ -36,6 +36,8 @@ package vdp18_core_comp_pack is
       vram_d_o      : out std_logic_vector(0 to  7);
       vram_d_i      : in  std_logic_vector(0 to  7);
       col_o         : out std_logic_vector(0 to  3);
+	 cnt_hor_o		: out std_logic_vector(8 downto 0);
+	 cnt_ver_o		: out std_logic_vector(8 downto 0);
       rgb_r_o       : out std_logic_vector(0 to  7);
       rgb_g_o       : out std_logic_vector(0 to  7);
       rgb_b_o       : out std_logic_vector(0 to  7);

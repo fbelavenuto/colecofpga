@@ -43,7 +43,9 @@ package vdp18_comp_pack is
       vert_inc_o    : out boolean;
       hsync_n_o     : out std_logic;
       vsync_n_o     : out std_logic;
-      blank_o       : out boolean
+      blank_o       : out boolean;
+	 cnt_hor_o		: out std_logic_vector(8 downto 0);
+	 cnt_ver_o		: out std_logic_vector(8 downto 0)
     );
   end component;
 
