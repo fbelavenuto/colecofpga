@@ -213,6 +213,7 @@ begin
 	port map (
 		clock_i				=> clock_master_s,
 		clk_en_10m7_i		=> clk_en_10m7_q,
+		clk_en_5m37_i		=> clk_en_5m37_q,
 		clock_cpu_en_o		=> clk_en_3m58_s,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,

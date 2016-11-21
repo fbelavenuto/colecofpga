@@ -240,7 +240,7 @@ begin
   blank_o    <= hblank_q or vblank_q;
 
 	cnt_hor_o	<= std_logic_vector(cnt_hor_q);
-	cnt_ver_o	<= std_logic_vector(cnt_vert_q);
+	cnt_ver_o	<= std_logic_vector(cnt_vert_q+15);	-- for vertical borders
 
 
 end rtl;

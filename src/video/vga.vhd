@@ -51,6 +51,8 @@ architecture rtl of vga is
 	constant v_sync_off			: integer := 492 - 1;
 	constant v_end_count			: integer := 525 - 1;
 	
+	constant v_start				: integer := 16;
+	
 begin
 	
 	altsram: entity work.framebuffer
@@ -93,7 +95,7 @@ begin
 					vcnt <= (others => '0');
 				else
 					vcnt <= vcnt + 1;
-					if vcnt = 39 then
+					if vcnt = (v_start-1) then
 						window_vcnt <= (others => '0');
 					else
 						window_vcnt <= window_vcnt + 1;
@@ -107,7 +109,7 @@ begin
 	addr_wr	<= I_VCNT(7 downto 0) & I_HCNT(7 downto 0);
 	addr_rd	<= window_vcnt(8 downto 1) & window_hcnt(8 downto 1);
 	blank		<= '1' when (hcnt > h_pixels_across) or (vcnt > v_pixels_down) else '0';
-	picture	<= '1' when (blank = '0') and (hcnt > 64 and hcnt < 576) and vcnt > 40 else '0';
+	picture	<= '1' when (blank = '0') and (hcnt > 64 and hcnt < 576) and vcnt > v_start else '0';
 
 	O_HSYNC	<= '1' when (hcnt <= h_sync_on) or (hcnt > h_sync_off) else '0';
 	O_VSYNC	<= '1' when (vcnt <= v_sync_on) or (vcnt > v_sync_off) else '0';
