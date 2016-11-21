@@ -41,14 +41,14 @@ architecture rtl of vga is
 -- ModeLine "640x480@60Hz"  25,175  640  656  752  800 480 490 492 525 -HSync -VSync
 	-- Horizontal Timing constants  
 	constant h_pixels_across	: integer := 640 - 1;
-	constant h_sync_on		: integer := 656 - 1;
-	constant h_sync_off		: integer := 752 - 1;
-	constant h_end_count		: integer := 800 - 1;
+	constant h_sync_on			: integer := 656 - 1;
+	constant h_sync_off			: integer := 752 - 1;
+	constant h_end_count			: integer := 800 - 1;
 	-- Vertical Timing constants
 	constant v_pixels_down		: integer := 480 - 1;
-	constant v_sync_on		: integer := 490 - 1;
-	constant v_sync_off		: integer := 492 - 1;
-	constant v_end_count		: integer := 525 - 1;
+	constant v_sync_on			: integer := 490 - 1;
+	constant v_sync_off			: integer := 492 - 1;
+	constant v_end_count			: integer := 525 - 1;
 	
 begin
 	
@@ -96,7 +96,7 @@ begin
 			end if;
 		end if;
 	end process;
-	
+
 	wren		<= '1' when (I_HCNT < 256) and (I_VCNT < 240) else '0';
 	addr_wr	<= I_VCNT(7 downto 0) & I_HCNT(7 downto 0);
 	addr_rd	<= vcnt(8 downto 1) & window_hcnt(8 downto 1);
@@ -110,5 +110,5 @@ begin
 	O_HCNT	<= hcnt;
 	O_VCNT	<= vcnt;
 	O_H		<= h;
-	
+
 end rtl;

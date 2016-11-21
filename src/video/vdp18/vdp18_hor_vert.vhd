@@ -239,8 +239,8 @@ begin
   vert_inc_o <= vert_inc_s;
   blank_o    <= hblank_q or vblank_q;
 
-	cnt_hor_o	<= std_logic_vector(cnt_hor_q + first_pix_s);
-	cnt_ver_o	<= std_logic_vector(cnt_vert_q + first_line_s);
+	cnt_hor_o	<= std_logic_vector(cnt_hor_q);
+	cnt_ver_o	<= std_logic_vector(cnt_vert_q);
 
 
 end rtl;

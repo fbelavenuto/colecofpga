@@ -100,11 +100,6 @@ entity multicore_top is
 		vga_hsync_n_o		: out   std_logic								:= '1';
 		vga_vsync_n_o		: out   std_logic								:= '1';
 
-		-- HDMI
---		hdmi_d_o				: out   std_logic_vector(2 downto 0)	:= (others => '0');
---		hdmi_clk_o			: out   std_logic								:= '0';
---		hdmi_cec_o			: out   std_logic								:= '0';
-
 		-- Debug
 		leds_n_o				: out   std_logic_vector(7 downto 0)	:= (others => '1')
 	);
@@ -119,6 +114,7 @@ architecture behavior of multicore_top is
 	signal clock_master_s	: std_logic;
 	signal clock_mem_s		: std_logic;
 	signal clock_vga_s		: std_logic;
+	signal clock_dvi_s		: std_logic;
 	signal clk_cnt_q			: unsigned(1 downto 0);
 	signal clk_en_10m7_q		: std_logic;
 	signal clk_en_5m37_q		: std_logic;
@@ -176,20 +172,20 @@ architecture behavior of multicore_top is
 	signal audio_dac_s		: std_logic;
 
 	-- Video
-	signal btn_dblscan_s		: std_logic;
-	signal btn_scanlines_s	: std_logic;
-	signal dblscan_en_s		: std_logic;
-	signal scanlines_en_s	: std_logic;
 	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
 	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
 	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
-	signal vga_col_s			: std_logic_vector( 3 downto 0);		-- 31KHz
-	signal oddline_s			: std_logic								:= '0';
-	signal vga_hsync_n_s		: std_logic;								-- 31KHz
-	signal vga_vsync_n_s		: std_logic;								-- 31KHz
-	signal vga_blank_s		: std_logic;								-- 31KHz
 	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
 	signal cnt_ver_s			: std_logic_vector( 8 downto 0);
+	signal vga_col_s			: std_logic_vector( 3 downto 0);
+	signal vga_r_s				: std_logic_vector( 3 downto 0);
+	signal vga_g_s				: std_logic_vector( 3 downto 0);
+	signal vga_b_s				: std_logic_vector( 3 downto 0);
+	signal vga_hsync_n_s		: std_logic;
+	signal vga_vsync_n_s		: std_logic;
+	signal vga_blank_s		: std_logic;
+	signal sound_hdmi_s		: std_logic_vector(15 downto 0);
+	signal tdms_s				: std_logic_vector( 7 downto 0);
 
 	-- Keyboard
 	signal ps2_keys_s			: std_logic_vector(15 downto 0);
@@ -219,9 +215,10 @@ begin
 	pll: entity work.pll1
 	port map (
 		inclk0	=> clock_50_i,
-		c0			=> clock_master_s,		-- 21.000
-		c1			=> clock_mem_s,			-- 42.000
-		c2			=> clock_vga_s,			-- 25.200
+		c0			=> clock_master_s,		--  21.000
+		c1			=> clock_mem_s,			--  42.000
+		c2			=> clock_vga_s,			--  25.200
+		c3			=> clock_dvi_s,			-- 126.000
 		locked	=> pll_locked_s
 	);
 
@@ -361,44 +358,6 @@ begin
 		joy		=> ps2_joy_s
 	);
 
-	-- Scandoubler button
-	btndbl: entity work.debounce
-	generic map (
-		counter_size_g	=> 16
-	)
-	port map (
-		clk_i				=> clock_master_s,
-		button_i			=> btn_n_i(2),
-		result_o			=> btn_dblscan_s
-	);
-
-	-- Scanline button
-	btnscl: entity work.debounce
-	generic map (
-		counter_size_g	=> 16
-	)
-	port map (
-		clk_i				=> clock_master_s,
-		button_i			=> btn_n_i(3),
-		result_o			=> btn_scanlines_s
-	);
-
---	-- VGA Scan Doubler
---	dblscan_b: entity work.dblscan
---	port map (
---		clk_6m_i			=> clock_master_s,
---		clk_en_6m_i		=> clk_en_5m37_q,
---		clk_12m_i		=> clock_master_s,
---		clk_en_12m_i	=> clk_en_10m7_q,
---		col_i				=> rgb_col_s,
---		col_o				=> vga_col_s,
---		oddline_o		=> oddline_s,
---		hsync_n_i		=> rgb_hsync_n_s,
---		vsync_n_i		=> rgb_vsync_n_s,
---		hsync_n_o		=> vga_hsync_n_s,
---		vsync_n_o		=> vga_vsync_n_s,
---		blank_o			=> open
---	);
 	-- VGA framebuffer
 	vga: entity work.vga
 	port map (
@@ -484,7 +443,6 @@ begin
 	bios_data_s		<= loader_data_s					when bios_loader_s = '1'	else 	sram_data_o_s;
 	ram_do_s			<= sram_data_o_s;
 	cart_do_s		<= sram_data_o_s;
-
 
 	-- Controller
 	but_up_s		<= joy2_up_i		& joy1_up_i;
@@ -590,26 +548,6 @@ begin
 		end loop;
 	end process pad_ctrl;	 
 
-	-- Double Scanner
-	process (reset_s, btn_dblscan_s)
-	begin
-		if reset_s = '1' then
-			dblscan_en_s <= '0';
-		elsif falling_edge(btn_dblscan_s) then
-			dblscan_en_s <= not dblscan_en_s;
-		end if;
-	end process;
-	
-	-- Scanlines
-	process (reset_s, btn_scanlines_s)
-	begin
-		if reset_s = '1' then
-			scanlines_en_s <= '0';
-		elsif falling_edge(btn_scanlines_s) then
-			scanlines_en_s <= not scanlines_en_s;
-		end if;
-	end process;
-
 	-- Audio
 	audio_s <= std_logic_vector(unsigned(audio_signed_s + 128));
 	dac_l_o	<= audio_dac_s;
@@ -623,41 +561,54 @@ begin
 	-- Purpose:
 	--   Converts the color information (doubled to VGA scan) to RGB values.
 	--
-	vga_col : process (clock_master_s, reset_s)
+	vga_col : process (clock_vga_s)
 		variable vga_col_v : natural range 0 to 15;
 		variable vga_r_v,
 					vga_g_v,
 					vga_b_v   : rgb_val_t;
 	begin
-		if reset_s = '1' then
-			vga_r_o <= (others => '0');
-			vga_g_o <= (others => '0');
-			vga_b_o <= (others => '0');
-		elsif rising_edge(clock_master_s) then
-			if clk_en_10m7_q = '1' then
-				if dblscan_en_s = '0' then
-					vga_col_v := to_integer(unsigned(rgb_col_s));
-				else
-					vga_col_v := to_integer(unsigned(vga_col_s));
-				end if;
-				vga_r_v   := full_rgb_table_c(vga_col_v)(r_c);
-				vga_g_v   := full_rgb_table_c(vga_col_v)(g_c);
-				vga_b_v   := full_rgb_table_c(vga_col_v)(b_c);
-				if (dblscan_en_s = '1' and scanlines_en_s = '1' and oddline_s = '1') then
-					-- scanlines ativo, reduzir brilho das linhas impares
-					vga_r_o	<= '0' & std_logic_vector(to_unsigned(vga_r_v, 8))(6 downto 5);
-					vga_g_o	<= '0' & std_logic_vector(to_unsigned(vga_g_v, 8))(6 downto 5);
-					vga_b_o	<= '0' & std_logic_vector(to_unsigned(vga_b_v, 8))(6 downto 5);
-				else
-					vga_r_o	<= std_logic_vector(to_unsigned(vga_r_v, 8))(7 downto 5);
-					vga_g_o	<= std_logic_vector(to_unsigned(vga_g_v, 8))(7 downto 5);
-					vga_b_o	<= std_logic_vector(to_unsigned(vga_b_v, 8))(7 downto 5);
-				end if;
-			end if;
+		if rising_edge(clock_vga_s) then
+			vga_col_v := to_integer(unsigned(vga_col_s));
+			vga_r_v   := full_rgb_table_c(vga_col_v)(r_c);
+			vga_g_v   := full_rgb_table_c(vga_col_v)(g_c);
+			vga_b_v   := full_rgb_table_c(vga_col_v)(b_c);
+			vga_r_s	<= std_logic_vector(to_unsigned(vga_r_v, 8))(7 downto 4);
+			vga_g_s	<= std_logic_vector(to_unsigned(vga_g_v, 8))(7 downto 4);
+			vga_b_s	<= std_logic_vector(to_unsigned(vga_b_v, 8))(7 downto 4);
 		end if;
 	end process vga_col;
 
-	vga_hsync_n_o	<= rgb_hsync_n_s	when dblscan_en_s = '0'		else vga_hsync_n_s;
-	vga_vsync_n_o	<= rgb_vsync_n_s	when dblscan_en_s = '0'		else vga_vsync_n_s;
+	-- HDMI
+	inst_dvid: entity work.hdmi
+	generic map (
+		FREQ	=> 25200000,	-- pixel clock frequency 
+		FS		=> 48000,		-- audio sample rate - should be 32000, 41000 or 48000 = 48KHz
+		CTS	=> 25200,		-- CTS = Freq(pixclk) * N / (128 * Fs)
+		N		=> 6144			-- N = 128 * Fs /1000,  128 * Fs /1500 <= N <= 128 * Fs /300 (Check HDMI spec 7.2 for details)
+	) 
+	port map (
+		I_CLK_VGA		=> clock_vga_s,
+		I_CLK_TMDS		=> clock_dvi_s,
+		I_RED				=> vga_r_s & vga_r_s,
+		I_GREEN			=> vga_g_s & vga_g_s,
+		I_BLUE			=> vga_b_s & vga_b_s,
+		I_BLANK			=> vga_blank_s,
+		I_HSYNC			=> vga_hsync_n_s,
+		I_VSYNC			=> vga_vsync_n_s,
+		I_AUDIO_PCM_L 	=> sound_hdmi_s,
+		I_AUDIO_PCM_R	=> sound_hdmi_s,
+		O_TMDS			=> tdms_s
+	);
+	
+	sound_hdmi_s <= audio_s & "00000000";
+
+	vga_hsync_n_o	<= tdms_s(7);	-- 2+		10
+	vga_vsync_n_o	<= tdms_s(6);	-- 2-		11
+	vga_b_o(2)		<= tdms_s(5);	-- 1+		144	
+	vga_b_o(1)		<= tdms_s(4);	-- 1-		143
+	vga_r_o(0)		<= tdms_s(3);	-- 0+		133
+	vga_g_o(2)		<= tdms_s(2);	-- 0-		132
+	vga_r_o(1)		<= tdms_s(1);	-- CLK+	113
+	vga_r_o(2)		<= tdms_s(0);	-- CLK-	112
 
 end architecture;
