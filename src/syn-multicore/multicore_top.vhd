@@ -118,6 +118,7 @@ architecture behavior of multicore_top is
 	-- Clocks
 	signal clock_master_s	: std_logic;
 	signal clock_mem_s		: std_logic;
+	signal clock_vga_s		: std_logic;
 	signal clk_cnt_q			: unsigned(1 downto 0);
 	signal clk_en_10m7_q		: std_logic;
 	signal clk_en_5m37_q		: std_logic;
@@ -183,9 +184,12 @@ architecture behavior of multicore_top is
 	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
 	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
 	signal vga_col_s			: std_logic_vector( 3 downto 0);		-- 31KHz
-	signal oddline_s			: std_logic;
+	signal oddline_s			: std_logic								:= '0';
 	signal vga_hsync_n_s		: std_logic;								-- 31KHz
 	signal vga_vsync_n_s		: std_logic;								-- 31KHz
+	signal vga_blank_s		: std_logic;								-- 31KHz
+	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
+	signal cnt_ver_s			: std_logic_vector( 8 downto 0);
 
 	-- Keyboard
 	signal ps2_keys_s			: std_logic_vector(15 downto 0);
@@ -215,8 +219,9 @@ begin
 	pll: entity work.pll1
 	port map (
 		inclk0	=> clock_50_i,
-		c0			=> clock_master_s,		-- 21.428571
-		c1			=> clock_mem_s,			-- 42.857
+		c0			=> clock_master_s,		-- 21.000
+		c1			=> clock_mem_s,			-- 42.000
+		c2			=> clock_vga_s,			-- 25.200
 		locked	=> pll_locked_s
 	);
 
@@ -229,6 +234,7 @@ begin
 	port map (
 		clock_i				=> clock_master_s,
 		clk_en_10m7_i		=> clk_en_10m7_q,
+		clk_en_5m37_i		=> clk_en_5m37_q,
 		clock_cpu_en_o		=> open,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,
@@ -279,6 +285,8 @@ begin
 		audio_signed_o		=> audio_signed_s,
 		-- RGB Video Interface
 		col_o					=> rgb_col_s,
+		cnt_hor_o			=> cnt_hor_s,
+		cnt_ver_o			=> cnt_ver_s,
 		rgb_r_o				=> open,
 		rgb_g_o				=> open,
 		rgb_b_o				=> open,
@@ -375,22 +383,39 @@ begin
 		result_o			=> btn_scanlines_s
 	);
 
-	-- VGA Scan Doubler
-	dblscan_b: entity work.dblscan
+--	-- VGA Scan Doubler
+--	dblscan_b: entity work.dblscan
+--	port map (
+--		clk_6m_i			=> clock_master_s,
+--		clk_en_6m_i		=> clk_en_5m37_q,
+--		clk_12m_i		=> clock_master_s,
+--		clk_en_12m_i	=> clk_en_10m7_q,
+--		col_i				=> rgb_col_s,
+--		col_o				=> vga_col_s,
+--		oddline_o		=> oddline_s,
+--		hsync_n_i		=> rgb_hsync_n_s,
+--		vsync_n_i		=> rgb_vsync_n_s,
+--		hsync_n_o		=> vga_hsync_n_s,
+--		vsync_n_o		=> vga_vsync_n_s,
+--		blank_o			=> open
+--	);
+	-- VGA framebuffer
+	vga: entity work.vga
 	port map (
-		clk_6m_i			=> clock_master_s,
-		clk_en_6m_i		=> clk_en_5m37_q,
-		clk_12m_i		=> clock_master_s,
-		clk_en_12m_i	=> clk_en_10m7_q,
-		col_i				=> rgb_col_s,
-		col_o				=> vga_col_s,
-		oddline_o		=> oddline_s,
-		hsync_n_i		=> rgb_hsync_n_s,
-		vsync_n_i		=> rgb_vsync_n_s,
-		hsync_n_o		=> vga_hsync_n_s,
-		vsync_n_o		=> vga_vsync_n_s,
-		blank_o			=> open
+		I_CLK			=> clock_master_s,
+		I_CLK_VGA	=> clock_vga_s,
+		I_COLOR		=> rgb_col_s,
+		I_HCNT		=> cnt_hor_s,
+		I_VCNT		=> cnt_ver_s,
+		O_HSYNC		=> vga_hsync_n_s,
+		O_VSYNC		=> vga_vsync_n_s,
+		O_COLOR		=> vga_col_s,
+		O_HCNT		=> open,
+		O_VCNT		=> open,
+		O_H			=> open,
+		O_BLANK		=> vga_blank_s
 	);
+
 
 	-- Glue Logic
 	por_n_s		<= pll_locked_s and btn_n_i(1);

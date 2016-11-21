@@ -83,6 +83,7 @@ entity vdp18_core is
     -- Global Interface -------------------------------------------------------
     clock_i       : in  std_logic;
     clk_en_10m7_i : in  std_logic;
+	 clk_en_5m37_i	: in  std_logic;
     reset_n_i     : in  std_logic;
     -- CPU Interface ----------------------------------------------------------
     csr_n_i       : in  std_logic;
@@ -100,6 +101,8 @@ entity vdp18_core is
     vram_d_i      : in  std_logic_vector(0 to  7);
     -- Video Interface --------------------------------------------------------
     col_o         : out std_logic_vector(0 to 3);
+	 cnt_hor_o		: out std_logic_vector(8 downto 0);
+	 cnt_ver_o		: out std_logic_vector(8 downto 0);
     rgb_r_o       : out std_logic_vector(0 to 7);
     rgb_g_o       : out std_logic_vector(0 to 7);
     rgb_b_o       : out std_logic_vector(0 to 7);
@@ -123,7 +126,6 @@ architecture struct of vdp18_core is
 
   signal clk_en_10m7_s,
          clk_en_5m37_s,
---         clk_en_3m58_s,
          clk_en_acc_s     : boolean;
 
   signal opmode_s         : opmode_t;
@@ -187,25 +189,11 @@ begin
  -- false_s       <= false;
 
   clk_en_10m7_s <= to_boolean_f(clk_en_10m7_i);
+  clk_en_5m37_s <= to_boolean_f(clk_en_5m37_i);
   rd_s          <= not to_boolean_f(csr_n_i);
   wr_s          <= not to_boolean_f(csw_n_i);
 
   reset_s <= reset_n_i = '0';
-
-
-  -----------------------------------------------------------------------------
-  -- Clock Generator
-  -----------------------------------------------------------------------------
-  clk_gen_b : vdp18_clk_gen
-    port map (
-      clock_i         => clock_i,
-      clk_en_10m7_i => clk_en_10m7_i,
-      reset_i       => reset_s,
-      clk_en_5m37_o => clk_en_5m37_s,
-      clk_en_3m58_o => open, --clk_en_3m58_s,
-      clk_en_2m68_o => open
-    );
-
 
   -----------------------------------------------------------------------------
   -- Horizontal and Vertical Timing Generator
@@ -225,7 +213,9 @@ begin
       vert_inc_o    => vert_inc_s,
       hsync_n_o     => hsync_n_s,
       vsync_n_o     => vsync_n_s,
-      blank_o       => blank_s
+      blank_o       => blank_s,
+		cnt_hor_o		=> cnt_hor_o,
+		cnt_ver_o		=> cnt_ver_o
     );
 
   hsync_n_o     <= hsync_n_s;

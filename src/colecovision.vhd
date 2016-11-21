@@ -51,6 +51,7 @@ entity colecovision is
 	port (
 		clock_i			: in  std_logic;
 		clk_en_10m7_i	: in  std_logic;
+		clk_en_5m37_i	: in  std_logic;
 		clock_cpu_en_o	: out std_logic;
 		reset_i			: in  std_logic;			-- Reset, tbem acionado quando por_n_i for 0
 		por_n_i			: in  std_logic;			-- Power-on Reset
@@ -101,6 +102,8 @@ entity colecovision is
 		audio_signed_o	: out signed(7 downto 0);
 		-- RGB Video Interface ----------------------------------------------------
 		col_o				: out std_logic_vector( 3 downto 0);
+		cnt_hor_o		: out std_logic_vector( 8 downto 0);
+		cnt_ver_o		: out std_logic_vector( 8 downto 0);
 		rgb_r_o			: out std_logic_vector( 7 downto 0);
 		rgb_g_o			: out std_logic_vector( 7 downto 0);
 		rgb_b_o			: out std_logic_vector( 7 downto 0);
@@ -236,6 +239,7 @@ begin
 	port map (
 		clock_i			=> clock_i,
 		clk_en_10m7_i	=> clk_en_10m7_i,
+		clk_en_5m37_i	=> clk_en_5m37_i,
 		reset_n_i		=> por_n_i,
 		csr_n_i			=> vdp_r_n_s,
 		csw_n_i			=> vdp_w_n_s,
@@ -249,7 +253,10 @@ begin
 		vram_a_o			=> vram_addr_o,
 		vram_d_o			=> vram_data_o,
 		vram_d_i			=> vram_data_i,
+		--
 		col_o				=> col_o,
+		cnt_hor_o		=> cnt_hor_o,
+		cnt_ver_o		=> cnt_ver_o,
 		rgb_r_o			=> rgb_r_o,
 		rgb_g_o			=> rgb_g_o,
 		rgb_b_o			=> rgb_b_o,
