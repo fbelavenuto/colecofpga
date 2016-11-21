@@ -377,7 +377,7 @@ begin
 
 
 	-- Glue Logic
-	por_n_s		<= pll_locked_s and btn_n_i(1);
+	por_n_s		<= pll_locked_s and btn_n_i(2);
 	reset_s		<= not pll_locked_s or not btn_n_i(4) or soft_reset_s;
 
 	-----------------------------------------------------------------------------
@@ -600,7 +600,7 @@ begin
 		O_TMDS			=> tdms_s
 	);
 	
-	sound_hdmi_s <= audio_s & "00000000";
+	sound_hdmi_s <= '0' & audio_s & "0000000";
 
 	vga_hsync_n_o	<= tdms_s(7);	-- 2+		10
 	vga_vsync_n_o	<= tdms_s(6);	-- 2-		11
