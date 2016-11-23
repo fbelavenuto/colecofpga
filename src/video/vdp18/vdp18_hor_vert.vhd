@@ -52,16 +52,12 @@ use work.vdp18_pack.opmode_t;
 use work.vdp18_pack.hv_t;
 
 entity vdp18_hor_vert is
-
-  generic (
-    is_pal_g      : boolean := false;
-	 is_cvbs_g		: boolean := false
-  );
   port (
     clock_i       : in  std_logic;
     clk_en_5m37_i : in  boolean;
     reset_i       : in  boolean;
     opmode_i      : in  opmode_t;
+	 ntsc_pal_i		: in  std_logic;
     num_pix_o     : out hv_t;
     num_line_o    : out hv_t;
     vert_inc_o    : out boolean;
@@ -69,7 +65,7 @@ entity vdp18_hor_vert is
     vsync_n_o     : out std_logic;
     blank_o       : out boolean;
 	 cnt_hor_o		: out std_logic_vector(8 downto 0);
-	 cnt_ver_o		: out std_logic_vector(8 downto 0)
+	 cnt_ver_o		: out std_logic_vector(7 downto 0)
   );
 
 end vdp18_hor_vert;
@@ -93,20 +89,16 @@ architecture rtl of vdp18_hor_vert is
   signal hblank_q,
          vblank_q     : boolean;
 
+	signal cnt_hor_s	: unsigned(8 downto 0);
+	signal cnt_ver_s	: unsigned(7 downto 0);
+
 begin
 
   -----------------------------------------------------------------------------
   -- Prepare comparison signals for NTSC and PAL.
   --
-  is_ntsc: if not is_pal_g generate
-    first_line_s <= hv_first_line_ntsc_c;
-    last_line_s  <= hv_last_line_ntsc_c;
-  end generate;
-  --
-  is_pal: if is_pal_g generate
-    first_line_s <= hv_first_line_pal_c;
-    last_line_s  <= hv_last_line_pal_c;
-  end generate;
+	first_line_s <= hv_first_line_ntsc_c when ntsc_pal_i = '0' else hv_first_line_pal_c;
+	last_line_s  <= hv_last_line_ntsc_c  when ntsc_pal_i = '0' else hv_last_line_pal_c;
   --
   -----------------------------------------------------------------------------
 
@@ -139,23 +131,7 @@ begin
 	--   Implements the horizontal and vertical counters.
 	--
 	counters: process (clock_i, reset_i, first_line_s)
-		variable ch1_v	: integer;
-		variable ch2_v	: integer;
-		variable ch3_v	: integer;
-		variable ch4_v	: integer;
 	begin
-		if is_cvbs_g then
-			ch1_v := -64;
-			ch2_v := -38;
-			ch3_v := -72;
-			ch4_v := -14;
-		else
-			ch1_v := -56;
-			ch2_v := -30;
-			ch3_v := -69;
-			ch4_v := -11;
-		end if;
-
 		if reset_i then
 			cnt_hor_q  <= hv_first_pix_text_c;
 			cnt_vert_q <= first_line_s;
@@ -182,19 +158,19 @@ begin
 				end if;
 
 				-- Horizontal sync ----------------------------------------------------
-				if    cnt_hor_q = ch1_v then		-- -64		-44		-56
+				if    cnt_hor_q = -64 then		-- -64		-44		-56
 					hsync_n_o <= '0';
-				elsif cnt_hor_q = ch2_v then		-- -38		-18		-30
+				elsif cnt_hor_q = -38 then		-- -38		-18		-30
 					hsync_n_o <= '1';
 				end if;
-				if    cnt_hor_q = ch3_v then		-- -72		-62		-69
+				if    cnt_hor_q = -72 then		-- -72		-62		-69
 					hblank_q  <= true;
-				elsif cnt_hor_q = ch4_v then		-- -14		-4			-11
+				elsif cnt_hor_q = -13 then		-- -14		-4			-11
 					hblank_q  <= false;
 				end if;
 
 				-- Vertical sync ------------------------------------------------------
-				if is_pal_g then
+				if ntsc_pal_i = '1' then
 					if    cnt_vert_q = 244 then
 						vsync_n_o <= '0';
 					elsif cnt_vert_q = 247 then
@@ -206,7 +182,6 @@ begin
 					elsif cnt_vert_q = first_line_s + 13 then
 						vblank_q  <= false;
 					end if;
-
 				else
 					if    cnt_vert_q = 218 then
 						vsync_n_o <= '0';
@@ -230,17 +205,39 @@ begin
   -- comparator for vertical line increment
   vert_inc_s <= clk_en_5m37_i and cnt_hor_q = hv_vertical_inc_c;
 
-
   -----------------------------------------------------------------------------
   -- Output mapping
   -----------------------------------------------------------------------------
   num_pix_o  <= cnt_hor_q;
   num_line_o <= cnt_vert_q;
   vert_inc_o <= vert_inc_s;
-  blank_o    <= hblank_q or vblank_q;
+	blank_o    <= hblank_q or vblank_q;
 
-	cnt_hor_o	<= std_logic_vector(cnt_hor_q);
-	cnt_ver_o	<= std_logic_vector(cnt_vert_q+15);	-- for vertical borders
+	-- Generate horizontal and vertical counters for VGA/HDMI (in top)
+	process (reset_i, clock_i)
+	begin
+		if reset_i then
+			cnt_hor_s <= (others => '0');
+			cnt_ver_s <= (others => '0');
+		elsif rising_edge(clock_i) then
+			if clk_en_5m37_i then
+				if cnt_hor_q = -12 then
+					cnt_hor_s <= (others => '0');
+				else
+					cnt_hor_s <= cnt_hor_s + 1;
+				end if;
+				if vert_inc_s then
+					if cnt_vert_q = -12 then
+						cnt_ver_s <= (others => '0');
+					else
+						cnt_ver_s <= cnt_ver_s + 1;
+					end if;
+				end if;
+			end if;
+		end if;
+	end process;
 
+	cnt_hor_o	<= std_logic_vector(cnt_hor_s);
+	cnt_ver_o	<= std_logic_vector(cnt_ver_s);
 
 end rtl;

@@ -75,8 +75,6 @@ use ieee.std_logic_1164.all;
 
 entity vdp18_core is
   generic (
-    is_pal_g      : boolean := false;
-	 is_cvbs_g		: boolean := false;
     compat_rgb_g  : integer := 0
   );
   port (
@@ -102,7 +100,7 @@ entity vdp18_core is
     -- Video Interface --------------------------------------------------------
     col_o         : out std_logic_vector(0 to 3);
 	 cnt_hor_o		: out std_logic_vector(8 downto 0);
-	 cnt_ver_o		: out std_logic_vector(8 downto 0);
+	 cnt_ver_o		: out std_logic_vector(7 downto 0);
     rgb_r_o       : out std_logic_vector(0 to 7);
     rgb_g_o       : out std_logic_vector(0 to 7);
     rgb_b_o       : out std_logic_vector(0 to 7);
@@ -199,15 +197,12 @@ begin
   -- Horizontal and Vertical Timing Generator
   -----------------------------------------------------------------------------
   hor_vert_b : vdp18_hor_vert
-    generic map (
-      is_pal_g		=> is_pal_g,
-		is_cvbs_g	=> is_cvbs_g
-    )
     port map (
       clock_i       => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
       reset_i       => reset_s,
       opmode_i      => opmode_s,
+		ntsc_pal_i		=> '0',			-- NTSC
       num_pix_o     => num_pix_s,
       num_line_o    => num_line_s,
       vert_inc_o    => vert_inc_s,

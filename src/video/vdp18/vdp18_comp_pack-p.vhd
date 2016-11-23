@@ -29,25 +29,22 @@ package vdp18_comp_pack is
   end component;
 
 	component vdp18_hor_vert
-	generic (
-		is_pal_g 		: boolean := false;
-		is_cvbs_g		: boolean := false
+	port (
+		clock_i       : in  std_logic;
+		clk_en_5m37_i : in  boolean;
+		reset_i       : in  boolean;
+		opmode_i      : in  opmode_t;
+		ntsc_pal_i		: in  std_logic;
+		num_pix_o     : out hv_t;
+		num_line_o    : out hv_t;
+		vert_inc_o    : out boolean;
+		hsync_n_o     : out std_logic;
+		vsync_n_o     : out std_logic;
+		blank_o       : out boolean;
+		cnt_hor_o		: out std_logic_vector(8 downto 0);
+		cnt_ver_o		: out std_logic_vector(7 downto 0)
 	);
-    port (
-      clock_i       : in  std_logic;
-      clk_en_5m37_i : in  boolean;
-      reset_i       : in  boolean;
-      opmode_i      : in  opmode_t;
-      num_pix_o     : out hv_t;
-      num_line_o    : out hv_t;
-      vert_inc_o    : out boolean;
-      hsync_n_o     : out std_logic;
-      vsync_n_o     : out std_logic;
-      blank_o       : out boolean;
-	 cnt_hor_o		: out std_logic_vector(8 downto 0);
-	 cnt_ver_o		: out std_logic_vector(8 downto 0)
-    );
-  end component;
+	end component;
 
   component vdp18_ctrl
     port (

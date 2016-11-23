@@ -42,10 +42,8 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity colecovision is
-
 	generic (
 		num_maq_g		: integer := 0;
-		is_pal_g			: boolean := false;
 		compat_rgb_g	: integer := 0
 	);
 	port (
@@ -103,7 +101,7 @@ entity colecovision is
 		-- RGB Video Interface ----------------------------------------------------
 		col_o				: out std_logic_vector( 3 downto 0);
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
-		cnt_ver_o		: out std_logic_vector( 8 downto 0);
+		cnt_ver_o		: out std_logic_vector( 7 downto 0);
 		rgb_r_o			: out std_logic_vector( 7 downto 0);
 		rgb_g_o			: out std_logic_vector( 7 downto 0);
 		rgb_b_o			: out std_logic_vector( 7 downto 0);
@@ -233,7 +231,6 @@ begin
 	-----------------------------------------------------------------------------
 	vdp18_b : entity work.vdp18_core
 	generic map (
-		is_pal_g			=> is_pal_g,
 		compat_rgb_g	=> compat_rgb_g
 	)
 	port map (

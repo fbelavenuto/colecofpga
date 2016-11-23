@@ -10,17 +10,17 @@ library IEEE;
 	
 entity vga is
 port (
-	I_CLK		: in std_logic;
+	I_CLK			: in std_logic;
 	I_CLK_VGA	: in std_logic;
 	I_COLOR		: in std_logic_vector(3 downto 0);
 	I_HCNT		: in std_logic_vector(8 downto 0);
-	I_VCNT		: in std_logic_vector(8 downto 0);
+	I_VCNT		: in std_logic_vector(7 downto 0);
 	O_HSYNC		: out std_logic;
 	O_VSYNC		: out std_logic;
 	O_COLOR		: out std_logic_vector(3 downto 0);
 	O_HCNT		: out std_logic_vector(9 downto 0);
 	O_VCNT		: out std_logic_vector(9 downto 0);
-	O_H		: out std_logic_vector(9 downto 0);
+	O_H			: out std_logic_vector(9 downto 0);
 	O_BLANK		: out std_logic);
 end vga;
 
@@ -30,11 +30,11 @@ architecture rtl of vga is
 	signal addr_wr			: std_logic_vector(15 downto 0);
 	signal wren				: std_logic;
 	signal picture			: std_logic;
-	signal window_hcnt	: std_logic_vector(8 downto 0) := "000000000";
-	signal window_vcnt	: std_logic_vector(8 downto 0) := "000000000";
-	signal hcnt				: std_logic_vector(9 downto 0) := "0000000000";
-	signal h					: std_logic_vector(9 downto 0) := "0000000000";
-	signal vcnt				: std_logic_vector(9 downto 0) := "0000000000";
+	signal window_hcnt	: std_logic_vector(9 downto 0) := (others => '0');
+	signal window_vcnt	: std_logic_vector(8 downto 0) := (others => '0');
+	signal hcnt				: std_logic_vector(9 downto 0) := (others => '0');
+	signal h					: std_logic_vector(9 downto 0) := (others => '0');
+	signal vcnt				: std_logic_vector(9 downto 0) := (others => '0');
 	signal hsync			: std_logic;
 	signal vsync			: std_logic;
 	signal blank			: std_logic;
@@ -50,8 +50,15 @@ architecture rtl of vga is
 	constant v_sync_on			: integer := 490 - 1;
 	constant v_sync_off			: integer := 492 - 1;
 	constant v_end_count			: integer := 525 - 1;
-	
-	constant v_start				: integer := 16;
+
+	-- In
+	constant hc_max				: integer := 280;
+	constant vc_max				: integer := 216;
+
+	constant h_start				: integer := 40;
+	constant h_end					: integer := h_start + (hc_max * 2);	-- 64 + (280 * 2) => 64 + 560 = 624
+	constant v_start				: integer := 22;
+	constant v_end					: integer := v_start + (vc_max * 2);
 	
 begin
 	
@@ -84,7 +91,7 @@ begin
 				hcnt <= (others => '0');
 			else
 				hcnt <= hcnt + 1;
-				if hcnt = 63 then
+				if hcnt = (h_start-1) then
 					window_hcnt <= (others => '0');
 				else
 					window_hcnt <= window_hcnt + 1;
@@ -105,11 +112,21 @@ begin
 		end if;
 	end process;
 
-	wren		<= '1' when (I_HCNT < 256) and (I_VCNT < 240) else '0';
-	addr_wr	<= I_VCNT(7 downto 0) & I_HCNT(7 downto 0);
-	addr_rd	<= window_vcnt(8 downto 1) & window_hcnt(8 downto 1);
+	process (I_HCNT, I_VCNT, window_hcnt, window_vcnt)
+		variable wr_result_v : std_logic_vector(16 downto 0);
+		variable rd_result_v : std_logic_vector(16 downto 0);
+	begin
+		wr_result_v := std_logic_vector((unsigned(I_VCNT)                  * to_unsigned(hc_max, 9)) + unsigned(I_HCNT));
+		rd_result_v := std_logic_vector((unsigned(window_vcnt(8 downto 1)) * to_unsigned(hc_max, 9)) + unsigned(window_hcnt(9 downto 1)));
+		addr_wr	<= wr_result_v(15 downto 0);
+		addr_rd	<= rd_result_v(15 downto 0);
+	end process;
+
+	wren		<= '1' when (I_HCNT < hc_max) and (I_VCNT < vc_max) else '0';
+--	addr_wr	<= I_VCNT(7 downto 0) & I_HCNT(7 downto 0);
+--	addr_rd	<= window_vcnt(8 downto 1) & window_hcnt(8 downto 1);
 	blank		<= '1' when (hcnt > h_pixels_across) or (vcnt > v_pixels_down) else '0';
-	picture	<= '1' when (blank = '0') and (hcnt > 64 and hcnt < 576) and vcnt > v_start else '0';
+	picture	<= '1' when (blank = '0') and (hcnt > h_start and hcnt < h_end) and (vcnt > v_start and vcnt < v_end) else '0';
 
 	O_HSYNC	<= '1' when (hcnt <= h_sync_on) or (hcnt > h_sync_off) else '0';
 	O_VSYNC	<= '1' when (vcnt <= v_sync_on) or (vcnt > v_sync_off) else '0';

@@ -43,6 +43,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity multicore_top is
+	generic (
+		hdmi_output_g	: boolean	:= true
+	);
 	port (
 		-- Clocks
 		clock_50_i			: in    std_logic;
@@ -176,7 +179,7 @@ architecture behavior of multicore_top is
 	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
 	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
 	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
-	signal cnt_ver_s			: std_logic_vector( 8 downto 0);
+	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal vga_col_s			: std_logic_vector( 3 downto 0);
 	signal vga_r_s				: std_logic_vector( 3 downto 0);
 	signal vga_g_s				: std_logic_vector( 3 downto 0);
@@ -225,7 +228,6 @@ begin
 	vg: entity work.colecovision
 	generic map (
 		num_maq_g		=> 6,
-		is_pal_g			=> false,
 		compat_rgb_g	=> 0
 	)
 	port map (
@@ -358,24 +360,6 @@ begin
 		joy		=> ps2_joy_s
 	);
 
-	-- VGA framebuffer
-	vga: entity work.vga
-	port map (
-		I_CLK			=> clock_master_s,
-		I_CLK_VGA	=> clock_vga_s,
-		I_COLOR		=> rgb_col_s,
-		I_HCNT		=> cnt_hor_s,
-		I_VCNT		=> cnt_ver_s,
-		O_HSYNC		=> vga_hsync_n_s,
-		O_VSYNC		=> vga_vsync_n_s,
-		O_COLOR		=> vga_col_s,
-		O_HCNT		=> open,
-		O_VCNT		=> open,
-		O_H			=> open,
-		O_BLANK		=> vga_blank_s
-	);
-
-
 	-- Glue Logic
 	por_n_s		<= pll_locked_s and btn_n_i(2);
 	reset_s		<= not pll_locked_s or not btn_n_i(4) or soft_reset_s;
@@ -386,9 +370,9 @@ begin
 	-- Purpose:
 	--   Counts the base clock and derives the clock enables.
 	--
-	clk_cnt: process (clock_master_s, por_n_s)
+	clk_cnt: process (clock_master_s, pll_locked_s)
 	begin
-		if por_n_s = '0' then
+		if pll_locked_s = '0' then
 			clk_cnt_q		<= (others => '0');
 			clk_en_10m7_q	<= '0';
 			clk_en_5m37_q	<= '0';
@@ -556,6 +540,23 @@ begin
 	-----------------------------------------------------------------------------
 	-- VGA Output
 	-----------------------------------------------------------------------------
+	-- VGA framebuffer
+	vga: entity work.vga
+	port map (
+		I_CLK			=> clock_master_s,
+		I_CLK_VGA	=> clock_vga_s,
+		I_COLOR		=> rgb_col_s,
+		I_HCNT		=> cnt_hor_s,
+		I_VCNT		=> cnt_ver_s,
+		O_HSYNC		=> vga_hsync_n_s,
+		O_VSYNC		=> vga_vsync_n_s,
+		O_COLOR		=> vga_col_s,
+		O_HCNT		=> open,
+		O_VCNT		=> open,
+		O_H			=> open,
+		O_BLANK		=> vga_blank_s
+	);
+
 	-- Process vga_col
 	--
 	-- Purpose:
@@ -578,37 +579,46 @@ begin
 		end if;
 	end process vga_col;
 
-	-- HDMI
-	inst_dvid: entity work.hdmi
-	generic map (
-		FREQ	=> 25200000,	-- pixel clock frequency 
-		FS		=> 48000,		-- audio sample rate - should be 32000, 41000 or 48000 = 48KHz
-		CTS	=> 25200,		-- CTS = Freq(pixclk) * N / (128 * Fs)
-		N		=> 6144			-- N = 128 * Fs /1000,  128 * Fs /1500 <= N <= 128 * Fs /300 (Check HDMI spec 7.2 for details)
-	) 
-	port map (
-		I_CLK_VGA		=> clock_vga_s,
-		I_CLK_TMDS		=> clock_dvi_s,
-		I_RED				=> vga_r_s & vga_r_s,
-		I_GREEN			=> vga_g_s & vga_g_s,
-		I_BLUE			=> vga_b_s & vga_b_s,
-		I_BLANK			=> vga_blank_s,
-		I_HSYNC			=> vga_hsync_n_s,
-		I_VSYNC			=> vga_vsync_n_s,
-		I_AUDIO_PCM_L 	=> sound_hdmi_s,
-		I_AUDIO_PCM_R	=> sound_hdmi_s,
-		O_TMDS			=> tdms_s
-	);
-	
-	sound_hdmi_s <= '0' & audio_s & "0000000";
+	uh: if hdmi_output_g generate
+		-- HDMI
+		inst_dvid: entity work.hdmi
+		generic map (
+			FREQ	=> 25200000,	-- pixel clock frequency 
+			FS		=> 48000,		-- audio sample rate - should be 32000, 41000 or 48000 = 48KHz
+			CTS	=> 25200,		-- CTS = Freq(pixclk) * N / (128 * Fs)
+			N		=> 6144			-- N = 128 * Fs /1000,  128 * Fs /1500 <= N <= 128 * Fs /300 (Check HDMI spec 7.2 for details)
+		) 
+		port map (
+			I_CLK_VGA		=> clock_vga_s,
+			I_CLK_TMDS		=> clock_dvi_s,
+			I_RED				=> vga_r_s & vga_r_s,
+			I_GREEN			=> vga_g_s & vga_g_s,
+			I_BLUE			=> vga_b_s & vga_b_s,
+			I_BLANK			=> vga_blank_s,
+			I_HSYNC			=> vga_hsync_n_s,
+			I_VSYNC			=> vga_vsync_n_s,
+			I_AUDIO_PCM_L 	=> sound_hdmi_s,
+			I_AUDIO_PCM_R	=> sound_hdmi_s,
+			O_TMDS			=> tdms_s
+		);
+		
+		sound_hdmi_s <= '0' & audio_s & "0000000";
+		vga_hsync_n_o	<= tdms_s(7);	-- 2+		10
+		vga_vsync_n_o	<= tdms_s(6);	-- 2-		11
+		vga_b_o(2)		<= tdms_s(5);	-- 1+		144	
+		vga_b_o(1)		<= tdms_s(4);	-- 1-		143
+		vga_r_o(0)		<= tdms_s(3);	-- 0+		133
+		vga_g_o(2)		<= tdms_s(2);	-- 0-		132
+		vga_r_o(1)		<= tdms_s(1);	-- CLK+	113
+		vga_r_o(2)		<= tdms_s(0);	-- CLK-	112
+	end generate;
 
-	vga_hsync_n_o	<= tdms_s(7);	-- 2+		10
-	vga_vsync_n_o	<= tdms_s(6);	-- 2-		11
-	vga_b_o(2)		<= tdms_s(5);	-- 1+		144	
-	vga_b_o(1)		<= tdms_s(4);	-- 1-		143
-	vga_r_o(0)		<= tdms_s(3);	-- 0+		133
-	vga_g_o(2)		<= tdms_s(2);	-- 0-		132
-	vga_r_o(1)		<= tdms_s(1);	-- CLK+	113
-	vga_r_o(2)		<= tdms_s(0);	-- CLK-	112
+	nuh: if not hdmi_output_g generate
+		vga_r_o			<= vga_r_s(3 downto 1);
+		vga_g_o			<= vga_g_s(3 downto 1);
+		vga_b_o			<= vga_b_s(3 downto 1);
+		vga_hsync_n_o	<= vga_hsync_n_s;
+		vga_vsync_n_o	<= vga_vsync_n_s;
+	end generate;
 
 end architecture;
