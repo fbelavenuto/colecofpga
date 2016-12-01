@@ -121,3 +121,8 @@ greybox_tmp
 /synth/zxuno/*.iaf
 /synth/zxuno/ipcore_dir/*.log
 /synth/zxuno/ipcore_dir/*.sym
+/src/pll1.qip
+/src/tb_clocks/transcript
+/src/tb_clocks/vsim.wlf
+/src/tb_clocks/work
+/synth/multicore/pll1.qip

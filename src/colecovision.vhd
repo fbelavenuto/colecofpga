@@ -1,5 +1,7 @@
 -------------------------------------------------------------------------------
 --
+-- ColecoFPGA project
+--
 -- Copyright (c) 2006, Arnim Laeuger (arnim.laeuger@gmx.net)
 -- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
 --
@@ -50,7 +52,7 @@ entity colecovision is
 		clock_i			: in  std_logic;
 		clk_en_10m7_i	: in  std_logic;
 		clk_en_5m37_i	: in  std_logic;
-		clock_cpu_en_o	: out std_logic;
+		clk_en_3m58_i	: in  std_logic;
 		reset_i			: in  std_logic;			-- Reset, tbem acionado quando por_n_i for 0
 		por_n_i			: in  std_logic;			-- Power-on Reset
 		-- Controller Interface ---------------------------------------------------
@@ -63,15 +65,8 @@ entity colecovision is
 		ctrl_p7_i		: in  std_logic_vector( 1 downto 0);
 		ctrl_p8_o		: out std_logic_vector( 1 downto 0);
 		ctrl_p9_i		: in  std_logic_vector( 1 downto 0);
-		-- BIOS ROM Interface -----------------------------------------------------
-		bios_loader_o	: out std_logic;
-		bios_addr_o		: out std_logic_vector(12 downto 0);	-- 8K
-		bios_ce_o		: out std_logic;
-		bios_oe_o		: out std_logic;
-		bios_we_o		: out std_logic;
-		bios_data_i		: in  std_logic_vector( 7 downto 0);
 		-- CPU RAM Interface ------------------------------------------------------
-		ram_addr_o		: out std_logic_vector(12 downto 0);	-- 8K
+		ram_addr_o		: out std_logic_vector(16 downto 0);	-- 128K
 		ram_ce_o			: out std_logic;
 		ram_oe_o			: out std_logic;
 		ram_we_o			: out std_logic;
@@ -85,7 +80,6 @@ entity colecovision is
 		vram_data_i		: in  std_logic_vector( 7 downto 0);
 		vram_data_o		: out std_logic_vector( 7 downto 0);
 		-- Cartridge ROM Interface ------------------------------------------------
-		cart_multcart_o: out std_logic;
 		cart_addr_o		: out std_logic_vector(14 downto 0);	-- 32K
 		cart_en_80_n_o	: out std_logic;
 		cart_en_a0_n_o	: out std_logic;
@@ -93,7 +87,6 @@ entity colecovision is
 		cart_en_e0_n_o	: out std_logic;
 		cart_ce_o		: out std_logic;
 		cart_oe_o		: out std_logic;
-		cart_we_o		: out std_logic;
 		cart_data_i		: in  std_logic_vector( 7 downto 0);
 		-- Audio Interface --------------------------------------------------------
 		audio_o			: out std_logic_vector(7 downto 0);
@@ -124,10 +117,6 @@ use std.textio.all;
 -- pragma translate_on
 
 architecture Behavior of colecovision is
-
-	-- Clock
-	signal clk_cnt_q			: unsigned(1 downto 0);
-	signal clk_en_3m58_s		: std_logic;
 
 	-- Reset
 	signal reset_n_s			: std_logic;
@@ -162,15 +151,18 @@ architecture Behavior of colecovision is
 	signal cfg_page_r			: std_logic_vector(7 downto 0);
 
 	-- BIOS
+	signal d_from_loader_s	: std_logic_vector( 7 downto 0);
 	signal loader_q			: std_logic;
 	signal multcart_q			: std_logic;
-	signal bios_ce_n_s		: std_logic;
+	signal bios_ce_s			: std_logic;
+	signal bios_oe_s			: std_logic;
+	signal bios_we_s			: std_logic;
 
 	-- RAM
-	signal ram_ce_n_s			: std_logic;
+	signal ram_ce_s			: std_logic;
 
 	-- VDP18 signal
-	signal d_from_vdp_s     : std_logic_vector( 7 downto 0);
+	signal d_from_vdp_s		: std_logic_vector( 7 downto 0);
 	signal vdp_r_n_s			: std_logic;
 	signal vdp_w_n_s			: std_logic;
 
@@ -197,6 +189,8 @@ architecture Behavior of colecovision is
 	signal cart_en_c0_n_s	: std_logic;
 	signal cart_en_e0_n_s	: std_logic;
 	signal cart_ce_s			: std_logic;
+	signal cart_oe_s			: std_logic;
+	signal cart_we_s			: std_logic;
 
 begin
 
@@ -224,6 +218,14 @@ begin
 		halt_n_o		=> open,
 		busrq_n_i	=> '1',
 		busak_n_o	=> open
+	);
+
+	-- Loader
+	lr: entity work.loaderrom
+	port map (
+		clk		=> clock_i,
+		addr		=> cpu_addr_s(12 downto 0),
+		data		=> d_from_loader_s
 	);
 
 	-----------------------------------------------------------------------------
@@ -271,7 +273,7 @@ begin
 	)
 	port map (
 		clock_i		=> clock_i,
-		clock_en_i	=> clk_en_3m58_s,
+		clock_en_i	=> clk_en_3m58_i,
 		res_n_i		=> reset_n_s,
 		ce_n_i		=> psg_we_n_s,
 		we_n_i		=> psg_we_n_s,
@@ -289,7 +291,7 @@ begin
 	ctrl_b : entity work.cv_ctrl
 	port map (
 		clock_i					=> clock_i,
-		clk_en_3m58_i		=> clk_en_3m58_s,
+		clk_en_3m58_i		=> clk_en_3m58_i,
 		reset_n_i			=> reset_n_s,
 		ctrl_en_key_n_i	=> ctrl_en_key_n_s,
 		ctrl_en_joy_n_i	=> ctrl_en_joy_n_s,
@@ -309,7 +311,7 @@ begin
 	-- SPI
 	sd: entity work.spi
 	port map (
-		clock_i			=> clk_en_3m58_s,
+		clock_i			=> clk_en_3m58_i,
 		reset_i			=> reset_i,
 		addr_i			=> cpu_addr_s(0),
 		cs_i				=> spi_cs_s,
@@ -329,31 +331,8 @@ begin
 
 	-- Glue
 	reset_n_s		<= not reset_i;
-	clk_en_cpu_s	<= clk_en_3m58_s and psg_ready_s and not m1_wait_q;
+	clk_en_cpu_s	<= clk_en_3m58_i and psg_ready_s and not m1_wait_q;
 
-	-----------------------------------------------------------------------------
-	-- Process clk_cnt
-	--
-	-- Purpose:
-	--   Implements the counter which is used to generate the clock enable
-	--   for the 3.58 MHz clock.
-	--
-	clk_cnt: process (por_n_i, clock_i)
-	begin
-		if por_n_i = '0' then
-			clk_cnt_q     <= (others => '0');
-		elsif rising_edge(clock_i) then
-			if clk_en_10m7_i = '1' then
-				if clk_cnt_q = 0 then
-					clk_cnt_q <= "10";
-				else
-					clk_cnt_q <= clk_cnt_q - 1;
-				end if;
-			end if;
-		end if;
-	end process clk_cnt;
-
-	clk_en_3m58_s <= clk_en_10m7_i	when	clk_cnt_q = 0	else	'0';
 
 	-----------------------------------------------------------------------------
 	-- Process m1_wait
@@ -366,7 +345,7 @@ begin
 		if reset_n_s = '0' or m1_n_s = '1' then
 			m1_wait_q   <= '0';
 		elsif rising_edge(clock_i) then
-			if clk_en_3m58_s = '1' then
+			if clk_en_3m58_i = '1' then
 				m1_wait_q <= not m1_wait_q;
 			end if;
 		end if;
@@ -375,29 +354,45 @@ begin
 	-----------------------------------------------------------------------------
 	-- Misc outputs
 	-----------------------------------------------------------------------------
-	clock_cpu_en_o	<= clk_en_3m58_s;
+	bios_we_s		<= not wr_n_s and bios_ce_s	when loader_q = '1'	else '0';
+	bios_oe_s		<= not rd_n_s and bios_ce_s;
 
-	bios_addr_o		<= cpu_addr_s(12 downto 0);
-	bios_ce_o		<= not bios_ce_n_s;
-	bios_we_o		<= not (wr_n_s or bios_ce_n_s)	when loader_q = '1'	else '0';
-	bios_oe_o		<= not (rd_n_s or bios_ce_n_s);
+	cart_ce_s		<= not (cart_en_80_n_s and cart_en_A0_n_s and cart_en_C0_n_s and cart_en_E0_n_s);
+	cart_oe_s		<= (not rd_n_s) and cart_ce_s;
+	cart_we_s		<= (not wr_n_s) and cart_ce_s		when multcart_q = '1'	else '0';
 
-	ram_addr_o		<= cpu_addr_s(12 downto 0);
+	-- RAM map
+	--														1111111
+	--														65432109876543210
+	-- 00000 - 01FFF = BIOS (8K)					0000xxxxxxxxxxxxx
+	-- 02000 - 03FFF = RAM  (8K)					0001xxxxxxxxxxxxx
+	-- 08000 - 0FFFF = Multicart (32K)			01xxxxxxxxxxxxxxx
+	-- 10000 - 17FFF = Cartridge (32K)			10xxxxxxxxxxxxxxx
+	--
+	ram_addr_o		<=
+	--  1111111
+	--  6543210
+		"0000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'															else
+		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'	and multcart_q = '1'								else	-- 8K linear RAM
+		"0001000" & cpu_addr_s( 9 downto 0)	when ram_ce_s = '1'	and multcart_q = '0'								else	-- 1K mirrored RAM
+		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'								else
+		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_oe_s = '1'	else
+		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_we_s = '1'	else
+		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '0'								else
+		(others => '0');
+
 	ram_data_o		<= d_from_cpu_s;
-	ram_ce_o			<= not ram_ce_n_s;
-	ram_we_o			<= not (wr_n_s or ram_ce_n_s);
-	ram_oe_o			<= not (rd_n_s or ram_ce_n_s);
+	ram_ce_o			<= ram_ce_s or bios_ce_s or cart_ce_s;
+	ram_we_o			<= (not wr_n_s and ram_ce_s) or bios_we_s or cart_we_s;
+	ram_oe_o			<= (not rd_n_s and ram_ce_s) or bios_oe_s or cart_oe_s;
 
 	cart_addr_o		<= cpu_addr_s(14 downto 0);
 	cart_en_80_n_o	<= cart_en_80_n_s;
 	cart_en_a0_n_o	<= cart_en_A0_n_s;
 	cart_en_c0_n_o	<= cart_en_C0_n_s;
 	cart_en_e0_n_o	<= cart_en_E0_n_s;
-	cart_ce_s		<= not (cart_en_80_n_s and cart_en_A0_n_s and cart_en_C0_n_s and cart_en_E0_n_s);
 	cart_ce_o		<= cart_ce_s;
-	cart_oe_o		<= (not rd_n_s) and cart_ce_s;
-	cart_we_o		<= (not wr_n_s) and cart_ce_s		when multcart_q = '1'	else '0';
-
+	cart_oe_o		<= cart_oe_s;
 
 	-- Address decoding
 	mem_access_s	<= '1'	when mreq_n_s = '0' and rfsh_n_s = '1'							else '0';
@@ -406,8 +401,8 @@ begin
 	io_write_s		<= '1'	when iorq_n_s = '0' and m1_n_s = '1' and wr_n_s = '0'		else '0';
 
 	-- memory
-	bios_ce_n_s		<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "000"		else '1';	-- BIOS         => 0000 to 1FFF
-	ram_ce_n_s		<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "011"		else '1';	-- RAM          => 6000 to 7FFF
+	bios_ce_s		<= '1'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "000"		else '0';	-- BIOS         => 0000 to 1FFF
+	ram_ce_s			<= '1'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "011"		else '0';	-- RAM          => 6000 to 7FFF
 	cart_en_80_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "100"		else '1';	-- Cartridge 80 => 8000 to 9FFF
 	cart_en_a0_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "101"		else '1';	-- Cartridge A0 => A000 to BFFF
 	cart_en_c0_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "110"		else '1';	-- Cartridge C0 => C000 to DFFF
@@ -434,7 +429,7 @@ begin
 		elsif reset_i = '1' then
 			multcart_q <= '1';
 		elsif rising_edge(clock_i) then
-			if clk_en_3m58_s = '1' and cfg_port_cs_s = '1' then
+			if clk_en_3m58_i = '1' and cfg_port_cs_s = '1' then
 				multcart_q <= d_from_cpu_s(1);
 				loader_q	  <= d_from_cpu_s(0);
 			end if;
@@ -447,25 +442,26 @@ begin
 		if por_n_i = '0' then
 			cfg_page_r <= (others => '0');
 		elsif rising_edge(clock_i) then
-			if clk_en_3m58_s = '1' and cfg_page_cs_s = '1' and wr_n_s = '0' then
+			if clk_en_3m58_i = '1' and cfg_page_cs_s = '1' and wr_n_s = '0' then
 				cfg_page_r <= d_from_cpu_s;
 			end if;
 		end if;
 	end process;
 
-	bios_loader_o		<= loader_q;
-	cart_multcart_o	<= multcart_q;
-
 	-- MUX data CPU
-	d_to_cpu_s		<= bios_data_i						when bios_ce_n_s = '0'		else
-							ram_data_i						when ram_ce_n_s  = '0'		else
-							d_from_vdp_s					when vdp_r_n_s = '0'			else
-							d_from_ctrl_s					when ctrl_r_n_s = '0'		else
-							cart_data_i						when cart_ce_s = '1'			else
-							d_from_spi_s					when spi_cs_s = '1'			else
-							machine_id_c					when machine_id_cs_s = '1'	else
-							cfg_page_r						when cfg_page_cs_s = '1'	else
-							(others => '1');
+	d_to_cpu_s	<=	-- Memory
+						d_from_loader_s				when loader_q = '1'			else
+						ram_data_i						when bios_ce_s = '1'			else
+						ram_data_i						when ram_ce_s  = '1'			else
+						ram_data_i						when cart_ce_s = '1'			else
+--						cart_data_i						when cart_ce_s = '1'			else
+						-- I/O
+						d_from_vdp_s					when vdp_r_n_s = '0'			else
+						d_from_ctrl_s					when ctrl_r_n_s = '0'		else
+						d_from_spi_s					when spi_cs_s = '1'			else
+						machine_id_c					when machine_id_cs_s = '1'	else
+						cfg_page_r						when cfg_page_cs_s = '1'	else
+						(others => '1');
 
 	-- Debug
 	D_cpu_addr	<= cpu_addr_s;
