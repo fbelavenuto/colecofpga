@@ -111,36 +111,14 @@ architecture behavior of coleco_top is
 	-- Clocks
 	signal clock_master_s	: std_logic;
 	signal clock_mem_s		: std_logic;
-	signal clk_cnt_q			: unsigned(1 downto 0);
-	signal clk_en_10m7_q		: std_logic;
-	signal clk_en_5m37_q		: std_logic;
-
-	-- ROM bios and loader
-	signal bios_loader_s		: std_logic;
-	signal bios_addr_s		: std_logic_vector(12 downto 0);		-- 8K
-	signal bios_data_s		: std_logic_vector(7 downto 0);
-	signal loader_data_s		: std_logic_vector(7 downto 0);
-	signal bios_ce_s			: std_logic;
-	signal bios_oe_s			: std_logic;
-	signal bios_we_s			: std_logic;
-
-	-- Cartridge
-	signal cart_multcart_s	: std_logic;
-	signal cart_addr_s		: std_logic_vector(14 downto 0);		-- 32K
-	signal cart_do_s			: std_logic_vector(7 downto 0);
-	signal cart_oe_s			: std_logic;
-	signal cart_ce_s			: std_logic;
-	signal cart_we_s			: std_logic;
-
-	-- SD
-	signal spi_data_in_s		: std_logic_vector(7 downto 0);
-	signal spi_data_out_s	: std_logic_vector(7 downto 0);
+	signal clock_vdp_en_s	: std_logic;
+	signal clock_5m_en_s		: std_logic;
+	signal clock_3m_en_s		: std_logic;
 
 	-- RAM memory
-	signal ram_addr_s			: std_logic_vector(12 downto 0);		-- 8K
-	signal ram_mirr_addr_s	: std_logic_vector(9 downto 0);		-- 1K (mirrored)
-	signal ram_do_s			: std_logic_vector(7 downto 0);
-	signal ram_di_s			: std_logic_vector(7 downto 0);
+	signal ram_addr_s			: std_logic_vector(16 downto 0);		-- 128K
+	signal d_from_ram_s		: std_logic_vector(7 downto 0);
+	signal d_to_ram_s			: std_logic_vector(7 downto 0);
 	signal ram_ce_s			: std_logic;
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
@@ -153,12 +131,9 @@ architecture behavior of coleco_top is
 	signal vram_oe_s			: std_logic;
 	signal vram_we_s			: std_logic;
 
-	-- SDRAM
-	signal sdram_addr_s		: std_logic_vector(16 downto 0);
-	signal sdram_data_o_s	: std_logic_vector(7 downto 0);
-	signal sdram_ce_s			: std_logic;
-	signal sdram_oe_s			: std_logic;
-	signal sdram_we_s			: std_logic;
+	-- SD
+	signal spi_data_in_s		: std_logic_vector(7 downto 0);
+	signal spi_data_out_s	: std_logic_vector(7 downto 0);
 
 	-- Audio
 	signal audio_signed_s	: signed(7 downto 0);
@@ -204,18 +179,27 @@ begin
 		locked	=> pll_locked_s
 	);
 
+	-- Clocks
+	clks: entity work.clocks
+	port map (
+		clock_i			=> clock_master_s,
+		por_i				=> not por_n_s,
+		clock_vdp_en_o	=> clock_vdp_en_s,
+		clock_5m_en_o	=> clock_5m_en_s,
+		clock_3m_en_o	=> clock_3m_en_s
+	);
+
 	-- The Colecovision
 	vg: entity work.colecovision
 	generic map (
 		num_maq_g		=> 5,
-		is_pal_g			=> 0,
 		compat_rgb_g	=> 0
 	)
 	port map (
 		clock_i				=> clock_master_s,
-		clk_en_10m7_i		=> clk_en_10m7_q,
-		clk_en_5m37_i		=> clk_en_5m37_q,
-		clock_cpu_en_o		=> open,
+		clk_en_10m7_i		=> clock_vdp_en_s,
+		clk_en_5m37_i		=> clock_5m_en_s,
+		clk_en_3m58_i		=> clock_3m_en_s,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,
 		-- Controller Interface
@@ -228,20 +212,13 @@ begin
 		ctrl_p7_i			=> ctrl_p7_s,
 		ctrl_p8_o			=> ctrl_p8_s,
 		ctrl_p9_i			=> ctrl_p9_s,
-		-- BIOS ROM Interface
-		bios_loader_o		=> bios_loader_s,
-      bios_addr_o			=> bios_addr_s,
-      bios_ce_o			=> bios_ce_s,
-		bios_oe_o			=> bios_oe_s,
-		bios_we_o			=> bios_we_s,
-      bios_data_i			=> bios_data_s,
 		-- CPU RAM Interface
 		ram_addr_o			=> ram_addr_s,
 		ram_ce_o				=> ram_ce_s,
 		ram_we_o				=> ram_we_s,
 		ram_oe_o				=> ram_oe_s,
-		ram_data_i			=> ram_do_s,
-		ram_data_o			=> ram_di_s,
+		ram_data_i			=> d_from_ram_s,
+		ram_data_o			=> d_to_ram_s,
 		-- Video RAM Interface
 		vram_addr_o			=> vram_addr_s,
 		vram_ce_o			=> vram_ce_s,
@@ -249,17 +226,6 @@ begin
 		vram_we_o			=> vram_we_s,
 		vram_data_i			=> vram_do_s,
 		vram_data_o			=> vram_di_s,
-		-- Cartridge ROM Interface
-		cart_multcart_o	=> cart_multcart_s,
-		cart_addr_o			=> cart_addr_s,
-		cart_en_80_n_o		=> open,
-		cart_en_a0_n_o		=> open,
-		cart_en_c0_n_o		=> open,
-		cart_en_e0_n_o		=> open,
-		cart_ce_o			=> cart_ce_s,
-		cart_oe_o			=> cart_oe_s,
-		cart_we_o			=> cart_we_s,
-		cart_data_i			=> cart_do_s,
 		-- Audio Interface
 		audio_o				=> open,
 		audio_signed_o		=> audio_signed_s,
@@ -278,14 +244,6 @@ begin
 		spi_cs_n_o			=> sd_cs_n_o,
 		-- DEBUG
 		D_cpu_addr			=> open
-	);
-
-	-- Loader
-	lr: entity work.loaderrom
-	port map (
-		clk		=> clock_master_s,
-		addr		=> bios_addr_s,
-		data		=> loader_data_s
 	);
 
 	-- Audio
@@ -315,16 +273,16 @@ begin
 			port0_cs_i		=> vram_ce_s,
 			port0_oe_i		=> vram_oe_s,
 			port0_we_i		=> vram_we_s,
-			port0_addr_i	=> "00000001000" & vram_addr_s,
+			port0_addr_i	=> "00000011111" & vram_addr_s,
 			port0_data_i	=> vram_di_s,
 			port0_data_o	=> vram_do_s,
 			-- Port 1
-			port1_cs_i		=> sdram_ce_s,
-			port1_oe_i		=> sdram_oe_s,
-			port1_we_i		=> sdram_we_s,
-			port1_addr_i	=> "00000000" & sdram_addr_s,
-			port1_data_i	=> ram_di_s,
-			port1_data_o	=> sdram_data_o_s,
+			port1_cs_i		=> ram_ce_s,
+			port1_oe_i		=> ram_oe_s,
+			port1_we_i		=> ram_we_s,
+			port1_addr_i	=> "00000000" & ram_addr_s,
+			port1_data_i	=> d_to_ram_s,
+			port1_data_o	=> d_from_ram_s,
 			-- SDRAM in board
 			mem_cke_o		=> sdram_cke_o,
 			mem_cs_n_o		=> sdram_cs_n_o,
@@ -353,16 +311,16 @@ begin
 			port0_cs_i		=> vram_ce_s,
 			port0_oe_i		=> vram_oe_s,
 			port0_we_i		=> vram_we_s,
-			port0_addr_i	=> "000001000" & vram_addr_s,
+			port0_addr_i	=> "000011111" & vram_addr_s,
 			port0_data_i	=> vram_di_s,
 			port0_data_o	=> vram_do_s,
 			-- Port 1
-			port1_cs_i		=> sdram_ce_s,
-			port1_oe_i		=> sdram_oe_s,
-			port1_we_i		=> sdram_we_s,
-			port1_addr_i	=> "000000" & sdram_addr_s,
-			port1_data_i	=> ram_di_s,
-			port1_data_o	=> sdram_data_o_s,
+			port1_cs_i		=> ram_ce_s,
+			port1_oe_i		=> ram_oe_s,
+			port1_we_i		=> ram_we_s,
+			port1_addr_i	=> "000000" & ram_addr_s,
+			port1_data_i	=> d_to_ram_s,
+			port1_data_o	=> d_from_ram_s,
 			-- SDRAM in board
 			mem_cke_o		=> sdram_cke_o,
 			mem_cs_n_o		=> sdram_cs_n_o,
@@ -419,9 +377,9 @@ begin
 	dblscan_b : entity work.dblscan
 	port map (
 		clk_6m_i			=> clock_master_s,
-		clk_en_6m_i		=> clk_en_5m37_q,
+		clk_en_6m_i		=> clock_5m_en_s,
 		clk_12m_i		=> clock_master_s,
-		clk_en_12m_i	=> clk_en_10m7_q,
+		clk_en_12m_i	=> clock_vdp_en_s,
 		col_i				=> rgb_col_s,
 		col_o				=> vga_col_s,
 		oddline_o		=> oddline_s,
@@ -439,70 +397,6 @@ begin
 
 	reset_s		<= not pll_locked_s or not keys_n_i(0) or soft_reset_s;
 	por_n_s		<= pll_locked_s;
-
-	-----------------------------------------------------------------------------
-	-- Process clk_cnt
-	--
-	-- Purpose:
-	--   Counts the base clock and derives the clock enables.
-	--
-	clk_cnt: process (clock_master_s, por_n_s)
-	begin
-		if por_n_s = '0' then
-			clk_cnt_q		<= (others => '0');
-			clk_en_10m7_q	<= '0';
-			clk_en_5m37_q	<= '0';
-
-		elsif rising_edge(clock_master_s) then
-	 
-			-- Clock counter --------------------------------------------------------
-			if clk_cnt_q = 3 then
-				clk_cnt_q <= (others => '0');
-			else
-				clk_cnt_q <= clk_cnt_q + 1;
-			end if;
-
-			-- 10.7 MHz clock enable ------------------------------------------------
-			case clk_cnt_q is
-				when "01" | "11" =>
-					clk_en_10m7_q <= '1';
-				when others =>
-					clk_en_10m7_q <= '0';
-			end case;
-
-			-- 5.37 MHz clock enable ------------------------------------------------
-			case clk_cnt_q is
-				when "11" =>
-					clk_en_5m37_q <= '1';
-				when others =>
-					clk_en_5m37_q <= '0';
-			end case;
-		end if;
-	end process clk_cnt;
-
-	-- Cartucho
-	-- cart_multcart_s bios_loader_s
-
-	-- RAM
-	ram_mirr_addr_s	<= ram_addr_s(9 downto 0);
-
-	sdram_addr_s
-		"0000" & bios_addr_s				when bios_ce_s = '1'																	else
-		"0011" & ram_addr_s				when ram_ce_s = '1'	and cart_multcart_s = '1'									else	-- 8K linear RAM
-		"0011100" & ram_mirr_addr_s	when ram_ce_s = '1'	and cart_multcart_s = '0'										else	-- 1K mirrored RAM
-		"01"   & cart_addr_s				when cart_ce_s = '1' and bios_loader_s = '1'									else
-		"01"   & cart_addr_s				when cart_ce_s = '1' and cart_multcart_s = '1' and cart_oe_s = '1'	else
-		"10"   & cart_addr_s				when cart_ce_s = '1' and cart_multcart_s = '1' and cart_we_s = '1'	else
-		"10"   & cart_addr_s				when cart_ce_s = '1' and cart_multcart_s = '0'								else
-		(others => '0');
-
-	sdram_ce_s	<= ram_ce_s or bios_ce_s or cart_ce_s;
-	sdram_oe_s	<= ram_oe_s or bios_oe_s or cart_oe_s;
-	sdram_we_s	<= ram_we_s or bios_we_s or cart_we_s;
-
-	bios_data_s		<= loader_data_s					when bios_loader_s = '1'	else 	sdram_data_o_s;
-	ram_do_s			<= sdram_data_o_s;
-	cart_do_s		<= sdram_data_o_s;
 
 	-----------------------------------------------------------------------------
 	-- Process pad_ctrl
@@ -610,7 +504,7 @@ begin
 	process (por_n_s, btn_dblscan_s)
 	begin
 		if por_n_s = '0' then
-			dblscan_en_s <= '1';
+			dblscan_en_s <= '1';							-- Enabled by default
 		elsif falling_edge(btn_dblscan_s) then
 			dblscan_en_s <= not dblscan_en_s;
 		end if;
@@ -645,7 +539,7 @@ begin
 			vga_g_o <= (others => '0');
 			vga_b_o <= (others => '0');
 		elsif rising_edge(clock_master_s) then
-			if clk_en_10m7_q = '1' then
+			if clock_vdp_en_s = '1' then
 				if dblscan_en_s = '0' then
 					vga_col_v := to_integer(unsigned(rgb_col_s));
 				else

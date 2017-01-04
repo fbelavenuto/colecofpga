@@ -324,15 +324,15 @@ begin
 		vram_we_o			=> vram_we_s,
 		vram_data_i			=> vram_do_s,
 		vram_data_o			=> vram_di_s,
-		-- Cartridge ROM Interface
-		cart_addr_o			=> open, -- cart_addr_s,
-		cart_en_80_n_o		=> open, -- cart_en_80_n_s,
-		cart_en_a0_n_o		=> open, -- cart_en_A0_n_s,
-		cart_en_c0_n_o		=> open, -- cart_en_C0_n_s,
-		cart_en_e0_n_o		=> open, -- cart_en_E0_n_s,
-		cart_ce_o			=> open, -- cart_ce_s,
-		cart_oe_o			=> open, -- cart_oe_s,
-		cart_data_i			=> (others => '0'), -- cart_do_s,
+--		-- Cartridge ROM Interface
+--		cart_addr_o			=> open, -- cart_addr_s,
+--		cart_en_80_n_o		=> open, -- cart_en_80_n_s,
+--		cart_en_a0_n_o		=> open, -- cart_en_A0_n_s,
+--		cart_en_c0_n_o		=> open, -- cart_en_C0_n_s,
+--		cart_en_e0_n_o		=> open, -- cart_en_E0_n_s,
+--		cart_ce_o			=> open, -- cart_ce_s,
+--		cart_oe_o			=> open, -- cart_oe_s,
+--		cart_data_i			=> (others => '0'), -- cart_do_s,
 		-- Audio Interface
 		audio_o				=> audio_s,
 		audio_signed_o		=> open,
@@ -440,17 +440,6 @@ begin
 		i2c_scl_io		=> I2C_SCLK
 	);
 
-	-- Key debounce
-	btndbl: entity work.debounce
-	generic map (
-		counter_size_g	=> 16
-	)
-	port map (
-		clk_i				=> clock_master_s,
-		button_i			=> KEY(1),
-		result_o			=> btn_dblscan_s
-	);
-
 	-- VGA Scandoubler
 	dblscan_b : entity work.dblscan
 	port map (
@@ -465,6 +454,17 @@ begin
 		hsync_n_o		=> vga_hsync_n_s,
 		vsync_n_o		=> vga_vsync_n_s,
 		blank_o			=> open
+	);
+
+	-- Key debounce
+	btndbl: entity work.debounce
+	generic map (
+		counter_size_g	=> 16
+	)
+	port map (
+		clk_i				=> clock_master_s,
+		button_i			=> KEY(1),
+		result_o			=> btn_dblscan_s
 	);
 
 	-- Controller

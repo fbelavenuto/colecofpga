@@ -157,6 +157,7 @@ set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ps2_dat_io
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sd_miso_i
 set_global_assignment -name VHDL_FILE "../../src/syn-wxeda/coleco_top.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-wxeda/pll1.qip"
+set_global_assignment -name VHDL_FILE ../../src/clocks.vhd
 set_global_assignment -name VHDL_FILE ../../src/colecovision.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd

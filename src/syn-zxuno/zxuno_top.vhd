@@ -1,5 +1,7 @@
 -------------------------------------------------------------------------------
 --
+-- ColecoFPGA project
+--
 -- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
 --
 -- All rights reserved
@@ -112,9 +114,9 @@ architecture behavior of zxuno_top is
 	-- Clocks
 	signal clock_master_s	: std_logic;
 	signal clock_mem_s		: std_logic;
-	signal clk_cnt_q			: unsigned(1 downto 0);
-	signal clk_en_10m7_q		: std_logic;
---	signal clk_en_5m37_q		: std_logic;
+	signal clock_vdp_en_s	: std_logic;
+	signal clock_5m_en_s		: std_logic;
+	signal clock_3m_en_s		: std_logic;
 
 	-- Resets
 	signal por_cnt_s			: unsigned(7 downto 0)				:= (others => '1');
@@ -123,39 +125,10 @@ architecture behavior of zxuno_top is
 	signal soft_reset_s		: std_logic;
 	signal core_reload_s		: std_logic;
 
-	-- SRAM
-	signal sram_addr_s		: std_logic_vector(18 downto 0);		-- 512K
-	signal sram_data_o_s		: std_logic_vector(7 downto 0);
-	signal sram_ce_s			: std_logic;
-	signal sram_oe_s			: std_logic;
-	signal sram_we_s			: std_logic;
-
-	-- ROM bios and loader
-	signal bios_loader_s		: std_logic;
-	signal bios_addr_s		: std_logic_vector(12 downto 0);		-- 8K
-	signal bios_data_s		: std_logic_vector(7 downto 0);
-	signal loader_data_s		: std_logic_vector(7 downto 0);
-	signal bios_ce_s			: std_logic;
-	signal bios_oe_s			: std_logic;
-	signal bios_we_s			: std_logic;
-
-	-- Cartridge
-	signal cart_multcart_s	: std_logic;
-	signal cart_addr_s		: std_logic_vector(14 downto 0);		-- 32K
-	signal cart_do_s			: std_logic_vector(7 downto 0);
-	signal cart_oe_s			: std_logic;
-	signal cart_ce_s			: std_logic;
-	signal cart_we_s			: std_logic;
-	signal cart_en_80_n_s	: std_logic;
-	signal cart_en_A0_n_s	: std_logic;
-	signal cart_en_C0_n_s	: std_logic;
-	signal cart_en_E0_n_s	: std_logic;
-
 	-- RAM memory
-	signal ram_addr_s			: std_logic_vector(12 downto 0);		-- 8K
-	signal ram_mirr_addr_s	: std_logic_vector(9 downto 0);		-- 1K (mirrored)
-	signal ram_do_s			: std_logic_vector(7 downto 0);
-	signal ram_di_s			: std_logic_vector(7 downto 0);
+	signal ram_addr_s			: std_logic_vector(16 downto 0);		-- 128K
+	signal d_from_ram_s		: std_logic_vector(7 downto 0);
+	signal d_to_ram_s			: std_logic_vector(7 downto 0);
 	signal ram_ce_s			: std_logic;
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
@@ -218,18 +191,27 @@ begin
 		CLK_OUT2	=> clock_mem_s					-- 42.857
 	);
 
+	-- Clocks
+	clks: entity work.clocks
+	port map (
+		clock_i			=> clock_master_s,
+		por_i				=> not por_n_s,
+		clock_vdp_en_o	=> clock_vdp_en_s,
+		clock_5m_en_o	=> clock_5m_en_s,
+		clock_3m_en_o	=> clock_3m_en_s
+	);
+
 	-- The Colecovision
 	vg: entity work.colecovision
 	generic map (
 		num_maq_g			=> 7,
-		is_pal_g				=> 0,
 		compat_rgb_g		=> 0
 	)
 	port map (
 		clock_i				=> clock_master_s,
-		clk_en_10m7_i		=> clk_en_10m7_q,
-		clk_en_5m37_i		=> clk_en_5m37_q,
-		clock_cpu_en_o		=> open,
+		clk_en_10m7_i		=> clock_vdp_en_s,
+		clk_en_5m37_i		=> clock_5m_en_s,
+		clk_en_3m58_i		=> clock_3m_en_s,
 		reset_i				=> reset_s,
 		por_n_i				=> por_n_s,
 		-- Controller Interface
@@ -242,20 +224,13 @@ begin
 		ctrl_p7_i			=> ctrl_p7_s,
 		ctrl_p8_o			=> ctrl_p8_s,
 		ctrl_p9_i			=> ctrl_p9_s,
-		-- BIOS ROM Interface
-		bios_loader_o		=> bios_loader_s,
-      bios_addr_o			=> bios_addr_s,
-      bios_ce_o			=> bios_ce_s,
-		bios_oe_o			=> bios_oe_s,
-		bios_we_o			=> bios_we_s,
-      bios_data_i			=> bios_data_s,
 		-- CPU RAM Interface
 		ram_addr_o			=> ram_addr_s,
 		ram_ce_o				=> ram_ce_s,
 		ram_we_o				=> ram_we_s,
 		ram_oe_o				=> ram_oe_s,
-		ram_data_i			=> ram_do_s,
-		ram_data_o			=> ram_di_s,
+		ram_data_i			=> d_from_ram_s,
+		ram_data_o			=> d_to_ram_s,
 		-- Video RAM Interface
 		vram_addr_o			=> vram_addr_s,
 		vram_ce_o			=> vram_ce_s,
@@ -263,17 +238,6 @@ begin
 		vram_we_o			=> vram_we_s,
 		vram_data_i			=> vram_do_s,
 		vram_data_o			=> vram_di_s,
-		-- Cartridge ROM Interface
-		cart_multcart_o	=> cart_multcart_s,
-		cart_addr_o			=> cart_addr_s,
-		cart_en_80_n_o		=> cart_en_80_n_s,
-		cart_en_a0_n_o		=> cart_en_A0_n_s,
-		cart_en_c0_n_o		=> cart_en_C0_n_s,
-		cart_en_e0_n_o		=> cart_en_E0_n_s,
-		cart_ce_o			=> cart_ce_s,
-		cart_oe_o			=> cart_oe_s,
-		cart_we_o			=> cart_we_s,
-		cart_data_i			=> cart_do_s,
 		-- Audio Interface
 		audio_o				=> open,
 		audio_signed_o		=> audio_signed_s,
@@ -299,12 +263,12 @@ begin
 	port map (
 		clk_i				=> clock_mem_s,
 		-- Port 0
-		porta0_addr_i	=> sram_addr_s,
-		porta0_ce_i		=> sram_ce_s,
-		porta0_oe_i		=> sram_oe_s,
-		porta0_we_i		=> sram_we_s,
-		porta0_data_i	=> ram_di_s,
-		porta0_data_o	=> sram_data_o_s,
+		porta0_addr_i	=> "00" & ram_addr_s,
+		porta0_ce_i		=> ram_ce_s,
+		porta0_oe_i		=> ram_oe_s,
+		porta0_we_i		=> ram_we_s,
+		porta0_data_i	=> d_to_ram_s,
+		porta0_data_o	=> d_from_ram_s,
 		-- Port 1
 		porta1_addr_i	=> "11111" & vram_addr_s,
 		porta1_ce_i		=> vram_ce_s,
@@ -332,14 +296,6 @@ begin
 		dac_o		=> audio_dac_s
 	);
 
-	-- Loader
-	lr: entity work.loaderrom
-	port map (
-		clk		=> clock_master_s,
-		addr		=> bios_addr_s,
-		data		=> loader_data_s
-	);
-
 	-- PS/2 keyboard interface
 	ps2if_inst : entity work.colecoKeyboard
 	port map (
@@ -358,7 +314,7 @@ begin
 	mb: entity work.multiboot
 	port map (
 		reset_i		=> reset_s,
-		clock_i		=> clk_en_10m7_q,
+		clock_i		=> clock_vdp_en_s,
 		start_i		=> core_reload_s
 	);
 
@@ -374,68 +330,6 @@ begin
 
 	por_n_s		<= '0' when por_cnt_s /= 0		else '1';
 	reset_s		<= not por_n_s or soft_reset_s;
-
-	-----------------------------------------------------------------------------
-	-- Process clk_cnt
-	--
-	-- Purpose:
-	--   Counts the base clock and derives the clock enables.
-	--
-	clk_cnt: process (clock_master_s, por_n_s)
-	begin
-		if por_n_s = '0' then
-			clk_cnt_q		<= (others => '0');
-			clk_en_10m7_q	<= '0';
---			clk_en_5m37_q	<= '0';
-
-		elsif rising_edge(clock_master_s) then
-	 
-			-- Clock counter --------------------------------------------------------
-			if clk_cnt_q = 3 then
-				clk_cnt_q <= (others => '0');
-			else
-				clk_cnt_q <= clk_cnt_q + 1;
-			end if;
-
-			-- 10.7 MHz clock enable ------------------------------------------------
-			case clk_cnt_q is
-				when "01" | "11" =>
-					clk_en_10m7_q <= '1';
-				when others =>
-					clk_en_10m7_q <= '0';
-			end case;
-
-			-- 5.37 MHz clock enable ------------------------------------------------
---			case clk_cnt_q is
---				when "11" =>
---					clk_en_5m37_q <= '1';
---				when others =>
---					clk_en_5m37_q <= '0';
---			end case;
-		end if;
-	end process clk_cnt;
-
-	-- RAM
-	ram_mirr_addr_s	<= ram_addr_s(9 downto 0);
-
-	sram_addr_s	<=
-		"000000" & bios_addr_s			when bios_ce_s = '1'																	else
-		"000011" & ram_addr_s			when ram_ce_s = '1'	and cart_multcart_s = '1'								else	-- 8K linear RAM
-		"000011100" & ram_mirr_addr_s	when ram_ce_s = '1'	and cart_multcart_s = '0'								else	-- 1K mirrored RAM
-		"0001"   & cart_addr_s			when cart_ce_s = '1' and bios_loader_s = '1'									else
-		"0001"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '1' and cart_oe_s = '1'	else
-		"0010"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '1' and cart_we_s = '1'	else
-		"0010"   & cart_addr_s			when cart_ce_s = '1' and cart_multcart_s = '0'								else
-		(others => '0');
-
-	sram_ce_s	<= ram_ce_s or bios_ce_s or cart_ce_s;
-	sram_oe_s	<= ram_oe_s or bios_oe_s or cart_oe_s;
-	sram_we_s	<= ram_we_s or bios_we_s or cart_we_s;
-
-	bios_data_s		<= loader_data_s					when bios_loader_s = '1'	else 	sram_data_o_s;
-	ram_do_s			<= sram_data_o_s;
-	cart_do_s		<= sram_data_o_s;
-
 	audio_s		<= std_logic_vector(unsigned(audio_signed_s + 128));
 	dac_l_o		<= audio_dac_s;
 	dac_r_o		<= audio_dac_s;

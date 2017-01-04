@@ -147,6 +147,7 @@ set_location_assignment PIN_113 -to sram_oe_n_o
 set_location_assignment PIN_30 -to sram_we_n_o
 set_global_assignment -name VHDL_FILE "../../src/syn-prot2/coleco_top.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-prot2/pll1.qip"
+set_global_assignment -name VHDL_FILE ../../src/clocks.vhd
 set_global_assignment -name VHDL_FILE ../../src/colecovision.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
