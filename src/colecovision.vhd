@@ -151,6 +151,7 @@ architecture Behavior of colecovision is
 	signal cfg_page_r			: std_logic_vector(7 downto 0);
 
 	-- BIOS
+	signal loader_ce_s		: std_logic;
 	signal d_from_loader_s	: std_logic_vector( 7 downto 0);
 	signal loader_q			: std_logic;
 	signal multcart_q			: std_logic;
@@ -354,6 +355,7 @@ begin
 	-----------------------------------------------------------------------------
 	-- Misc outputs
 	-----------------------------------------------------------------------------
+	loader_ce_s		<= not rd_n_s and bios_ce_s	when loader_q = '1'	else '0';
 	bios_we_s		<= not wr_n_s and bios_ce_s	when loader_q = '1'	else '0';
 	bios_oe_s		<= not rd_n_s and bios_ce_s;
 
@@ -450,7 +452,7 @@ begin
 
 	-- MUX data CPU
 	d_to_cpu_s	<=	-- Memory
-						d_from_loader_s				when loader_q = '1'			else
+						d_from_loader_s				when loader_ce_s = '1'		else
 						ram_data_i						when bios_ce_s = '1'			else
 						ram_data_i						when ram_ce_s  = '1'			else
 						ram_data_i						when cart_ce_s = '1'			else
