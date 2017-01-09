@@ -125,5 +125,5 @@ TIMESPEC TS_clock_master_s = PERIOD "clock_master_s" 46.560 ns HIGH 50%;
 NET "clock_mem_s" TNM_NET = clock_mem_s;
 TIMESPEC TS_clock_mem_s = PERIOD "clock_mem_s" 23.280 ns HIGH 50%;
 
-NET "clk_en_10m7_q" TNM_NET = clk_en_10m7_q;
-TIMESPEC TS_clk_en_10m7_q = PERIOD "clk_en_10m7_q" 93.120 ns HIGH 50%;
+#NET "clock_vdp_en_s" TNM_NET = clock_vdp_en_s;
+#TIMESPEC TS_clock_vdp_en_s = PERIOD "clock_vdp_en_s" 93.120 ns HIGH 50%;
