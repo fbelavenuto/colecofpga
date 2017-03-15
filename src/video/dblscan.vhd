@@ -132,7 +132,7 @@ begin
 	we_b_s	<= not ibank_s and clk_en_6m_i;
 	rgb_in_s	<= col_i;
 
-	u_ram_a : work.dpram
+	u_ram_a : entity work.dpram
 	generic map (
 		addr_width_g => 9,
 		data_width_g => 4
@@ -148,7 +148,7 @@ begin
 		data_b_o => rgb_out_a_s
 	);
 
-	u_ram_b : work.dpram
+	u_ram_b : entity work.dpram
 	generic map (
 		addr_width_g => 9,
 		data_width_g => 4
