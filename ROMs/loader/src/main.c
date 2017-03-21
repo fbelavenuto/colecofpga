@@ -7,6 +7,10 @@
 #include "mmc.h"
 #include "fat.h"
 
+__sfr __at 0x52 CONFIG;
+#define peek16(A) (*(volatile unsigned int*)(A))
+#define poke16(A,V) *(volatile unsigned int*)(A)=(V)
+
 static const char biosfiles[3][12] = {
 	"COLECO  BIO",
 	"ONYX    BIO",
@@ -39,12 +43,44 @@ void erro(unsigned char *erro)
 }
 
 /*******************************************************************************/
+void startMulticart()
+{
+	unsigned char *cp    = (unsigned char *)0x7100;
+
+	// Disable loader and start BIOS
+	*cp++=0x3e;		// LD A, 2
+	*cp++=0x02;
+	*cp++=0xd3;		// OUT (0x52), A
+	*cp++=0x52;
+	*cp++=0xc3;		// JP 0
+	*cp++=0x00;
+	*cp++=0x00;
+	__asm__("jp 0x7100");
+}
+
+/*******************************************************************************/
+void startExtCart()
+{
+	unsigned char *cp    = (unsigned char *)0x7100;
+
+	// Disable loader and start BIOS
+	*cp++=0x3e;		// LD A, 4
+	*cp++=0x04;
+	*cp++=0xd3;		// OUT (0x52), A
+	*cp++=0x52;
+	*cp++=0xc3;		// JP 0
+	*cp++=0x00;
+	*cp++=0x00;
+	__asm__("jp 0x7100");
+}
+
+/*******************************************************************************/
 void main()
 {
 	unsigned char *pbios = (unsigned char *)0x0000;
 	unsigned char *pcart = (unsigned char *)0x8000;
-	unsigned char *cp    = (unsigned char *)0x7100;
 	unsigned char i, joybtns, bi;
+	unsigned int  ext_cart_id = 0xFFFF;
 	char *biosfile       = NULL;
 	char msg[32];
 	fileTYPE file;
@@ -85,29 +121,30 @@ void main()
 		}
 		pbios += 512;
 	}
-	strcpy(msg, "Loading MULTCART ROM");
-	printCenter(10, msg);
-
-	if (!FileOpen(&file, mcfile)) {							// Abrir arquivo
-		erro("MULTCART.ROM file not found!");
-	}
-	if (file.size != 16384) {
-		erro("MULTCART.ROM file size wrong!");
-	}
-	for (i = 0; i < 32; i++) {								// Ler 32 blocos de 512 bytes (16384 bytes)
-		if (!FileRead(&file, pcart)) {
-			erro("Error reading file MULTCART.ROM");
+	// Test if external cartridge exists
+	ext_cart_id = peek16(0x8000);
+	if (ext_cart_id == 0x55AA || ext_cart_id == 0xAA55) {
+		// Has external cartridge
+		startExtCart();
+	} else {
+		// Do not has external cartridge
+		CONFIG = 0x03;
+		strcpy(msg, "Loading MULTCART ROM");
+		printCenter(10, msg);
+	
+		if (!FileOpen(&file, mcfile)) {							// Abrir arquivo
+			erro("MULTCART.ROM file not found!");
 		}
-		pcart += 512;
+		if (file.size != 16384) {
+			erro("MULTCART.ROM file size wrong!");
+		}
+		for (i = 0; i < 32; i++) {								// Ler 32 blocos de 512 bytes (16384 bytes)
+			if (!FileRead(&file, pcart)) {
+				erro("Error reading file MULTCART.ROM");
+			}
+			pcart += 512;
+		}
+		vdp_putstring("OK");
+		startMulticart();
 	}
-	vdp_putstring("OK");
-	// Disable loader and start BIOS
-	*cp++=0x3e;		// LD A, 2
-	*cp++=0x02;
-	*cp++=0xd3;		// OUT (0x52), A
-	*cp++=0x52;
-	*cp++=0xc3;		// JP 0
-	*cp++=0x00;
-	*cp++=0x00;
-	__asm__("jp 0x7100");
 }

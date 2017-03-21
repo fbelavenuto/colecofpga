@@ -101,6 +101,14 @@ entity zxuno_top is
 		-- GPIO
 --		gpio_io				: inout std_logic_vector(35 downto 6)	:= (others => 'Z');
 
+		-- Cartridge
+		cart_addr_o			: out   std_logic_vector(14 downto 0)	:= (others => '0');
+		cart_data_i			: in    std_logic_vector( 7 downto 0);
+		cart_en_80_n_o		: out   std_logic								:= '1';
+		cart_en_A0_n_o		: out   std_logic								:= '1';
+		cart_en_C0_n_o		: out   std_logic								:= '1';
+		cart_en_E0_n_o		: out   std_logic								:= '1';
+
 		-- Debug
 		led_o					: out   std_logic								:= '0'
 	);
@@ -238,6 +246,13 @@ begin
 		vram_we_o			=> vram_we_s,
 		vram_data_i			=> vram_do_s,
 		vram_data_o			=> vram_di_s,
+		-- Cartridge ROM Interface
+		cart_addr_o			=> cart_addr_o,
+		cart_data_i			=> cart_data_i,
+		cart_en_80_n_o		=> cart_en_80_n_o,
+		cart_en_a0_n_o		=> cart_en_A0_n_o,
+		cart_en_c0_n_o		=> cart_en_C0_n_o,
+		cart_en_e0_n_o		=> cart_en_E0_n_o,
 		-- Audio Interface
 		audio_o				=> open,
 		audio_signed_o		=> audio_signed_s,
