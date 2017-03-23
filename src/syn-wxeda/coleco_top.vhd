@@ -131,10 +131,6 @@ architecture behavior of coleco_top is
 	signal vram_oe_s			: std_logic;
 	signal vram_we_s			: std_logic;
 
-	-- SD
-	signal spi_data_in_s		: std_logic_vector(7 downto 0);
-	signal spi_data_out_s	: std_logic_vector(7 downto 0);
-
 	-- Audio
 	signal audio_signed_s	: signed(7 downto 0);
 	signal audio_s				: std_logic_vector(7 downto 0);
@@ -156,6 +152,7 @@ architecture behavior of coleco_top is
 	-- Keyboard
 	signal ps2_keys_s			: std_logic_vector(15 downto 0);
 	signal ps2_joy_s			: std_logic_vector(15 downto 0);
+
 	-- Controller
 	signal ctrl_p1_s			: std_logic_vector( 2 downto 1)	:= "00";
 	signal ctrl_p2_s			: std_logic_vector( 2 downto 1)	:= "00";
@@ -226,6 +223,13 @@ begin
 		vram_we_o			=> vram_we_s,
 		vram_data_i			=> vram_do_s,
 		vram_data_o			=> vram_di_s,
+		-- Cartridge ROM Interface
+		cart_addr_o			=> open,
+		cart_data_i			=> (others => '1'),
+		cart_en_80_n_o		=> open,
+		cart_en_a0_n_o		=> open,
+		cart_en_c0_n_o		=> open,
+		cart_en_e0_n_o		=> open,
 		-- Audio Interface
 		audio_o				=> open,
 		audio_signed_o		=> audio_signed_s,

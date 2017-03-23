@@ -239,6 +239,13 @@ begin
 		vram_we_o			=> vram_we_s,
 		vram_data_i			=> vram_do_s,
 		vram_data_o			=> vram_di_s,
+		-- Cartridge ROM Interface
+		cart_addr_o			=> open,
+		cart_data_i			=> (others => '1'),
+		cart_en_80_n_o		=> open,
+		cart_en_a0_n_o		=> open,
+		cart_en_c0_n_o		=> open,
+		cart_en_e0_n_o		=> open,
 		-- Audio Interface
 		audio_o				=> open,
 		audio_signed_o		=> audio_signed_s,
