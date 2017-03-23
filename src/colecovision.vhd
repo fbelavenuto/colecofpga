@@ -79,15 +79,15 @@ entity colecovision is
 		vram_we_o		: out std_logic;
 		vram_data_i		: in  std_logic_vector( 7 downto 0);
 		vram_data_o		: out std_logic_vector( 7 downto 0);
-		-- Cartridge ROM Interface ------------------------------------------------
-		cart_addr_o		: out std_logic_vector(14 downto 0);	-- 32K
-		cart_data_i		: in  std_logic_vector( 7 downto 0);
-		cart_en_80_n_o	: out std_logic;
-		cart_en_a0_n_o	: out std_logic;
-		cart_en_c0_n_o	: out std_logic;
-		cart_en_e0_n_o	: out std_logic;
+--		-- Cartridge ROM Interface ------------------------------------------------
+--		cart_addr_o		: out std_logic_vector(14 downto 0);	-- 32K
+--		cart_en_80_n_o	: out std_logic;
+--		cart_en_a0_n_o	: out std_logic;
+--		cart_en_c0_n_o	: out std_logic;
+--		cart_en_e0_n_o	: out std_logic;
 --		cart_ce_o		: out std_logic;
 --		cart_oe_o		: out std_logic;
+--		cart_data_i		: in  std_logic_vector( 7 downto 0);
 		-- Audio Interface --------------------------------------------------------
 		audio_o			: out std_logic_vector(7 downto 0);
 		audio_signed_o	: out signed(7 downto 0);
@@ -185,12 +185,10 @@ architecture Behavior of colecovision is
 	signal spi_rd_s			: std_logic;
 
 	-- Cartridge
-	signal ext_cart_en_q		: std_logic;
 	signal cart_en_80_n_s	: std_logic;
 	signal cart_en_a0_n_s	: std_logic;
 	signal cart_en_c0_n_s	: std_logic;
 	signal cart_en_e0_n_s	: std_logic;
-	signal ext_cart_ce_s		: std_logic;
 	signal cart_ce_s			: std_logic;
 	signal cart_oe_s			: std_logic;
 	signal cart_we_s			: std_logic;
@@ -361,8 +359,7 @@ begin
 	bios_we_s		<= not wr_n_s and bios_ce_s	when loader_q = '1'	else '0';
 	bios_oe_s		<= not rd_n_s and bios_ce_s;
 
-	cart_ce_s		<= not (cart_en_80_n_s and cart_en_A0_n_s and cart_en_C0_n_s and cart_en_E0_n_s) and not ext_cart_en_q;
-	ext_cart_ce_s	<= not (cart_en_80_n_s and cart_en_A0_n_s and cart_en_C0_n_s and cart_en_E0_n_s) and     ext_cart_en_q;
+	cart_ce_s		<= not (cart_en_80_n_s and cart_en_A0_n_s and cart_en_C0_n_s and cart_en_E0_n_s);
 	cart_oe_s		<= (not rd_n_s) and cart_ce_s;
 	cart_we_s		<= (not wr_n_s) and cart_ce_s		when multcart_q = '1'	else '0';
 
@@ -391,11 +388,11 @@ begin
 	ram_we_o			<= (not wr_n_s and ram_ce_s) or bios_we_s or cart_we_s;
 	ram_oe_o			<= (not rd_n_s and ram_ce_s) or bios_oe_s or cart_oe_s;
 
-	cart_addr_o		<= cpu_addr_s(14 downto 0);
-	cart_en_80_n_o	<= cart_en_80_n_s;
-	cart_en_a0_n_o	<= cart_en_A0_n_s;
-	cart_en_c0_n_o	<= cart_en_C0_n_s;
-	cart_en_e0_n_o	<= cart_en_E0_n_s;
+--	cart_addr_o		<= cpu_addr_s(14 downto 0);
+--	cart_en_80_n_o	<= cart_en_80_n_s;
+--	cart_en_a0_n_o	<= cart_en_A0_n_s;
+--	cart_en_c0_n_o	<= cart_en_C0_n_s;
+--	cart_en_e0_n_o	<= cart_en_E0_n_s;
 --	cart_ce_o		<= cart_ce_s;
 --	cart_oe_o		<= cart_oe_s;
 
@@ -429,16 +426,14 @@ begin
 	process (por_n_i, reset_i, clock_i)
 	begin
 		if por_n_i = '0' then
-			ext_cart_en_q	<= '1';
-			multcart_q		<= '1';
-			loader_q			<= '1';
+			multcart_q <= '1';
+			loader_q	  <= '1';
 		elsif reset_i = '1' then
-			multcart_q		<= '1';
+			multcart_q <= '1';
 		elsif rising_edge(clock_i) then
 			if clk_en_3m58_i = '1' and cfg_port_cs_s = '1' then
-				ext_cart_en_q	<= d_from_cpu_s(2);
-				multcart_q		<= d_from_cpu_s(1);
-				loader_q			<= d_from_cpu_s(0);
+				multcart_q <= d_from_cpu_s(1);
+				loader_q	  <= d_from_cpu_s(0);
 			end if;
 		end if;
 	end process;
@@ -461,7 +456,7 @@ begin
 						ram_data_i						when bios_ce_s = '1'			else
 						ram_data_i						when ram_ce_s  = '1'			else
 						ram_data_i						when cart_ce_s = '1'			else
-						cart_data_i						when ext_cart_ce_s = '1'	else
+--						cart_data_i						when cart_ce_s = '1'			else
 						-- I/O
 						d_from_vdp_s					when vdp_r_n_s = '0'			else
 						d_from_ctrl_s					when ctrl_r_n_s = '0'		else
