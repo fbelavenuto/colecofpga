@@ -508,9 +508,7 @@
     <property xil_pn:name="PROP_intWorkingDirUsed" xil_pn:value="No" xil_pn:valueState="non-default"/>
   </properties>
 
-  <bindings>
-    <binding xil_pn:location="/zxuno_top" xil_pn:name="zxuno_pins.ucf"/>
-  </bindings>
+  <bindings/>
 
   <libraries/>
 

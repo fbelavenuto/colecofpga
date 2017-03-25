@@ -143,7 +143,8 @@ void main(void)
 
 	CFG_PAGE = page;
 	if (w ==_RFIRE) {
-		__asm__("jp 0x0000");
+//		__asm__("jp 0x0000");
+		goto LOAD;
 	}
 	rc = pf_lseek(page * 27 * maxln + snum * 27 + 17);
 	rc = pf_read(buff, 13, &br);
