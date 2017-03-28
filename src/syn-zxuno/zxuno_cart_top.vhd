@@ -45,7 +45,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity zxuno_top is
+entity zxuno_cart_top is
 	port (
 		-- Clocks
 		clock_50_i			: in    std_logic;
@@ -98,9 +98,13 @@ entity zxuno_top is
 		vga_ntsc_o			: out   std_logic								:= '1';
 		vga_pal_o			: out   std_logic								:= '0';
 
-		-- HDMI
-		hdmi_p_o				: out   std_logic_vector(3 downto 0);
-		hdmi_n_o				: out   std_logic_vector(3 downto 0);
+		-- Cartridge
+		cart_addr_o			: out   std_logic_vector(14 downto 0)	:= (others => '0');
+		cart_data_i			: in    std_logic_vector( 7 downto 0);
+		cart_en_80_n_o		: out   std_logic								:= '1';
+		cart_en_A0_n_o		: out   std_logic								:= '1';
+		cart_en_C0_n_o		: out   std_logic								:= '1';
+		cart_en_E0_n_o		: out   std_logic								:= '1';
 
 		-- GPIO
 --		gpio_io				: inout std_logic_vector(35 downto 6)	:= (others => 'Z');
@@ -113,7 +117,7 @@ end entity;
 use work.cv_keys_pack.all;
 use work.vdp18_col_pack.all;
 
-architecture behavior of zxuno_top is
+architecture behavior of zxuno_cart_top is
 
 	-- Clocks
 	signal clock_master_s	: std_logic;
@@ -171,12 +175,6 @@ architecture behavior of zxuno_top is
 	signal vga_b_s				: std_logic_vector( 7 downto 0);
 	signal scanlines_en_s	: std_logic;
 	signal odd_line_s			: std_logic;
-	signal sound_hdmi_s		: std_logic_vector(15 downto 0);
-	signal tdms_r_s			: std_logic_vector( 9 downto 0);
-	signal tdms_g_s			: std_logic_vector( 9 downto 0);
-	signal tdms_b_s			: std_logic_vector( 9 downto 0);
-	signal tdms_p_s			: std_logic_vector( 3 downto 0);
-	signal tdms_n_s			: std_logic_vector( 3 downto 0);
 
 	-- Keyboard
 	signal ps2_keys_s			: std_logic_vector(15 downto 0);
@@ -269,12 +267,12 @@ begin
 		vram_data_i			=> vram_do_s,
 		vram_data_o			=> vram_di_s,
 		-- Cartridge ROM Interface
-		cart_addr_o			=> open,
-		cart_data_i			=> (others => '1'),
-		cart_en_80_n_o		=> open,
-		cart_en_a0_n_o		=> open,
-		cart_en_c0_n_o		=> open,
-		cart_en_e0_n_o		=> open,
+		cart_addr_o			=> cart_addr_o,
+		cart_data_i			=> cart_data_i,
+		cart_en_80_n_o		=> cart_en_80_n_o,
+		cart_en_a0_n_o		=> cart_en_A0_n_o,
+		cart_en_c0_n_o		=> cart_en_C0_n_o,
+		cart_en_e0_n_o		=> cart_en_E0_n_o,
 		-- Audio Interface
 		audio_o				=> open,
 		audio_signed_o		=> audio_signed_s,
@@ -556,45 +554,6 @@ begin
 			vga_b_s	<= rgb2_b_v;
 		end if;
 	end process;
-
-	-- HDMI
-	sound_hdmi_s <= '0' & audio_s & audio_s(7 downto 1);
-
-	hdmi: entity work.hdmi
-	generic map (
-		FREQ	=> 25200000,	-- pixel clock frequency 
-		FS		=> 48000,		-- audio sample rate - should be 32000, 41000 or 48000 = 48KHz
-		CTS	=> 25200,		-- CTS = Freq(pixclk) * N / (128 * Fs)
-		N		=> 6144			-- N = 128 * Fs /1000,  128 * Fs /1500 <= N <= 128 * Fs /300 (Check HDMI spec 7.2 for details)
-	)
-	port map (
-		I_CLK_PIXEL		=> clock_vga_s,
-		I_R				=> vga_r_s,
-		I_G				=> vga_g_s,
-		I_B				=> vga_b_s,
-		I_BLANK			=> vga_blank_s,
-		I_HSYNC			=> vga_hsync_n_s,
-		I_VSYNC			=> vga_vsync_n_s,
-		-- PCM audio
-		I_AUDIO_ENABLE	=> '1',
-		I_AUDIO_PCM_L 	=> sound_hdmi_s,
-		I_AUDIO_PCM_R	=> sound_hdmi_s,
-		-- TMDS parallel pixel synchronous outputs (serialize LSB first)
-		O_RED				=> tdms_r_s,
-		O_GREEN			=> tdms_g_s,
-		O_BLUE			=> tdms_b_s
-	);
-
-	hdmio: entity work.hdmi_out_xilinx
-	port map (
-		clock_pixel_i		=> clock_vga_s,
-		clock_tdms_i		=> clock_hdmi_s,
-		red_i					=> tdms_r_s,
-		green_i				=> tdms_g_s,
-		blue_i				=> tdms_b_s,
-		tmds_out_p			=> hdmi_p_o,
-		tmds_out_n			=> hdmi_n_o
-	);
 
 	vga_r_o			<= rgb_r_s									when vga_out_en_s = '0'	else vga_r_s(7 downto 5);
 	vga_g_o			<= rgb_g_s									when vga_out_en_s = '0'	else vga_g_s(7 downto 5);

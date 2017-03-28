@@ -41,7 +41,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package kbd_pkg is
-  
+
   constant SCANCODE_BACKQUOTE   : std_logic_vector(7 downto 0) := X"0E";
   constant SCANCODE_A           : std_logic_vector(7 downto 0) := X"1C";
   constant SCANCODE_B           : std_logic_vector(7 downto 0) := X"32";
@@ -133,7 +133,7 @@ package kbd_pkg is
 	alias SCANCODE_PAD7           : std_logic_vector(7 downto 0) is SCANCODE_HOME;
 	alias SCANCODE_PAD8           : std_logic_vector(7 downto 0) is SCANCODE_UP;
 	alias SCANCODE_PAD9           : std_logic_vector(7 downto 0) is SCANCODE_PGUP;
-	
+
   type kbd_row is array (natural range <>) of std_logic_vector(7 downto 0);
   type kbd_col is array (natural range <>) of std_logic_vector(7 downto 0);
 

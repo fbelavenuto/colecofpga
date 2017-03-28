@@ -1,7 +1,8 @@
 -------------------------------------------------------------------[01.11.2014]
 -- Encoder
 -------------------------------------------------------------------------------
--- Engineer: MVV <mvvproject@gmail.com>
+-- V1.0		03.08.2014	Initial release
+-- V2.0		01.11.2014	Added AUX
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -124,3 +125,10 @@ begin
 	end process;      
  
 end rtl;
+
+--
+--	process(CLK)
+--	begin
+--		if (CLK'event and CLK = '1') then
+--			case encoding is
+--				when "00"

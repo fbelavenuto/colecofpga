@@ -52,7 +52,9 @@ entity colecoKeyboard is
 		-- user outputs
 		keys				: out   std_logic_vector(15 downto 0);
 		joy				: out   std_logic_vector(15 downto 0);
-		core_reload_o	: out   std_logic
+		core_reload_o	: out   std_logic;
+		home_o			: out std_logic
+
 	);
 end colecoKeyboard;
 
@@ -78,12 +80,13 @@ architecture SYN of colecoKeyboard is
 	-- 1us tick for PS/2 interface
 	signal tick1us		: std_logic;
 
-	signal ps2_reset      : std_logic;
-	signal ps2_press      : std_logic;
-	signal ps2_release    : std_logic;
-	signal ps2_scancode   : std_logic_vector(7 downto 0);
-	signal ctrl_s				: std_logic								:= '0';
-	signal alt_s				: std_logic								:= '0';
+	signal ps2_reset		: std_logic;
+	signal ps2_press		: std_logic;
+	signal ps2_release	: std_logic;
+	signal ps2_scancode	: std_logic_vector(7 downto 0);
+	signal ctrl_s			: std_logic								:= '0';
+	signal alt_s			: std_logic								:= '0';
+	signal home_s			: std_logic								:= '0';
 
 begin
 
@@ -115,6 +118,7 @@ begin
 			keys				<= (others => '0');
 			joy				<= (others => '0');
 			core_reload_o	<= '0';
+			home_s			<= '0';
 		elsif rising_edge (clk) then
 			core_reload_o <= '0';
 
@@ -170,6 +174,8 @@ begin
 						if alt_s = '1' and ctrl_s = '1' then
 							core_reload_o <= '1';
 						end if;
+					when SCANCODE_HOME =>
+						home_s <= ps2_press;
 					when others =>
 						null;
 				end case;
@@ -194,5 +200,7 @@ begin
 		release  	=> ps2_release,
 		scancode 	=> ps2_scancode
 	);
+
+	home_o <= home_s;
 
 end SYN;
