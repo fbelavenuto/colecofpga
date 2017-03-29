@@ -110,6 +110,9 @@ NET "cart_en_80_n_o"    LOC="P30"  | IOSTANDARD = LVCMOS33;
 NET "cart_en_A0_n_o"    LOC="P27"  | IOSTANDARD = LVCMOS33;
 NET "cart_en_C0_n_o"    LOC="P56"  | IOSTANDARD = LVCMOS33;
 NET "cart_en_E0_n_o"    LOC="P17"  | IOSTANDARD = LVCMOS33;
+NET "snesjoy_clock_o"   LOC="P14"  | IOSTANDARD = LVCMOS33;
+NET "snesjoy_latch_o"   LOC="P12"  | IOSTANDARD = LVCMOS33;
+NET "snesjoy_data_i"    LOC="P15"  | IOSTANDARD = LVCMOS33;
 
 # GPIO
 #NET "gpio_io<6>"        LOC="P58"  | IOSTANDARD = LVCMOS33 | PULLUP;

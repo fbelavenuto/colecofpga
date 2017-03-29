@@ -3,5 +3,5 @@
 3 = Prototype 1 (SDRAM)
 4 = Prototype 2 (SRAM)
 5 = WXEDA
-6 = EP4C10 board
+6 = Multicore
 7 = ZX-Uno
