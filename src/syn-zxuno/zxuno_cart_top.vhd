@@ -431,7 +431,9 @@ begin
 							but_a_s, but_b_s,	but_up_s, but_down_s, but_left_s, but_right_s,
 							but_x_s, but_y_s,	but_sel_s, but_start_s,	but_tl_s, but_tr_s
 	)
-		variable key_v : natural range cv_keys_t'range;
+		variable key_v   : natural range cv_keys_t'range;
+		variable fire1_v : std_logic;
+		variable fire2_v : std_logic;
 	begin
 		-- quadrature device not implemented
 		ctrl_p7_s          <= "11";
@@ -539,22 +541,29 @@ begin
 			ctrl_p2_s(1) <= cv_keys_c(key_v)(2);
 			ctrl_p3_s(1) <= cv_keys_c(key_v)(3);
 			ctrl_p4_s(1) <= cv_keys_c(key_v)(4);
-			ctrl_p6_s(1) <= not ps2_keys_s(0) and joy_fire2_i; -- button right (fire 2)
+
 			if but_tl_s(0) = '1' and but_tr_s(0) = '1' then		-- fire 2 only if the TL and TR buttons are not pressed
-				ctrl_p6_s(1) <= but_a_s(0) and but_x_s(0);
+				fire2_v := but_a_s(0) and but_x_s(0);
+			else
+				fire2_v := '1';
 			end if;
+
+			ctrl_p6_s(1) <= not ps2_keys_s(0) and joy_fire2_i and fire2_v; -- button right (fire 2)
 
 		elsif ctrl_p5_s(1) = '1' and ctrl_p8_s(1) = '0' then
 			-- joystick and left button enabled -----------------------------------
-			ctrl_p1_s(1) <= not ps2_joy_s(0) and joy_up_i;		-- up
-			ctrl_p2_s(1) <= not ps2_joy_s(1) and joy_down_i;	-- down
-			ctrl_p3_s(1) <= not ps2_joy_s(2) and joy_left_i;	-- left
-			ctrl_p4_s(1) <= not ps2_joy_s(3) and joy_right_i;	-- right
-			ctrl_p6_s(1) <= not ps2_joy_s(4) and joy_fire1_i;	-- button left (fire 1)
+			ctrl_p1_s(1) <= not ps2_joy_s(0) and joy_up_i    and but_up_s(0);		-- up
+			ctrl_p2_s(1) <= not ps2_joy_s(1) and joy_down_i  and but_down_s(0);	-- down
+			ctrl_p3_s(1) <= not ps2_joy_s(2) and joy_left_i  and but_left_s(0);	-- left
+			ctrl_p4_s(1) <= not ps2_joy_s(3) and joy_right_i and but_right_s(0);	-- right
+
 			if but_tl_s(0) = '1' and but_tr_s(0) = '1' then		-- fire 1 only if the TL and TR buttons are not pressed
-				ctrl_p6_s(1) <= but_b_s(0) and but_y_s(0);
+				fire1_v := but_b_s(0) and but_y_s(0);
+			else
+				fire1_v := '1';
 			end if;
 
+			ctrl_p6_s(1) <= not ps2_joy_s(4) and joy_fire1_i and fire1_v;	-- button left (fire 1)
 		else
 			-- nothing active -----------------------------------------------------
 			ctrl_p1_s(1) <= '1';
