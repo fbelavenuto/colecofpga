@@ -52,7 +52,10 @@ end entity;
 architecture Behavioral of hdmi_out_xilinx is
 
 	signal mod5				: std_logic_vector(2 downto 0);
-	signal shift_r, shift_g, shift_b	: std_logic_vector(9 downto 0);
+	signal shift_r,
+			shift_g,
+			shift_b,
+			shift_clk		: std_logic_vector(9 downto 0);
 
 	type a_output_bits is array (0 to 3) of std_logic_vector(1 downto 0);
 	signal output_bits    : a_output_bits := (others => (others => '0'));
@@ -69,16 +72,18 @@ begin
 				shift_r <= red_i;
 				shift_g <= green_i;
 				shift_b <= blue_i;
+				shift_clk <= "0000011111";		-- the clock channel symbol is static
 			else
 				mod5 <= mod5 + "001";
-				shift_r <= "00" & shift_r(9 downto 2);
-				shift_g <= "00" & shift_g(9 downto 2);
-				shift_b <= "00" & shift_b(9 downto 2);
+				shift_r		<= "00" & shift_r(9 downto 2);
+				shift_g		<= "00" & shift_g(9 downto 2);
+				shift_b		<= "00" & shift_b(9 downto 2);
+				shift_clk	<= "00" & shift_clk(9 downto 2);
 			end if;
 		end if;
 	end process;
 
-	output_bits(3) <= clock_pixel_i & not clock_pixel_i;
+	output_bits(3) <= shift_clk(1 downto 0);
 	output_bits(2) <= shift_r(1 downto 0);
 	output_bits(1) <= shift_g(1 downto 0);
 	output_bits(0) <= shift_b(1 downto 0);
