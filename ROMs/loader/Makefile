@@ -13,7 +13,7 @@ ODIR = obj
 CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -I..
 LDFLAGS = -mz80 --code-loc 0x0100 --data-loc 0x6000 --no-std-crt0
 
-_OBJS = crt0.rel main.rel joy.rel mmc.rel fat.rel vdp.rel
+_OBJS = crt0.rel main.rel vdp.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 all: dir loader

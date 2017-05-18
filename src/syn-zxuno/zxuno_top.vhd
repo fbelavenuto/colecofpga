@@ -280,6 +280,8 @@ begin
 		audio_signed_o		=> audio_signed_s,
 		-- RGB Video Interface
 		col_o					=> rgb_col_s,
+		cnt_ver_o			=> cnt_ver_s,
+		cnt_hor_o			=> cnt_hor_s,
 		rgb_r_o				=> open,
 		rgb_g_o				=> open,
 		rgb_b_o				=> open,
@@ -503,9 +505,6 @@ begin
 		O_HSYNC		=> vga_hsync_n_s,
 		O_VSYNC		=> vga_vsync_n_s,
 		O_COLOR		=> vga_col_s,
-		O_HCNT		=> open,
-		O_VCNT		=> open,
-		O_H			=> open,
 		O_BLANK		=> vga_blank_s
 	);
 

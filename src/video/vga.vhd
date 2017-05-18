@@ -9,32 +9,30 @@ library IEEE;
 	use IEEE.numeric_std.all;
 	
 entity vga is
-port (
-	I_CLK			: in std_logic;
-	I_CLK_VGA	: in std_logic;
-	I_COLOR		: in std_logic_vector(3 downto 0);
-	I_HCNT		: in std_logic_vector(8 downto 0);
-	I_VCNT		: in std_logic_vector(7 downto 0);
-	O_HSYNC		: out std_logic;
-	O_VSYNC		: out std_logic;
-	O_COLOR		: out std_logic_vector(3 downto 0);
-	O_HCNT		: out std_logic_vector(9 downto 0);
-	O_VCNT		: out std_logic_vector(9 downto 0);
-	O_H			: out std_logic_vector(9 downto 0);
-	O_BLANK		: out std_logic);
+	port (
+		I_CLK			: in  std_logic;
+		I_CLK_VGA	: in  std_logic;
+		I_COLOR		: in  std_logic_vector(3 downto 0);
+		I_HCNT		: in  std_logic_vector(8 downto 0);
+		I_VCNT		: in  std_logic_vector(7 downto 0);
+		O_HSYNC		: out std_logic;
+		O_VSYNC		: out std_logic;
+		O_COLOR		: out std_logic_vector(3 downto 0);
+		O_BLANK		: out std_logic
+	);
 end vga;
 
 architecture rtl of vga is
-	signal pixel_out		: std_logic_vector(3 downto 0);
+	signal pixel_out		: std_logic_vector( 3 downto 0);
 	signal addr_rd			: std_logic_vector(15 downto 0);
 	signal addr_wr			: std_logic_vector(15 downto 0);
 	signal wren				: std_logic;
 	signal picture			: std_logic;
-	signal window_hcnt	: std_logic_vector(9 downto 0) := (others => '0');
-	signal window_vcnt	: std_logic_vector(8 downto 0) := (others => '0');
-	signal hcnt				: std_logic_vector(9 downto 0) := (others => '0');
-	signal h					: std_logic_vector(9 downto 0) := (others => '0');
-	signal vcnt				: std_logic_vector(9 downto 0) := (others => '0');
+	signal window_hcnt	: std_logic_vector( 9 downto 0) := (others => '0');
+	signal window_vcnt	: std_logic_vector( 8 downto 0) := (others => '0');
+	signal hcnt				: std_logic_vector( 9 downto 0) := (others => '0');
+	signal h					: std_logic_vector( 9 downto 0) := (others => '0');
+	signal vcnt				: std_logic_vector( 9 downto 0) := (others => '0');
 	signal hsync			: std_logic;
 	signal vsync			: std_logic;
 	signal blank			: std_logic;
@@ -62,7 +60,7 @@ architecture rtl of vga is
 	
 begin
 	
-	frbuff: entity work.dpram
+	frbuff: entity work.dpramX
 	generic map (
 		addr_width_g	=> 16,
 		data_width_g	=> 4
@@ -133,8 +131,5 @@ begin
 	O_VSYNC	<= '1' when (vcnt <= v_sync_on) or (vcnt > v_sync_off) else '0';
 	O_COLOR	<= pixel_out when picture = '1' else (others => '0');
 	O_BLANK	<= blank;
-	O_HCNT	<= hcnt;
-	O_VCNT	<= vcnt;
-	O_H		<= h;
 
 end rtl;
