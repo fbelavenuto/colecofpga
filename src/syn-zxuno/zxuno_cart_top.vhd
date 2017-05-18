@@ -599,9 +599,6 @@ begin
 		O_HSYNC		=> vga_hsync_n_s,
 		O_VSYNC		=> vga_vsync_n_s,
 		O_COLOR		=> vga_col_s,
-		O_HCNT		=> open,
-		O_VCNT		=> open,
-		O_H			=> open,
 		O_BLANK		=> vga_blank_s
 	);
 

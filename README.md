@@ -40,6 +40,8 @@ The arrow keys simulate the original directional. Z key is the 'fire 1', X key i
 
 The key combination CTRL+ALT+BACKSPACE, on ZX-Uno version, reloads the main core of Xilinx, returning to the main menu.
 
+In boards with VGA output (ZX-Uno), uses the HOME key to toggle VGA output.
+
 In this circuit the BIOS ROM is loaded from the SD card as well as the ROM multcart. In the source folder 'SD_Card' contains all necessary files to the SD card. Format it to FAT16 and copy the files.
 
 In multcart menu, use the directionals to navigate the ROMs and use FIRE 1 button to load the selected ROM.
