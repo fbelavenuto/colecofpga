@@ -60,7 +60,7 @@ architecture rtl of vga is
 	
 begin
 	
-	frbuff: entity work.dpramX
+	frbuff: entity work.dpram
 	generic map (
 		addr_width_g	=> 16,
 		data_width_g	=> 4

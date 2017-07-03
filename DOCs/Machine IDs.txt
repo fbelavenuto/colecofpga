@@ -5,3 +5,4 @@
 5 = WXEDA
 6 = Multicore
 7 = ZX-Uno
+8 = CVUNO board
