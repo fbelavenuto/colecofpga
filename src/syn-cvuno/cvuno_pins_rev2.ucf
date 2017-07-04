@@ -1,6 +1,9 @@
 # Clocks
 NET "clock_50_i"        LOC="P55"  | IOSTANDARD = LVCMOS33;
 
+# Buttons
+#NET "btn_reset_n_i"		LOC="P37"  | IOSTANDARD = LVCMOS33;
+
 # Video output
 NET "vga_r_o<3>"        LOC="P94"  | IOSTANDARD = LVCMOS33;
 NET "vga_r_o<2>"        LOC="P95"  | IOSTANDARD = LVCMOS33;
@@ -114,6 +117,8 @@ NET "cart_en_A0_n_o"    LOC="P24"  | IOSTANDARD = LVCMOS33;
 NET "cart_en_C0_n_o"    LOC="P51"  | IOSTANDARD = LVCMOS33;
 NET "cart_en_E0_n_o"    LOC="P16"  | IOSTANDARD = LVCMOS33;
 
+#LED
+NET "led_o"					LOC="P99"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
 
 #Created by Constraints Editor (xc6slx9-tqg144-2) - 2016/09/06
 NET "clock_50_i" TNM_NET = clock_50_i;
@@ -124,6 +129,9 @@ TIMESPEC TS_clock_master_s = PERIOD "clock_master_s" 46.560 ns HIGH 50%;
 
 NET "clock_mem_s" TNM_NET = clock_mem_s;
 TIMESPEC TS_clock_mem_s = PERIOD "clock_mem_s" 23.280 ns HIGH 50%;
+
+NET "clock_vga_s" TNM_NET = clock_vga_s;
+TIMESPEC TS_clock_vga_s = PERIOD "clock_vga_s" 40 ns HIGH 50%;
 
 #NET "clock_vdp_en_s" TNM_NET = clock_vdp_en_s;
 #TIMESPEC TS_clock_vdp_en_s = PERIOD "clock_vdp_en_s" 93.120 ns HIGH 50%;

@@ -50,18 +50,17 @@ entity cvuno_top is
 	port (
 		-- Clocks
 		clock_50_i			: in    std_logic;
-
-		-- SRAM (AS7C34096)
+		-- Buttons
+--		btn_reset_n_i		: in    std_logic;
+		-- SRAM
 		sram_addr_o			: out   std_logic_vector(20 downto 0)	:= (others => '0');
 		sram_data_io		: inout std_logic_vector(7 downto 0)	:= (others => 'Z');
 		sram_we_n_o			: out   std_logic								:= '1';
-
 		-- SD Card
 		sd_cs_n_o			: out   std_logic								:= '1';
 		sd_sclk_o			: out   std_logic								:= '0';
 		sd_mosi_o			: out   std_logic								:= '0';
 		sd_miso_i			: in    std_logic;
-
 		-- Flash
 		flash_cs_n_o		: out   std_logic								:= '1';
 		flash_sclk_o		: out   std_logic								:= '0';
@@ -69,7 +68,6 @@ entity cvuno_top is
 		flash_miso_i		: in    std_logic;
 		flash_wp_o			: out   std_logic								:= '0';
 		flash_hold_o		: out   std_logic								:= '1';
-
 		-- Joystick
 		joy_p5_o				: out   std_logic;
 		joy_p8_o				: out   std_logic;
@@ -87,26 +85,24 @@ entity cvuno_top is
 		joy2_p6_i			: in    std_logic;
 		joy2_p7_i			: in    std_logic;
 		joy2_p9_i			: in    std_logic;
-
 		-- Audio
 		dac_l_o				: out   std_logic								:= '0';
 		dac_r_o				: out   std_logic								:= '0';
-
 		-- VGA
 		vga_r_o				: out   std_logic_vector(3 downto 0)	:= (others => '0');
 		vga_g_o				: out   std_logic_vector(3 downto 0)	:= (others => '0');
 		vga_b_o				: out   std_logic_vector(3 downto 0)	:= (others => '0');
 		vga_hsync_n_o		: out   std_logic								:= '1';
 		vga_vsync_n_o		: out   std_logic								:= '1';
-
 		-- Cartridge
 		cart_addr_o			: out   std_logic_vector(14 downto 0)	:= (others => '0');
 		cart_data_i			: in    std_logic_vector( 7 downto 0);
 		cart_en_80_n_o		: out   std_logic								:= '1';
 		cart_en_A0_n_o		: out   std_logic								:= '1';
 		cart_en_C0_n_o		: out   std_logic								:= '1';
-		cart_en_E0_n_o		: out   std_logic								:= '1'
-
+		cart_en_E0_n_o		: out   std_logic								:= '1';
+		-- LED
+		led_o					: out   std_logic								:= '0'
 	);
 end entity;
 
@@ -150,9 +146,9 @@ architecture behavior of cvuno_top is
 	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
 	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
 	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
-	signal rgb_r_s				: std_logic_vector( 2 downto 0);
-	signal rgb_g_s				: std_logic_vector( 2 downto 0);
-	signal rgb_b_s				: std_logic_vector( 2 downto 0);
+--	signal rgb_r_s				: std_logic_vector( 2 downto 0);
+--	signal rgb_g_s				: std_logic_vector( 2 downto 0);
+--	signal rgb_b_s				: std_logic_vector( 2 downto 0);
 	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
 	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal vga_out_en_s		: std_logic;
@@ -250,6 +246,8 @@ begin
 		audio_signed_o		=> audio_signed_s,
 		-- RGB Video Interface
 		col_o					=> rgb_col_s,
+		cnt_hor_o			=> cnt_hor_s,
+		cnt_ver_o			=> cnt_ver_s,
 		rgb_r_o				=> open,
 		rgb_g_o				=> open,
 		rgb_b_o				=> open,
@@ -314,7 +312,7 @@ begin
 	end process;
 
 	por_n_s		<= '0' when por_cnt_s /= 0		else '1';
-	reset_s		<= not por_n_s;-- or soft_reset_s;
+	reset_s		<= not por_n_s;-- or not btn_reset_n_i;
 	audio_s		<= std_logic_vector(unsigned(audio_signed_s + 128));
 	dac_l_o		<= audio_dac_s;
 	dac_r_o		<= audio_dac_s;
@@ -350,29 +348,29 @@ begin
 		O_BLANK		=> vga_blank_s
 	);
 
-	-- 15 KHz
-	process (clock_master_s)
-		variable rgb_col_v	: natural range 0 to 15;
-		variable rgb1_r_v,
-					rgb1_g_v,
-					rgb1_b_v		: rgb_val_t;
-		variable rgb2_r_v,
-					rgb2_g_v,
-					rgb2_b_v		: std_logic_vector(7 downto 0);
-	begin
-		if rising_edge(clock_master_s) then
-			rgb_col_v := to_integer(unsigned(rgb_col_s));
-			rgb1_r_v	:= full_rgb_table_c(rgb_col_v)(r_c);
-			rgb1_g_v	:= full_rgb_table_c(rgb_col_v)(g_c);
-			rgb1_b_v	:= full_rgb_table_c(rgb_col_v)(b_c);
-			rgb2_r_v	:= std_logic_vector(to_unsigned(rgb1_r_v, 8));
-			rgb2_g_v	:= std_logic_vector(to_unsigned(rgb1_g_v, 8));
-			rgb2_b_v	:= std_logic_vector(to_unsigned(rgb1_b_v, 8));
-			rgb_r_s	<= rgb2_r_v(7 downto 5);
-			rgb_g_s	<= rgb2_g_v(7 downto 5);
-			rgb_b_s	<= rgb2_b_v(7 downto 5);
-		end if;
-	end process;
+--	-- 15 KHz
+--	process (clock_master_s)
+--		variable rgb_col_v	: natural range 0 to 15;
+--		variable rgb1_r_v,
+--					rgb1_g_v,
+--					rgb1_b_v		: rgb_val_t;
+--		variable rgb2_r_v,
+--					rgb2_g_v,
+--					rgb2_b_v		: std_logic_vector(7 downto 0);
+--	begin
+--		if rising_edge(clock_master_s) then
+--			rgb_col_v := to_integer(unsigned(rgb_col_s));
+--			rgb1_r_v	:= full_rgb_table_c(rgb_col_v)(r_c);
+--			rgb1_g_v	:= full_rgb_table_c(rgb_col_v)(g_c);
+--			rgb1_b_v	:= full_rgb_table_c(rgb_col_v)(b_c);
+--			rgb2_r_v	:= std_logic_vector(to_unsigned(rgb1_r_v, 8));
+--			rgb2_g_v	:= std_logic_vector(to_unsigned(rgb1_g_v, 8));
+--			rgb2_b_v	:= std_logic_vector(to_unsigned(rgb1_b_v, 8));
+--			rgb_r_s	<= rgb2_r_v(7 downto 5);
+--			rgb_g_s	<= rgb2_g_v(7 downto 5);
+--			rgb_b_s	<= rgb2_b_v(7 downto 5);
+--		end if;
+--	end process;
 
 	-- VGA
 	process (clock_vga_s)
@@ -403,5 +401,8 @@ begin
 	vga_b_o			<= vga_b_s(7 downto 4);
 	vga_hsync_n_o	<= vga_hsync_n_s;
 	vga_vsync_n_o	<= vga_vsync_n_s;
+
+	-- LED
+	led_o	<= not sd_cs_n_s;
 
 end architecture;
