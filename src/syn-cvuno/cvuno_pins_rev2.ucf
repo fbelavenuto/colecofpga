@@ -82,9 +82,9 @@ NET "joy1_p7_i"         LOC="P6"   | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy1_p9_i"         LOC="P12"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy2_p1_i"         LOC="P14"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy2_p2_i"         LOC="P67"  | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "joy2_p3_i"         LOC="P60"  | IOSTANDARD = LVCMOS33 | PULLUP;
+#NET "joy2_p3_i"         LOC="P60"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy2_p4_i"         LOC="P59"  | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "joy2_p6_i"         LOC="P69"  | IOSTANDARD = LVCMOS33 | PULLUP;
+#NET "joy2_p6_i"         LOC="P69"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy2_p7_i"         LOC="P66"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy2_p9_i"         LOC="P58"  | IOSTANDARD = LVCMOS33 | PULLUP;
 

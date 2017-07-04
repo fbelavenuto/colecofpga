@@ -283,6 +283,8 @@ begin
 		audio_signed_o		=> audio_signed_s,
 		-- RGB Video Interface
 		col_o					=> rgb_col_s,
+		cnt_hor_o			=> cnt_hor_s,
+		cnt_ver_o			=> cnt_ver_s,
 		rgb_r_o				=> open,
 		rgb_g_o				=> open,
 		rgb_b_o				=> open,
@@ -299,7 +301,7 @@ begin
 	 );
 
 	-- SRAM
-	sram0: entity work.dpSRAM_5128
+	sram: entity work.dpSRAM_5128
 	port map (
 		clk_i				=> clock_mem_s,
 		-- Port 0

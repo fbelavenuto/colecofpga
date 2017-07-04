@@ -80,9 +80,9 @@ entity cvuno_top is
 		joy1_p9_i			: in    std_logic;
 		joy2_p1_i			: in    std_logic;
 		joy2_p2_i			: in    std_logic;
-		joy2_p3_i			: in    std_logic;
+--		joy2_p3_i			: in    std_logic;
 		joy2_p4_i			: in    std_logic;
-		joy2_p6_i			: in    std_logic;
+--		joy2_p6_i			: in    std_logic;
 		joy2_p7_i			: in    std_logic;
 		joy2_p9_i			: in    std_logic;
 		-- Audio
@@ -131,24 +131,19 @@ architecture behavior of cvuno_top is
 
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
-	signal vram_do_s			: std_logic_vector(7 downto 0);
-	signal vram_di_s			: std_logic_vector(7 downto 0);
+	signal vram_do_s			: std_logic_vector( 7 downto 0);
+	signal vram_di_s			: std_logic_vector( 7 downto 0);
 	signal vram_ce_s			: std_logic;
 	signal vram_oe_s			: std_logic;
 	signal vram_we_s			: std_logic;
 
 	-- Audio
 	signal audio_signed_s	: signed(7 downto 0);
-	signal audio_s				: std_logic_vector(7 downto 0);
+	signal audio_s				: std_logic_vector( 7 downto 0);
 	signal audio_dac_s		: std_logic;
 
 	-- Video
 	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
-	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
-	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
---	signal rgb_r_s				: std_logic_vector( 2 downto 0);
---	signal rgb_g_s				: std_logic_vector( 2 downto 0);
---	signal rgb_b_s				: std_logic_vector( 2 downto 0);
 	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
 	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal vga_out_en_s		: std_logic;
@@ -251,8 +246,8 @@ begin
 		rgb_r_o				=> open,
 		rgb_g_o				=> open,
 		rgb_b_o				=> open,
-		hsync_n_o			=> rgb_hsync_n_s,
-		vsync_n_o			=> rgb_vsync_n_s,
+		hsync_n_o			=> open,
+		vsync_n_o			=> open,
 		comp_sync_n_o		=> open,
 		-- SPI
 		spi_miso_i			=> sd_miso_i,
@@ -322,9 +317,9 @@ begin
 	-- Controller
 	ctrl_p1_s	<= joy2_p1_i & joy1_p1_i;
 	ctrl_p2_s	<= joy2_p2_i & joy1_p2_i;
-	ctrl_p3_s	<= joy2_p3_i & joy1_p3_i;
+	ctrl_p3_s	<= '1' & joy1_p3_i;
 	ctrl_p4_s	<= joy2_p4_i & joy1_p4_i;
-	ctrl_p6_s	<= joy2_p6_i & joy1_p6_i;
+	ctrl_p6_s	<= '1' & joy1_p6_i;
 	ctrl_p7_s	<= joy2_p7_i & joy1_p7_i;
 	ctrl_p9_s	<= joy2_p9_i & joy1_p9_i;
 	joy_p5_o		<= ctrl_p5_s(1);
@@ -347,30 +342,6 @@ begin
 		O_COLOR		=> vga_col_s,
 		O_BLANK		=> vga_blank_s
 	);
-
---	-- 15 KHz
---	process (clock_master_s)
---		variable rgb_col_v	: natural range 0 to 15;
---		variable rgb1_r_v,
---					rgb1_g_v,
---					rgb1_b_v		: rgb_val_t;
---		variable rgb2_r_v,
---					rgb2_g_v,
---					rgb2_b_v		: std_logic_vector(7 downto 0);
---	begin
---		if rising_edge(clock_master_s) then
---			rgb_col_v := to_integer(unsigned(rgb_col_s));
---			rgb1_r_v	:= full_rgb_table_c(rgb_col_v)(r_c);
---			rgb1_g_v	:= full_rgb_table_c(rgb_col_v)(g_c);
---			rgb1_b_v	:= full_rgb_table_c(rgb_col_v)(b_c);
---			rgb2_r_v	:= std_logic_vector(to_unsigned(rgb1_r_v, 8));
---			rgb2_g_v	:= std_logic_vector(to_unsigned(rgb1_g_v, 8));
---			rgb2_b_v	:= std_logic_vector(to_unsigned(rgb1_b_v, 8));
---			rgb_r_s	<= rgb2_r_v(7 downto 5);
---			rgb_g_s	<= rgb2_g_v(7 downto 5);
---			rgb_b_s	<= rgb2_b_v(7 downto 5);
---		end if;
---	end process;
 
 	-- VGA
 	process (clock_vga_s)

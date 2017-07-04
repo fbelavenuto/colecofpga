@@ -1,6 +1,5 @@
 *.bak
 greybox_tmp
-/BINs
 /DOCs/Coleco_s700a/src/tb_vdp18
 /ROMs/multcart/*.ihx
 /ROMs/multcart/*.lk
