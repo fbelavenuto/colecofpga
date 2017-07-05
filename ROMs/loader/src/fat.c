@@ -292,6 +292,7 @@ unsigned char FileRead(fileTYPE *file, unsigned char *pBuffer)
 	sb += file->sector & cluster_mask;			// sector offset in cluster
 
 	if (!MMC_Read(sb, pBuffer)) {				// read sector from drive
+		DisableCard();
 		return 0;
 	} else {
 		// increment sector index
@@ -302,5 +303,6 @@ unsigned char FileRead(fileTYPE *file, unsigned char *pBuffer)
 			file->cluster = GetCluster(file->cluster);
 		}
 	}
+	DisableCard();
 	return 1;
 }
