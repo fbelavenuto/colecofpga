@@ -80,11 +80,9 @@ entity cvuno_top is
 		joy1_p9_i			: in    std_logic;
 		joy2_p1_i			: in    std_logic;
 		joy2_p2_i			: in    std_logic;
---		joy2_p3_i			: in    std_logic;
+		joy2_p3_i			: in    std_logic;
 		joy2_p4_i			: in    std_logic;
---		joy2_p6_i			: in    std_logic;
-		joy2_p7_i			: in    std_logic;
-		joy2_p9_i			: in    std_logic;
+		joy2_p6_i			: in    std_logic;
 		-- Audio
 		dac_l_o				: out   std_logic								:= '0';
 		dac_r_o				: out   std_logic								:= '0';
@@ -317,14 +315,13 @@ begin
 	-- Controller
 	ctrl_p1_s	<= joy2_p1_i & joy1_p1_i;
 	ctrl_p2_s	<= joy2_p2_i & joy1_p2_i;
-	ctrl_p3_s	<= '1' & joy1_p3_i;
+	ctrl_p3_s	<= joy2_p3_i & joy1_p3_i;
 	ctrl_p4_s	<= joy2_p4_i & joy1_p4_i;
-	ctrl_p6_s	<= '1' & joy1_p6_i;
-	ctrl_p7_s	<= joy2_p7_i & joy1_p7_i;
-	ctrl_p9_s	<= joy2_p9_i & joy1_p9_i;
+	ctrl_p6_s	<= joy2_p6_i & joy1_p6_i;
+	ctrl_p7_s	<= '1' & joy1_p7_i;
+	ctrl_p9_s	<= '1' & joy1_p9_i;
 	joy_p5_o		<= ctrl_p5_s(1);
 	joy_p8_o		<= ctrl_p8_s(1);
-
 
 	-----------------------------------------------------------------------------
 	-- VGA/RGB Output
