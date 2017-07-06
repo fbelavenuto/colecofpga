@@ -80,11 +80,11 @@ entity cvuno_top is
 		joy1_p9_i			: in    std_logic;
 		joy2_p1_i			: in    std_logic;
 		joy2_p2_i			: in    std_logic;
---		joy2_p3_i			: in    std_logic;
+		joy2_p3_i			: in    std_logic;
 		joy2_p4_i			: in    std_logic;
---		joy2_p6_i			: in    std_logic;
-		joy2_p7_i			: in    std_logic;
-		joy2_p9_i			: in    std_logic;
+		joy2_p6_i			: in    std_logic;
+--		joy2_p7_i			: in    std_logic;
+--		joy2_p9_i			: in    std_logic;
 		-- Audio
 		dac_l_o				: out   std_logic								:= '0';
 		dac_r_o				: out   std_logic								:= '0';
@@ -333,19 +333,20 @@ begin
 	sd_cs_n_o	<= sd_cs_n_s;
 
 	-- Memory
+	bios_addr_s	<= ram_addr_s(12 downto 0);
 	bios_ce_s	<= '1' when ram_addr_s(15 downto 13) = "000" and ram_ce_s = '1'	else '0';
 	bios_we_s	<= '1' when bios_ce_s = '1' and ram_we_s = '1'							else '0';
 
-	d_to_cv_s	<= d_from_ram_s	when bios_ce_s = '0'		else d_from_bios_s;
+	d_to_cv_s	<= d_from_bios_s when bios_ce_s = '1'		else d_from_ram_s;
 	
 	-- Controller
 	ctrl_p1_s	<= joy2_p1_i & joy1_p1_i;
 	ctrl_p2_s	<= joy2_p2_i & joy1_p2_i;
-	ctrl_p3_s	<= '1' & joy1_p3_i;
+	ctrl_p3_s	<= joy2_p3_i & joy1_p3_i;
 	ctrl_p4_s	<= joy2_p4_i & joy1_p4_i;
-	ctrl_p6_s	<= '1' & joy1_p6_i;
-	ctrl_p7_s	<= joy2_p7_i & joy1_p7_i;
-	ctrl_p9_s	<= joy2_p9_i & joy1_p9_i;
+	ctrl_p6_s	<= joy2_p6_i & joy1_p6_i;
+	ctrl_p7_s	<= '1' & joy1_p7_i;
+	ctrl_p9_s	<= '1' & joy1_p9_i;
 	joy_p5_o		<= ctrl_p5_s(1);
 	joy_p8_o		<= ctrl_p8_s(1);
 
