@@ -68,8 +68,8 @@ void main(void)
 	}
 
 	select = 0;
-	if (macid == 4) {
-		maxln = 15;		// Prototype 2
+	if (macid == 4 || macid == 8) {
+		maxln = 15;		// Prototype 2 or CVUNO
 	} else {
 		maxln = 13;		// Others
 	}
@@ -90,7 +90,7 @@ void main(void)
 		//                         11111111112222222222333
 		//                12345678901234567890123456789012
 		print_at(0, 3,   "     U/D:Select   L/R:Page");
-		if (macid != 4) {
+		if (macid != 4 && macid != 8) {
 			print_at(1,21,"<ESC>Reset <U/D>Sel <L/R>Page");
 			print_at(1,22,"<Q>* <W># <Z>L-Fire <X>R-Fire");
 		}
@@ -143,8 +143,8 @@ void main(void)
 
 	CFG_PAGE = page;
 	if (w ==_RFIRE) {
-		__asm__("jp 0x0000");
-//		goto LOAD;
+//		__asm__("jp 0x0000");
+		goto LOAD;
 	}
 	rc = pf_lseek(page * 27 * maxln + snum * 27 + 17);
 	rc = pf_read(buff, 13, &br);

@@ -83,6 +83,8 @@ entity cvuno_top is
 		joy2_p3_i			: in    std_logic;
 		joy2_p4_i			: in    std_logic;
 		joy2_p6_i			: in    std_logic;
+--		joy2_p7_i			: in    std_logic;
+--		joy2_p9_i			: in    std_logic;
 		-- Audio
 		dac_l_o				: out   std_logic								:= '0';
 		dac_r_o				: out   std_logic								:= '0';
@@ -118,6 +120,14 @@ architecture behavior of cvuno_top is
 	signal por_cnt_s			: unsigned(7 downto 0)				:= (others => '1');
 	signal por_n_s				: std_logic;
 	signal reset_s				: std_logic;
+
+	-- Internal BIOS
+	signal bios_addr_s		: std_logic_vector(12 downto 0);		-- 8K
+	signal d_from_bios_s		: std_logic_vector( 7 downto 0);
+	signal bios_ce_s			: std_logic;
+	signal bios_we_s			: std_logic;
+
+	signal d_to_cv_s			: std_logic_vector( 7 downto 0);
 
 	-- RAM memory
 	signal ram_addr_s			: std_logic_vector(16 downto 0);		-- 128K
@@ -218,7 +228,7 @@ begin
 		ram_ce_o				=> ram_ce_s,
 		ram_we_o				=> ram_we_s,
 		ram_oe_o				=> ram_oe_s,
-		ram_data_i			=> d_from_ram_s,
+		ram_data_i			=> d_to_cv_s,
 		ram_data_o			=> d_to_ram_s,
 		-- Video RAM Interface
 		vram_addr_o			=> vram_addr_s,
@@ -255,6 +265,17 @@ begin
 		-- DEBUG
 		D_cpu_addr			=> open--D_cpu_addr
 	 );
+
+	-- Internal BIOS
+	bios: entity work.colecobios
+	port map (
+		clock_i		=> clock_master_s,
+		addr_wr_i	=> bios_addr_s,
+		data_i		=> d_to_ram_s,
+		we_i			=> bios_we_s,
+		addr_rd_i	=> bios_addr_s,
+		data_o		=> d_from_bios_s
+	);
 
 	-- SRAM
 	sram: entity work.dpSRAM_5128
@@ -309,9 +330,15 @@ begin
 	audio_s		<= std_logic_vector(unsigned(audio_signed_s + 128));
 	dac_l_o		<= audio_dac_s;
 	dac_r_o		<= audio_dac_s;
-
 	sd_cs_n_o	<= sd_cs_n_s;
 
+	-- Memory
+	bios_addr_s	<= ram_addr_s(12 downto 0);
+	bios_ce_s	<= '1' when ram_addr_s(16 downto 13) = "0000" and ram_ce_s = '1'	else '0';
+	bios_we_s	<= '1' when bios_ce_s = '1' and ram_we_s = '1'							else '0';
+
+	d_to_cv_s	<= d_from_bios_s when bios_ce_s = '1'		else d_from_ram_s;
+	
 	-- Controller
 	ctrl_p1_s	<= joy2_p1_i & joy1_p1_i;
 	ctrl_p2_s	<= joy2_p2_i & joy1_p2_i;
@@ -322,6 +349,7 @@ begin
 	ctrl_p9_s	<= '1' & joy1_p9_i;
 	joy_p5_o		<= ctrl_p5_s(1);
 	joy_p8_o		<= ctrl_p8_s(1);
+
 
 	-----------------------------------------------------------------------------
 	-- VGA/RGB Output

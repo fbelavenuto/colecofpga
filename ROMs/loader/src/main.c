@@ -7,9 +7,14 @@
 #include "mmc.h"
 #include "fat.h"
 
-__sfr __at 0x52 CONFIG;
 #define peek16(A) (*(volatile unsigned int*)(A))
 #define poke16(A,V) *(volatile unsigned int*)(A)=(V)
+
+/* I/O ports */
+__sfr __at 0x52 CONFIG;
+__sfr __at 0x53 MACHID;
+
+/* Constants */
 
 static const char biosfiles[3][12] = {
 	"COLECO  BIO",
@@ -18,10 +23,15 @@ static const char biosfiles[3][12] = {
 };
 static const char * mcfile    = "MULTCARTROM";
 
-//                              11111111112222222222333
-//                     12345678901234567890123456789012
-const char TITULO[] = "      COLECOVISION LOADER       ";
+//                                     11111111112222222222333
+//                            12345678901234567890123456789012
+static const char TITULO[] = "      COLECOVISION LOADER       ";
 
+/* Variables */
+
+static unsigned char mach_id;
+
+/* Functions */
 
 /*******************************************************************************/
 void printCenter(unsigned char y, unsigned char *msg)
@@ -85,6 +95,8 @@ void main()
 	char msg[32];
 	fileTYPE file;
 
+	mach_id = MACHID;
+
 	vdp_init();
 	vdp_setcolor(COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring(TITULO);
@@ -103,19 +115,22 @@ void main()
 	strcat(msg, biosfile);
 	printCenter(9, msg);
 
-	if (!MMC_Init()) {										// Inicializar cartão
+	if (!MMC_Init()) {										// Initialize SD Card
+		if (mach_id == 8) {
+			startExtCart();
+		}
 		erro("Error on SD card initialization!");
 	}
-	if (!FindDrive()) {										// Abrir partição
+	if (!FindDrive()) {										// Find partition
 		erro("Error monting SD card!");
 	}
-	if (!FileOpen(&file, biosfile)) {						// Abrir arquivo
+	if (!FileOpen(&file, biosfile)) {						// Open file
 		erro("BIOS file not found!");
 	}
 	if (file.size != 8192) {
 		erro("BIOS file size is not 8192!");
 	}
-	for (i = 0; i < 16; i++) {								// Ler 16 blocos de 512 bytes (8192 bytes)
+	for (i = 0; i < 16; i++) {								// Read 16 blocks of 512 bytes (8192 bytes)
 		if (!FileRead(&file, pbios)) {
 			erro("Error reading BIOS file!");
 		}
@@ -132,13 +147,13 @@ void main()
 		strcpy(msg, "Loading MULTCART ROM");
 		printCenter(10, msg);
 	
-		if (!FileOpen(&file, mcfile)) {							// Abrir arquivo
+		if (!FileOpen(&file, mcfile)) {							// Open file
 			erro("MULTCART.ROM file not found!");
 		}
 		if (file.size != 16384) {
 			erro("MULTCART.ROM file size wrong!");
 		}
-		for (i = 0; i < 32; i++) {								// Ler 32 blocos de 512 bytes (16384 bytes)
+		for (i = 0; i < 32; i++) {								// Read 32 blocks of 512 bytes (16384 bytes)
 			if (!FileRead(&file, pcart)) {
 				erro("Error reading file MULTCART.ROM");
 			}

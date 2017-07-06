@@ -376,6 +376,7 @@ begin
 	--  1111111
 	--  6543210
 		"0000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'															else
+--		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'															else	-- 8K linear RAM
 		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'	and multcart_q = '1'								else	-- 8K linear RAM
 		"0001100" & cpu_addr_s( 9 downto 0)	when ram_ce_s = '1'	and multcart_q = '0'								else	-- 1K mirrored RAM
 		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'								else
