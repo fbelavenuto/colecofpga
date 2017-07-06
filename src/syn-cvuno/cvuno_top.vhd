@@ -43,6 +43,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 use work.vdp18_col_pack.all;
 
@@ -159,10 +160,10 @@ architecture behavior of cvuno_top is
 	signal vga_vsync_n_s		: std_logic;
 	signal vga_blank_s		: std_logic;
 	signal vga_col_s			: std_logic_vector( 3 downto 0);
-	signal vga_r_s				: std_logic_vector( 7 downto 0);
-	signal vga_g_s				: std_logic_vector( 7 downto 0);
-	signal vga_b_s				: std_logic_vector( 7 downto 0);
-	signal scanlines_en_s	: std_logic;
+	signal vga_r_s				: std_logic_vector( 3 downto 0);
+	signal vga_g_s				: std_logic_vector( 3 downto 0);
+	signal vga_b_s				: std_logic_vector( 3 downto 0);
+	signal scanlines_en_s	: std_logic									:= '0';
 	signal odd_line_s			: std_logic;
 
 	-- Controller
@@ -368,33 +369,67 @@ begin
 		O_BLANK		=> vga_blank_s
 	);
 
-	-- VGA
-	process (clock_vga_s)
-		variable rgb_col_v	: natural range 0 to 15;
-		variable rgb1_r_v,
-					rgb1_g_v,
-					rgb1_b_v		: rgb_val_t;
-		variable rgb2_r_v,
-					rgb2_g_v,
-					rgb2_b_v		: std_logic_vector(7 downto 0);
+	-- Scanlines
+	process(vga_hsync_n_s,vga_vsync_n_s)
 	begin
-		if rising_edge(clock_vga_s) then
-			rgb_col_v := to_integer(unsigned(vga_col_s));
-			rgb1_r_v	:= full_rgb_table_c(rgb_col_v)(r_c);
-			rgb1_g_v	:= full_rgb_table_c(rgb_col_v)(g_c);
-			rgb1_b_v	:= full_rgb_table_c(rgb_col_v)(b_c);
-			rgb2_r_v	:= std_logic_vector(to_unsigned(rgb1_r_v, 8));
-			rgb2_g_v	:= std_logic_vector(to_unsigned(rgb1_g_v, 8));
-			rgb2_b_v	:= std_logic_vector(to_unsigned(rgb1_b_v, 8));
-			vga_r_s	<= rgb2_r_v;
-			vga_g_s	<= rgb2_g_v;
-			vga_b_s	<= rgb2_b_v;
+		if vga_vsync_n_s = '0' then
+			odd_line_s <= '0';
+		elsif rising_edge(vga_hsync_n_s) then
+			odd_line_s <= not odd_line_s;
 		end if;
 	end process;
 
-	vga_r_o			<= vga_r_s(7 downto 4);
-	vga_g_o			<= vga_g_s(7 downto 4);
-	vga_b_o			<= vga_b_s(7 downto 4);
+	-- VGA
+	process (clock_vga_s)
+		variable vga_col_v	: natural range 0 to 15;
+		variable vga_r_v,
+					vga_g_v,
+					vga_b_v		: rgb_val_t;
+		variable vga_r1_v,
+					vga_g1_v,
+					vga_b1_v		: std_logic_vector(7 downto 0);
+		variable vga_r2_v,
+					vga_g2_v,
+					vga_b2_v		: std_logic_vector(3 downto 0);
+	begin
+		if rising_edge(clock_vga_s) then
+			vga_col_v := to_integer(unsigned(vga_col_s));
+			vga_r_v   := full_rgb_table_c(vga_col_v)(r_c);
+			vga_g_v   := full_rgb_table_c(vga_col_v)(g_c);
+			vga_b_v   := full_rgb_table_c(vga_col_v)(b_c);
+			vga_r1_v	 := std_logic_vector(to_unsigned(vga_r_v, 8));
+			vga_g1_v	 := std_logic_vector(to_unsigned(vga_g_v, 8));
+			vga_b1_v	 := std_logic_vector(to_unsigned(vga_b_v, 8));
+			vga_r2_v	 := vga_r1_v(7 downto 4);
+			vga_g2_v	 := vga_g1_v(7 downto 4);
+			vga_b2_v	 := vga_b1_v(7 downto 4);
+			if scanlines_en_s = '1' then
+				if vga_r2_v > 1 and odd_line_s = '1' then
+					vga_r_s <= vga_r2_v - 2;
+				else
+					vga_r_s <= vga_r2_v;
+				end if;
+				if vga_g2_v > 1 and odd_line_s = '1' then
+					vga_g_s <= vga_g2_v - 2;
+				else
+					vga_g_s <= vga_g2_v;
+				end if;
+				if vga_b2_v > 1 and odd_line_s = '1' then
+					vga_b_s <= vga_b2_v - 2;
+				else
+					vga_b_s <= vga_b2_v;
+				end if;
+			else
+				vga_r_s <= vga_r2_v;
+				vga_g_s <= vga_g2_v;
+				vga_b_s <= vga_b2_v;
+			end if;
+		end if;
+	end process vga_col;
+
+	vga_r_o			<= vga_r_s;
+	vga_g_o			<= vga_g_s;
+	vga_b_o			<= vga_b_s;
 	vga_hsync_n_o	<= vga_hsync_n_s;
 	vga_vsync_n_o	<= vga_vsync_n_s;
 
