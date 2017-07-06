@@ -334,7 +334,7 @@ begin
 
 	-- Memory
 	bios_addr_s	<= ram_addr_s(12 downto 0);
-	bios_ce_s	<= '1' when ram_addr_s(15 downto 13) = "000" and ram_ce_s = '1'	else '0';
+	bios_ce_s	<= '1' when ram_addr_s(16 downto 13) = "0000" and ram_ce_s = '1'	else '0';
 	bios_we_s	<= '1' when bios_ce_s = '1' and ram_we_s = '1'							else '0';
 
 	d_to_cv_s	<= d_from_bios_s when bios_ce_s = '1'		else d_from_ram_s;
