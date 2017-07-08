@@ -2,7 +2,7 @@
 NET "clock_50_i"        LOC="P55"  | IOSTANDARD = LVCMOS33;
 
 # Buttons
-#NET "btn_reset_n_i"		LOC="P37"  | IOSTANDARD = LVCMOS33;
+NET "btn_reset_n_i"		LOC="P12"  | IOSTANDARD = LVCMOS33;
 
 # Video output
 NET "vga_r_o<3>"        LOC="P94"  | IOSTANDARD = LVCMOS33;
@@ -60,7 +60,8 @@ NET "sram_we_n_o"       LOC="P121" | IOSTANDARD = LVCMOS33;
 NET "sd_cs_n_o"         LOC="P79"  | IOSTANDARD = LVCMOS33 | DRIVE = 8;
 NET "sd_sclk_o"         LOC="P75"  | IOSTANDARD = LVCMOS33 | DRIVE = 8;
 NET "sd_mosi_o"         LOC="P74"  | IOSTANDARD = LVCMOS33 | DRIVE = 8;
-NET "sd_miso_i"         LOC="P78"  | IOSTANDARD = LVCMOS33 | DRIVE = 8;
+NET "sd_miso_i"         LOC="P78"  | IOSTANDARD = LVCMOS33;
+NET "sd_cd_n_i"			LOC="P6"   | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # SPI Flash
 NET "flash_cs_n_o"      LOC="P38"  | IOSTANDARD = LVCMOS33 | DRIVE = 8;
@@ -78,8 +79,6 @@ NET "joy1_p2_i"         LOC="P5"   | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy1_p3_i"         LOC="P7"   | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy1_p4_i"         LOC="P11"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy1_p6_i"         LOC="P2"   | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "joy1_p7_i"         LOC="P6"   | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "joy1_p9_i"         LOC="P12"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy2_p1_i"         LOC="P14"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy2_p2_i"         LOC="P67"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy2_p3_i"         LOC="P58"  | IOSTANDARD = LVCMOS33 | PULLUP;

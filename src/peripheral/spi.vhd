@@ -59,7 +59,8 @@ entity spi is
 		spi_cs_o			: out   std_logic;
 		spi_sclk_o		: out   std_logic;
 		spi_mosi_o		: out   std_logic;
-		spi_miso_i		: in    std_logic
+		spi_miso_i		: in    std_logic;
+		sd_cd_n_i		: in    std_logic
 	);
 end entity;
 
@@ -75,10 +76,10 @@ architecture rtl of spi is
 
 begin
 
-	enable_s <= '1'	when cs_i = '1' and (wr_i = '1' or rd_i = '1')	else '0';
+	enable_s <= '1'		when cs_i = '1' and (wr_i = '1' or rd_i = '1')	else '0';
 
 	-- Port reading
-	data_o	<=
+	data_o	<= "0000000" & sd_cd_n_i when enable_s = '1' and addr_i = '0' and rd_i = '1'  else
 				   port51_r			when enable_s = '1' and addr_i = '1' and rd_i = '1'  else
 				   (others => '1');
 		

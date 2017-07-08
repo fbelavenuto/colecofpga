@@ -52,7 +52,7 @@ entity cvuno_top is
 		-- Clocks
 		clock_50_i			: in    std_logic;
 		-- Buttons
---		btn_reset_n_i		: in    std_logic;
+		btn_reset_n_i		: in    std_logic;
 		-- SRAM
 		sram_addr_o			: out   std_logic_vector(20 downto 0)	:= (others => '0');
 		sram_data_io		: inout std_logic_vector(7 downto 0)	:= (others => 'Z');
@@ -62,6 +62,7 @@ entity cvuno_top is
 		sd_sclk_o			: out   std_logic								:= '0';
 		sd_mosi_o			: out   std_logic								:= '0';
 		sd_miso_i			: in    std_logic;
+		sd_cd_n_i			: in    std_logic;
 		-- Flash
 		flash_cs_n_o		: out   std_logic								:= '1';
 		flash_sclk_o		: out   std_logic								:= '0';
@@ -77,15 +78,11 @@ entity cvuno_top is
 		joy1_p3_i			: in    std_logic;
 		joy1_p4_i			: in    std_logic;
 		joy1_p6_i			: in    std_logic;
-		joy1_p7_i			: in    std_logic;
-		joy1_p9_i			: in    std_logic;
 		joy2_p1_i			: in    std_logic;
 		joy2_p2_i			: in    std_logic;
 		joy2_p3_i			: in    std_logic;
 		joy2_p4_i			: in    std_logic;
 		joy2_p6_i			: in    std_logic;
---		joy2_p7_i			: in    std_logic;
---		joy2_p9_i			: in    std_logic;
 		-- Audio
 		dac_l_o				: out   std_logic								:= '0';
 		dac_r_o				: out   std_logic								:= '0';
@@ -263,6 +260,7 @@ begin
 		spi_mosi_o			=> sd_mosi_o,
 		spi_sclk_o			=> sd_sclk_o,
 		spi_cs_n_o			=> sd_cs_n_s,
+		sd_cd_n_i			=> sd_cd_n_i,
 		-- DEBUG
 		D_cpu_addr			=> open--D_cpu_addr
 	 );
@@ -327,7 +325,7 @@ begin
 	end process;
 
 	por_n_s		<= '0' when por_cnt_s /= 0		else '1';
-	reset_s		<= not por_n_s;-- or not btn_reset_n_i;
+	reset_s		<= not por_n_s or not btn_reset_n_i;
 	audio_s		<= std_logic_vector(unsigned(audio_signed_s + 128));
 	dac_l_o		<= audio_dac_s;
 	dac_r_o		<= audio_dac_s;
@@ -346,8 +344,8 @@ begin
 	ctrl_p3_s	<= joy2_p3_i & joy1_p3_i;
 	ctrl_p4_s	<= joy2_p4_i & joy1_p4_i;
 	ctrl_p6_s	<= joy2_p6_i & joy1_p6_i;
-	ctrl_p7_s	<= '1' & joy1_p7_i;
-	ctrl_p9_s	<= '1' & joy1_p9_i;
+	ctrl_p7_s	<= "11";
+	ctrl_p9_s	<= "11";
 	joy_p5_o		<= ctrl_p5_s(1);
 	joy_p8_o		<= ctrl_p8_s(1);
 

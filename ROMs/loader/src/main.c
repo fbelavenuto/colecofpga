@@ -11,6 +11,7 @@
 #define poke16(A,V) *(volatile unsigned int*)(A)=(V)
 
 /* I/O ports */
+__sfr __at 0x50 STATUS;
 __sfr __at 0x52 CONFIG;
 __sfr __at 0x53 MACHID;
 
@@ -96,6 +97,12 @@ void main()
 	fileTYPE file;
 
 	mach_id = MACHID;
+	
+	if (mach_id == 8) {
+		if ((STATUS & 0x01) == 0x01) {
+			startExtCart();
+		}
+	}
 
 	vdp_init();
 	vdp_setcolor(COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
@@ -116,9 +123,6 @@ void main()
 	printCenter(9, msg);
 
 	if (!MMC_Init()) {										// Initialize SD Card
-		if (mach_id == 8) {
-			startExtCart();
-		}
 		erro("Error on SD card initialization!");
 	}
 	if (!FindDrive()) {										// Find partition

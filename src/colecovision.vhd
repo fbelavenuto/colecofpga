@@ -104,6 +104,7 @@ entity colecovision is
 		spi_mosi_o		: out std_logic;
 		spi_sclk_o		: out std_logic;
 		spi_cs_n_o		: out std_logic;
+		sd_cd_n_i		: in  std_logic;
 		-- DEBUG
 		D_cpu_addr		: out std_logic_vector(15 downto 0)
 	);
@@ -324,7 +325,8 @@ begin
 		spi_cs_o			=> spi_cs_n_o,
 		spi_sclk_o		=> spi_sclk_o,
 		spi_mosi_o		=> spi_mosi_o,
-		spi_miso_i		=> spi_miso_i
+		spi_miso_i		=> spi_miso_i,
+		sd_cd_n_i		=> sd_cd_n_i
 	);
 
 	spi_wr_s		<= not wr_n_s;
