@@ -39,8 +39,9 @@ use unisim.vcomponents.all;
 
 entity hdmi_out_xilinx is
 	port (
-		clock_pixel_i		: in std_logic;	-- x1
-		clock_tdms_i		: in std_logic;	-- x5
+		clock_pixel_i		: in  std_logic;	-- x1
+		clock_tdms_i		: in  std_logic;	-- x5
+		clock_tdms_n_i		: in  std_logic;	-- 180o
 		red_i					: in  std_logic_vector(9 downto 0);
 		green_i				: in  std_logic_vector(9 downto 0);
 		blue_i				: in  std_logic_vector(9 downto 0);
@@ -100,8 +101,8 @@ begin
 			SRTYPE        => "ASYNC"
 		)
 		port map (
-			C0  =>     clock_tdms_i,
-			C1  => not clock_tdms_i,
+			C0  => clock_tdms_i,
+			C1  => clock_tdms_n_i,
 			CE  => '1',
 			R   => '0',
 			S   => '0',

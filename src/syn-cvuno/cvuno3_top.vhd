@@ -51,19 +51,23 @@ entity cvuno3_top is
 	port (
 		-- Clocks
 		clock_50_i			: in    std_logic;
+
 		-- Buttons
 		btn_reset_n_i		: in    std_logic;
+
 		-- SRAM
 		sram_addr_o			: out   std_logic_vector(20 downto 0)	:= (others => '0');
 		sram_data_io		: inout std_logic_vector(7 downto 0)	:= (others => 'Z');
 		sram_oe_n_o			: out   std_logic								:= '1';
 		sram_we_n_o			: out   std_logic								:= '1';
+
 		-- SD Card
 		sd_cs_n_o			: out   std_logic								:= '1';
 		sd_sclk_o			: out   std_logic								:= '0';
 		sd_mosi_o			: out   std_logic								:= '0';
 		sd_miso_i			: in    std_logic;
 		sd_cd_n_i			: in    std_logic;
+
 		-- Flash
 		flash_cs_n_o		: out   std_logic								:= '1';
 		flash_sclk_o		: out   std_logic								:= '0';
@@ -71,11 +75,13 @@ entity cvuno3_top is
 		flash_miso_i		: in    std_logic;
 		flash_wp_o			: out   std_logic								:= '0';
 		flash_hold_o		: out   std_logic								:= '1';
+
 		-- PS2
 		ps2_clk_io			: inout std_logic								:= 'Z';
 		ps2_data_io			: inout std_logic								:= 'Z';
 --		ps2_mouse_clk_io  : inout std_logic								:= 'Z';
 --		ps2_mouse_data_io : inout std_logic								:= 'Z';
+
 		-- Joystick
 		joy_p5_o				: out   std_logic;
 		joy_p8_o				: out   std_logic;
@@ -93,9 +99,11 @@ entity cvuno3_top is
 		joy2_p6_i			: in    std_logic;
 		joy2_p7_i			: in    std_logic;
 		joy2_p9_i			: in    std_logic;
+
 		-- Audio
 		dac_l_o				: out   std_logic								:= '0';
 		dac_r_o				: out   std_logic								:= '0';
+
 		-- VGA
 		vga_r_o				: out   std_logic_vector(3 downto 0)	:= (others => '0');
 		vga_g_o				: out   std_logic_vector(3 downto 0)	:= (others => '0');
@@ -104,19 +112,28 @@ entity cvuno3_top is
 		vga_vsync_n_o		: out   std_logic								:= '1';
 		stnd_o				: out   std_logic								:= '1';
 		pal_clk_en_o		: out   std_logic								:= '1';
+
+		-- HDMI
+		hdmi_p_o				: out   std_logic_vector(3 downto 0);
+		hdmi_n_o				: out   std_logic_vector(3 downto 0);
+
 		-- Cartridge
 		cart_addr_o			: out   std_logic_vector(14 downto 0)	:= (others => '0');
 		cart_data_i			: in    std_logic_vector( 7 downto 0);
+		cart_dir_o			: out   std_logic								:= '1';
+		cart_oe_n_o			: out   std_logic								:= '1';
 		cart_en_80_n_o		: out   std_logic								:= '1';
 		cart_en_A0_n_o		: out   std_logic								:= '1';
 		cart_en_C0_n_o		: out   std_logic								:= '1';
 		cart_en_E0_n_o		: out   std_logic								:= '1';
+
 		-- LED
-		led_o					: out   std_logic								:= '0'
+		led_o					: out   std_logic								:= '0';
+		led2_o				: out   std_logic								:= '0'
 	);
 end entity;
 
-architecture behavior of cvuno_top is
+architecture behavior of cvuno3_top is
 
 	-- Clocks
 	signal clock_master_s	: std_logic;
@@ -125,9 +142,12 @@ architecture behavior of cvuno_top is
 	signal clock_5m_en_s		: std_logic;
 	signal clock_3m_en_s		: std_logic;
 	signal clock_vga_s		: std_logic;
+	signal clock_hdmi_s		: std_logic;
+	signal clock_hdmi_n_s	: std_logic;
 
 	-- Resets
 	signal por_cnt_s			: unsigned(7 downto 0)				:= (others => '1');
+	signal por_s				: std_logic;
 	signal por_n_s				: std_logic;
 	signal reset_s				: std_logic;
 
@@ -174,6 +194,12 @@ architecture behavior of cvuno_top is
 	signal vga_b_s				: std_logic_vector( 3 downto 0);
 	signal scanlines_en_s	: std_logic									:= '0';
 	signal odd_line_s			: std_logic;
+	signal sound_hdmi_s		: std_logic_vector(15 downto 0);
+	signal tdms_r_s			: std_logic_vector( 9 downto 0);
+	signal tdms_g_s			: std_logic_vector( 9 downto 0);
+	signal tdms_b_s			: std_logic_vector( 9 downto 0);
+	signal tdms_p_s			: std_logic_vector( 3 downto 0);
+	signal tdms_n_s			: std_logic_vector( 3 downto 0);
 
 	-- Controller
 	signal ctrl_p1_s			: std_logic_vector( 2 downto 1);
@@ -197,14 +223,16 @@ begin
 		CLK_IN1	=> clock_50_i,				--  50.000
 		CLK_OUT1	=> clock_master_s,		--  21.47727 (21.739) MHz (6x NTSC)
 		CLK_OUT2	=> clock_mem_s,			--  42.95454 (43.478) MHz
-		CLK_OUT3 => clock_vga_s				--  25.20000 (25.000) MHz
+		CLK_OUT3 => clock_vga_s,			--  25.20000 (25.000) MHz
+		CLK_OUT4	=> clock_hdmi_s,			-- 126.0000 (125.000) MHz
+		CLK_OUT5	=> clock_hdmi_n_s			-- 180o
 	);
 
 	-- Clocks
 	clks: entity work.clocks
 	port map (
 		clock_i			=> clock_master_s,
-		por_i				=> not por_n_s,
+		por_i				=> por_s,
 		clock_vdp_en_o	=> clock_vdp_en_s,
 		clock_5m_en_o	=> clock_5m_en_s,
 		clock_3m_en_o	=> clock_3m_en_s
@@ -250,6 +278,7 @@ begin
 		-- Cartridge ROM Interface
 		cart_addr_o			=> cart_addr_o,
 		cart_data_i			=> cart_data_i,
+		cart_oe_n_o			=> cart_oe_n_o,
 		cart_en_80_n_o		=> cart_en_80_n_o,
 		cart_en_a0_n_o		=> cart_en_A0_n_o,
 		cart_en_c0_n_o		=> cart_en_C0_n_o,
@@ -310,7 +339,7 @@ begin
 		sram_addr_o		=> sram_addr_o(18 downto 0),
 		sram_data_io	=> sram_data_io,
 		sram_ce_n_o		=> open,
-		sram_oe_n_o		=> open,
+		sram_oe_n_o		=> sram_oe_n_o,
 		sram_we_n_o		=> sram_we_n_o
 	);
 
@@ -336,12 +365,14 @@ begin
 		end if;
 	end process;
 
+	por_s			<= '1' when por_cnt_s /= 0		else '0';
 	por_n_s		<= '0' when por_cnt_s /= 0		else '1';
-	reset_s		<= not por_n_s or not btn_reset_n_i;
+	reset_s		<= por_s or not btn_reset_n_i;
 	audio_s		<= std_logic_vector(unsigned(audio_signed_s + 128));
 	dac_l_o		<= audio_dac_s;
 	dac_r_o		<= audio_dac_s;
 	sd_cs_n_o	<= sd_cs_n_s;
+	cart_dir_o	<= '0';
 
 	-- Memory
 	bios_addr_s	<= ram_addr_s(12 downto 0);
@@ -356,8 +387,8 @@ begin
 	ctrl_p3_s	<= joy2_p3_i & joy1_p3_i;
 	ctrl_p4_s	<= joy2_p4_i & joy1_p4_i;
 	ctrl_p6_s	<= joy2_p6_i & joy1_p6_i;
-	ctrl_p7_s	<= "11";
-	ctrl_p9_s	<= "11";
+	ctrl_p7_s	<= joy2_p7_i & joy1_p7_i;
+	ctrl_p9_s	<= joy2_p9_i & joy1_p9_i;
 	joy_p5_o		<= ctrl_p5_s(1);
 	joy_p8_o		<= ctrl_p8_s(1);
 
@@ -443,7 +474,48 @@ begin
 	vga_hsync_n_o	<= vga_hsync_n_s;
 	vga_vsync_n_o	<= vga_vsync_n_s;
 
+	-- HDMI
+	sound_hdmi_s <= '0' & audio_s & audio_s(7 downto 1);
+
+	hdmi: entity work.hdmi
+	generic map (
+		FREQ	=> 25200000,	-- pixel clock frequency 
+		FS		=> 48000,		-- audio sample rate - should be 32000, 41000 or 48000 = 48KHz
+		CTS	=> 25200,		-- CTS = Freq(pixclk) * N / (128 * Fs)
+		N		=> 6144			-- N = 128 * Fs /1000,  128 * Fs /1500 <= N <= 128 * Fs /300 (Check HDMI spec 7.2 for details)
+	)
+	port map (
+		I_CLK_PIXEL		=> clock_vga_s,
+		I_R				=> vga_r_s & vga_r_s,
+		I_G				=> vga_g_s & vga_g_s,
+		I_B				=> vga_b_s & vga_g_s,
+		I_BLANK			=> vga_blank_s,
+		I_HSYNC			=> vga_hsync_n_s,
+		I_VSYNC			=> vga_vsync_n_s,
+		-- PCM audio
+		I_AUDIO_ENABLE	=> '1',
+		I_AUDIO_PCM_L 	=> sound_hdmi_s,
+		I_AUDIO_PCM_R	=> sound_hdmi_s,
+		-- TMDS parallel pixel synchronous outputs (serialize LSB first)
+		O_RED				=> tdms_r_s,
+		O_GREEN			=> tdms_g_s,
+		O_BLUE			=> tdms_b_s
+	);
+
+	hdmio: entity work.hdmi_out_xilinx
+	port map (
+		clock_pixel_i		=> clock_vga_s,
+		clock_tdms_i		=> clock_hdmi_s,
+		clock_tdms_n_i		=> clock_hdmi_n_s,
+		red_i					=> tdms_r_s,
+		green_i				=> tdms_g_s,
+		blue_i				=> tdms_b_s,
+		tmds_out_p			=> hdmi_p_o,
+		tmds_out_n			=> hdmi_n_o
+	);
+
 	-- LED
-	led_o	<= not sd_cs_n_s;
+	led_o		<= not sd_cs_n_s;
+	led2_o	<= '0';
 
 end architecture;

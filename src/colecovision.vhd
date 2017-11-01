@@ -82,6 +82,7 @@ entity colecovision is
 		-- Cartridge ROM Interface ------------------------------------------------
 		cart_addr_o		: out std_logic_vector(14 downto 0);	-- 32K
 		cart_data_i		: in  std_logic_vector( 7 downto 0);
+		cart_oe_n_o		: out std_logic;
 		cart_en_80_n_o	: out std_logic;
 		cart_en_a0_n_o	: out std_logic;
 		cart_en_c0_n_o	: out std_logic;
@@ -393,6 +394,7 @@ begin
 	ram_oe_o			<= (not rd_n_s and ram_ce_s) or bios_oe_s or cart_oe_s;
 
 	cart_addr_o		<= cpu_addr_s(14 downto 0);
+	cart_oe_n_o		<= not cart_oe_s;
 	cart_en_80_n_o	<= cart_en_80_n_s or rd_n_s	when ext_cart_en_q = '1'	else '1';
 	cart_en_a0_n_o	<= cart_en_A0_n_s or rd_n_s	when ext_cart_en_q = '1'	else '1';
 	cart_en_c0_n_o	<= cart_en_C0_n_s or rd_n_s	when ext_cart_en_q = '1'	else '1';
