@@ -488,7 +488,7 @@ begin
 		I_CLK_PIXEL		=> clock_vga_s,
 		I_R				=> vga_r_s & vga_r_s,
 		I_G				=> vga_g_s & vga_g_s,
-		I_B				=> vga_b_s & vga_g_s,
+		I_B				=> vga_b_s & vga_b_s,
 		I_BLANK			=> vga_blank_s,
 		I_HSYNC			=> vga_hsync_n_s,
 		I_VSYNC			=> vga_vsync_n_s,
