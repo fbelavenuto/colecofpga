@@ -173,6 +173,7 @@ architecture Behavior of colecovision is
 	signal psg_ready_s          : std_logic;
 	signal psg_we_n_s			: std_logic;
 
+
 	 -- AY-8910 signal
 	signal ay_d_s           : std_logic_vector( 7 downto 0);
 	signal ay_ch_a_s        : unsigned( 11 downto 0);
@@ -180,6 +181,8 @@ architecture Behavior of colecovision is
 	signal ay_ch_c_s        : unsigned( 11 downto 0);
 	signal psg_b_audio_s    : signed( 13 downto 0);
 	signal psg_b_audio_u    : unsigned( 13 downto 0);
+	signal ay_addr_we_n_s   : std_logic;
+	signal ay_addr_rd_n_s   : std_logic;
 
 	-- Controller signals
 	signal d_from_ctrl_s    : std_logic_vector( 7 downto 0);
