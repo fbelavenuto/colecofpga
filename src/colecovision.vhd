@@ -184,6 +184,7 @@ architecture Behavior of colecovision is
 	signal ay_addr_we_n_s   : std_logic;
 	signal ay_addr_rd_n_s   : std_logic;
 	signal ay_data_rd_n_s   : std_logic;
+	signal ay_data_we_n_s   : std_logic;
 	
 
 	-- Controller signals
