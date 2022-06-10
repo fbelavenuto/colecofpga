@@ -183,6 +183,8 @@ architecture Behavior of colecovision is
 	signal psg_b_audio_u    : unsigned( 13 downto 0);
 	signal ay_addr_we_n_s   : std_logic;
 	signal ay_addr_rd_n_s   : std_logic;
+	signal ay_data_rd_n_s   : std_logic;
+	
 
 	-- Controller signals
 	signal d_from_ctrl_s    : std_logic_vector( 7 downto 0);
