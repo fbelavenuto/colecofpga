@@ -463,9 +463,9 @@ begin
 	vdp_r_n_s			<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 5) = "101"		else '1';	-- VDP read           => A0 to BF
 	ctrl_en_joy_n_s	<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "110"		else '1';	-- Controller joy set => C0 to DF
 	psg_we_n_s			<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "111"		else '1';	-- PSG write          => E0 to FF
-	ay_addr_we_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 0 = x"50"		else '1';	-- AY addr write       
-	ay_data_we_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 0 = x"51"		else '1';	-- AY data write       
-	ay_data_rd_n_s		<= '0'	when io_read_s  = '1'  and cpu_addr_s(7 downto 0 = x"52"		else '1';	-- AY data read       
+	ay_addr_we_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 0) = x"50"		else '1';	-- AY addr write       
+	ay_data_we_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 0) = x"51"		else '1';	-- AY data write       
+	ay_data_rd_n_s		<= '0'	when io_read_s  = '1'  and cpu_addr_s(7 downto 0) = x"52"		else '1';	-- AY data read       
 	ctrl_r_n_s			<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 5) = "111"		else '1';	-- Controller read    => E0 to FF
 
 	-- Write I/O port 52
