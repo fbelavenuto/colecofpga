@@ -149,8 +149,8 @@ architecture behavior of zxuno_top_vga2m is
 	signal vram_we_s			: std_logic;
 
 	-- Audio
-	signal audio_signed_s	: signed(7 downto 0);
-	signal audio_s				: std_logic_vector(7 downto 0);
+	signal audio_signed_s	: signed(13 downto 0);
+	signal audio_unsigned_s : std_logic_vector(13 downto 0);
 	signal audio_dac_s		: std_logic;
 
 	-- Video
@@ -247,7 +247,7 @@ begin
 		cart_en_c0_n_o		=> open,
 		cart_en_e0_n_o		=> open,
 		-- Audio Interface
-		audio_o				=> open,
+		audio_o				=> audio_unsigned_s,
 		audio_signed_o		=> audio_signed_s,
 		-- RGB Video Interface
 		col_o					=> rgb_col_s,
@@ -299,12 +299,12 @@ begin
 	-- Audio
 	audioout: entity work.dac
 	generic map (
-		msbi_g		=> 7
+		msbi_g		=> 13
 	)
 	port map (
 		clk_i		=> clock_master_s,
 		res_i		=> reset_s,
-		dac_i		=> audio_s,
+		dac_i		=> audio_unsigned_s,
 		dac_o		=> audio_dac_s
 	);
 
@@ -342,7 +342,6 @@ begin
 
 	por_n_s		<= '0' when por_cnt_s /= 0		else '1';
 	reset_s		<= not por_n_s or soft_reset_s or not key_nmi_n_i;
-	audio_s		<= std_logic_vector(unsigned(audio_signed_s + 128));
 	dac_l_o		<= audio_dac_s;
 	dac_r_o		<= audio_dac_s;
 

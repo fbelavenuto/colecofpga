@@ -88,8 +88,8 @@ entity colecovision is
 		cart_en_c0_n_o	: out std_logic;
 		cart_en_e0_n_o	: out std_logic;
 		-- Audio Interface --------------------------------------------------------
-		audio_o			: out std_logic_vector(7 downto 0);
-		audio_signed_o	: out signed(7 downto 0);
+		audio_o			: out unsigned(13 downto 0);
+		audio_signed_o	: out signed(13 downto 0);
 		-- RGB Video Interface ----------------------------------------------------
 		col_o				: out std_logic_vector( 3 downto 0);
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
@@ -168,9 +168,18 @@ architecture Behavior of colecovision is
 	signal vdp_w_n_s			: std_logic;
 
 	-- SN76489 signal
-	signal audio_s				: signed(7 downto 0);
-	signal psg_ready_s      : std_logic;
+	signal psg_a_audio_s    : signed( 13 downto 0);
+	signal psg_a_audio_u    : unsigned( 13 downto 0);
+	signal psg_ready_s          : std_logic;
 	signal psg_we_n_s			: std_logic;
+
+	 -- AY-8910 signal
+	signal ay_d_s           : std_logic_vector( 7 downto 0);
+	signal ay_ch_a_s        : unsigned( 11 downto 0);
+	signal ay_ch_b_s        : unsigned( 11 downto 0);
+	signal ay_ch_c_s        : unsigned( 11 downto 0);
+	signal psg_b_audio_s    : signed( 13 downto 0);
+	signal psg_b_audio_u    : unsigned( 13 downto 0);
 
 	-- Controller signals
 	signal d_from_ctrl_s    : std_logic_vector( 7 downto 0);
@@ -267,26 +276,51 @@ begin
 		comp_sync_n_o	=> comp_sync_n_o
 	);
 
+
+    -----------------------------------------------------------------------------
+	-- YM2149 Programmable Sound Generator
+	-----------------------------------------------------------------------------
+	
+	psg_a: work.ym2149_audio
+    port map (
+		clk_i       => clock_i,
+		en_clk_psg_i=> clk_en_3m58_i,
+		reset_n_i   => reset_n_s,
+		bdir_i      => not ay_addr_we_n_s or not ay_data_we_n_s,
+		bc_i        => not ay_addr_we_n_s or not ay_data_rd_n_s,
+		data_i      => d_from_cpu_s,
+		data_r_o    => ay_d_s,
+		ch_a_o      => ay_ch_a_s,
+		ch_b_o      => ay_ch_b_s,
+		ch_c_o      => ay_ch_c_s,
+		mix_audio_o => psg_b_audio_u
+		pcm14s_o    => psg_b_audio_s,
+		sel_n_i     => '0'
+    );
+
 	-----------------------------------------------------------------------------
 	-- SN76489 Programmable Sound Generator
 	-----------------------------------------------------------------------------
 	psg_b : entity work.sn76489_top
-	generic map (
-		clock_div_16_g	=> 1
-	)
-	port map (
-		clock_i		=> clock_i,
-		clock_en_i	=> clk_en_3m58_i,
-		res_n_i		=> reset_n_s,
+	
+	psg_b : work.sn76489_audio
+    generic map (
+    	FAST_IO_G          => '0',
+		MIN_PERIOD_CNT_G   => 17
+    )port map (
+		clk_i		=> clock_i,
+		en_clk_psg_i=> clk_en_3m58_i,
+		//res_n_i		=> reset_n_s,
 		ce_n_i		=> psg_we_n_s,
 		we_n_i		=> psg_we_n_s,
 		ready_o		=> psg_ready_s,
-		d_i			=> d_from_cpu_s,
-		aout_o		=> audio_s
+		data_i		=> d_from_cpu_s,
+		mix_audio_o => psg_a_audio_u
+		pcm14s_o    => psg_a_audio_s
 	);
 
-	audio_o			<= std_logic_vector(audio_s);
-	audio_signed_o	<= audio_s;
+	audio_o			<= psg_a_audio_u + psg_a_audio_u;
+	audio_signed_o	<= psg_a_audio_s + psg_b_audio_s;
 
 	-----------------------------------------------------------------------------
 	-- Controller ports
@@ -380,12 +414,12 @@ begin
 	--  6543210
 		"0000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'															else
 --		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'															else	-- 8K linear RAM
-		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'	and multcart_q = '1'								else	-- 8K linear RAM
-		"0001100" & cpu_addr_s( 9 downto 0)	when ram_ce_s = '1'	and multcart_q = '0'								else	-- 1K mirrored RAM
-		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'								else
+		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'	and multcart_q = '1'						else	-- 8K linear RAM
+		"0001100" & cpu_addr_s( 9 downto 0)	when ram_ce_s = '1'	and multcart_q = '0'						else	-- 1K mirrored RAM
+		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'							else
 		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_oe_s = '1'	else
 		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_we_s = '1'	else
-		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '0'								else
+		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '0'						else
 		(others => '0');
 
 	ram_data_o		<= d_from_cpu_s;
@@ -408,7 +442,9 @@ begin
 
 	-- memory
 	bios_ce_s		<= '1'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "000"		else '0';	-- BIOS         => 0000 to 1FFF
-	ram_ce_s			<= '1'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "011"		else '0';	-- RAM          => 6000 to 7FFF
+	ram_ce_s		<= '1'	when mem_access_s = '1' and ((cpu_addr_s(15 downto 13) = "011")
+	                                                  or (cpu_addr_s(15 downto 13) = "010")
+					                                  or (cpu_addr_s(15 downto 13) = "011"))	else '0';	-- RAM          => 2000 to 7FFF
 	cart_en_80_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "100"		else '1';	-- Cartridge 80 => 8000 to 9FFF
 	cart_en_a0_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "101"		else '1';	-- Cartridge A0 => A000 to BFFF
 	cart_en_c0_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "110"		else '1';	-- Cartridge C0 => C000 to DFFF
@@ -424,6 +460,9 @@ begin
 	vdp_r_n_s			<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 5) = "101"		else '1';	-- VDP read           => A0 to BF
 	ctrl_en_joy_n_s	<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "110"		else '1';	-- Controller joy set => C0 to DF
 	psg_we_n_s			<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "111"		else '1';	-- PSG write          => E0 to FF
+	ay_addr_we_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 0 = x"50"		else '1';	-- AY addr write       
+	ay_data_we_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 0 = x"51"		else '1';	-- AY data write       
+	ay_data_rd_n_s		<= '0'	when io_read_s  = '1'  and cpu_addr_s(7 downto 0 = x"52"		else '1';	-- AY data read       
 	ctrl_r_n_s			<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 5) = "111"		else '1';	-- Controller read    => E0 to FF
 
 	-- Write I/O port 52
@@ -458,15 +497,16 @@ begin
 
 	-- MUX data CPU
 	d_to_cpu_s	<=	-- Memory
-						d_from_loader_s				when loader_ce_s = '1'		else
-						ram_data_i						when bios_ce_s = '1'			else
-						ram_data_i						when ram_ce_s  = '1'			else
-						ram_data_i						when cart_ce_s = '1'			else
+						d_from_loader_s				    when loader_ce_s = '1'		else
+						ram_data_i						when bios_ce_s = '1'		else
+						ram_data_i						when ram_ce_s  = '1'		else
+						ram_data_i						when cart_ce_s = '1'		else
 						cart_data_i						when ext_cart_ce_s = '1'	else
 						-- I/O
-						d_from_vdp_s					when vdp_r_n_s = '0'			else
+						d_from_vdp_s					when vdp_r_n_s = '0'		else
 						d_from_ctrl_s					when ctrl_r_n_s = '0'		else
 						d_from_spi_s					when spi_cs_s = '1'			else
+						ay_d_s                          when ay_data_rd_n_s  ='0'   else
 						machine_id_c					when machine_id_cs_s = '1'	else
 						cfg_page_r						when cfg_page_cs_s = '1'	else
 						(others => '1');
