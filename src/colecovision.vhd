@@ -383,7 +383,7 @@ begin
 		pcm14s_o    => psg_a_audio_u2
 	);
 
-	audio_o			<= psg_a_audio_u + psg_a_audio_u;
+	audio_o			<= psg_a_audio_u + psg_b_audio_u;
 	audio_signed_o	<= psg_a_audio_s + psg_b_audio_s;
 
 	-----------------------------------------------------------------------------
