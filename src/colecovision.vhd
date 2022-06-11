@@ -307,7 +307,7 @@ begin
 	-----------------------------------------------------------------------------
 	-- SN76489 Programmable Sound Generator
 	-----------------------------------------------------------------------------
-		
+
 	psg_b : work.sn76489_audio
     generic map (
     	FAST_IO_G          => '0',
@@ -447,7 +447,7 @@ begin
 
 	-- memory
 	bios_ce_s		<= '1'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "000"		else '0';	-- BIOS         => 0000 to 1FFF
-	ram_ce_s		<= '1'	when mem_access_s = '1' and ((cpu_addr_s(15 downto 13) = "011")
+	ram_ce_s		<= '1'	when mem_access_s = '1' and ((cpu_addr_s(15 downto 13) = "001")
 	                                                  or (cpu_addr_s(15 downto 13) = "010")
 					                                  or (cpu_addr_s(15 downto 13) = "011"))	else '0';	-- RAM          => 2000 to 7FFF
 	cart_en_80_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "100"		else '1';	-- Cartridge 80 => 8000 to 9FFF
