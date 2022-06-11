@@ -118,6 +118,56 @@ use std.textio.all;
 
 architecture Behavior of colecovision is
 
+   component ym2149_audio
+   generic                 -- Non-custom PSG address mask is 0000.
+      ( ADDRESS_G          : std_logic_vector(3 downto 0) := x"0"
+   );
+   port
+      ( clk_i              : in     std_logic -- system clock
+      ; en_clk_psg_i       : in     std_logic -- PSG clock enable
+      ; sel_n_i            : in     std_logic -- divide select, 0=clock-enable/2
+      ; reset_n_i          : in     std_logic -- active low
+      ; bc_i               : in     std_logic -- bus control
+      ; bdir_i             : in     std_logic -- bus direction
+      ; data_i             : in     std_logic_vector(7 downto 0)
+      ; data_r_o           : out    std_logic_vector(7 downto 0) -- registered output data
+      ; ch_a_o             : out    unsigned(11 downto 0)
+      ; ch_b_o             : out    unsigned(11 downto 0)
+      ; ch_c_o             : out    unsigned(11 downto 0)
+      ; mix_audio_o        : out    unsigned(13 downto 0)
+      ; pcm14s_o           : out    unsigned(13 downto 0)
+   );
+   end component;
+
+   component sn76489_audio
+   generic                 -- 0 = normal I/O, 32 clocks per write
+                           -- 1 = fast I/O, around 2 clocks per write
+      ( FAST_IO_G          : std_logic := '0'
+
+                           -- Minimum allowable period count (see comments further
+                           -- down for more information), recommended:
+                           --  6  18643.46Hz First audible count.
+                           -- 17   6580.04Hz Counts at 16 are known to be used for
+                           --                amplitude-modulation.
+      ; MIN_PERIOD_CNT_G   : integer := 6
+   );
+   port
+      ( clk_i              : in     std_logic -- System clock
+      ; en_clk_psg_i       : in     std_logic -- PSG clock enable
+      ; ce_n_i             : in     std_logic -- chip enable, active low
+      ; wr_n_i             : in     std_logic -- write enable, active low
+      ; ready_o            : out    std_logic -- low during I/O operations
+      ; data_i             : in     std_logic_vector(7 downto 0)
+      ; ch_a_o             : out    unsigned(11 downto 0)
+      ; ch_b_o             : out    unsigned(11 downto 0)
+      ; ch_c_o             : out    unsigned(11 downto 0)
+      ; noise_o            : out    unsigned(11 downto 0)
+      ; mix_audio_o        : out    unsigned(13 downto 0)
+      ; pcm14s_o           : out    unsigned(13 downto 0)
+   );
+   end component;
+
+
 	-- Reset
 	signal reset_n_s			: std_logic;
 
@@ -169,6 +219,7 @@ architecture Behavior of colecovision is
 
 	-- SN76489 signal
 	signal psg_a_audio_s    : signed( 13 downto 0);
+	signal psg_a_audio_u2    : unsigned( 13 downto 0);
 	signal psg_a_audio_u    : unsigned( 13 downto 0);
 	signal psg_ready_s          : std_logic;
 	signal psg_we_n_s			: std_logic;
@@ -179,13 +230,17 @@ architecture Behavior of colecovision is
 	signal ay_ch_a_s        : unsigned( 11 downto 0);
 	signal ay_ch_b_s        : unsigned( 11 downto 0);
 	signal ay_ch_c_s        : unsigned( 11 downto 0);
-	signal psg_b_audio_s    : signed( 13 downto 0);
+    signal psg_b_audio_s    : signed( 13 downto 0);
+	signal psg_b_audio_u2   : unsigned( 13 downto 0);
 	signal psg_b_audio_u    : unsigned( 13 downto 0);
 	signal ay_addr_we_n_s   : std_logic;
 	signal ay_addr_rd_n_s   : std_logic;
 	signal ay_data_rd_n_s   : std_logic;
 	signal ay_data_we_n_s   : std_logic;
 	
+   signal bdir_s           : std_logic;
+   signal bc_s             : std_logic;
+   
 
 	-- Controller signals
 	signal d_from_ctrl_s    : std_logic_vector( 7 downto 0);
@@ -286,42 +341,46 @@ begin
     -----------------------------------------------------------------------------
 	-- YM2149 Programmable Sound Generator
 	-----------------------------------------------------------------------------
-	
-	psg_a: work.ym2149_audio
+   bdir_s <= not ay_addr_we_n_s or not ay_data_we_n_s;
+   bc_s   <= not ay_addr_we_n_s or not ay_data_rd_n_s;
+   psg_b_audio_s <= signed(psg_b_audio_u2);
+   
+	psg_a: ym2149_audio
     port map (
 		clk_i       => clock_i,
 		en_clk_psg_i=> clk_en_3m58_i,
 		reset_n_i   => reset_n_s,
-		bdir_i      => not ay_addr_we_n_s or not ay_data_we_n_s,
-		bc_i        => not ay_addr_we_n_s or not ay_data_rd_n_s,
+		bdir_i      => bdir_s,--not ay_addr_we_n_s or not ay_data_we_n_s,
+		bc_i        => bc_s, --not ay_addr_we_n_s or not ay_data_rd_n_s,
 		data_i      => d_from_cpu_s,
 		data_r_o    => ay_d_s,
 		ch_a_o      => ay_ch_a_s,
 		ch_b_o      => ay_ch_b_s,
 		ch_c_o      => ay_ch_c_s,
-		mix_audio_o => psg_b_audio_u
-		pcm14s_o    => psg_b_audio_s,
+		mix_audio_o => psg_b_audio_u,
+		pcm14s_o    => psg_b_audio_u2,
 		sel_n_i     => '0'
     );
 
 	-----------------------------------------------------------------------------
 	-- SN76489 Programmable Sound Generator
 	-----------------------------------------------------------------------------
-
-	psg_b : work.sn76489_audio
+	psg_a_audio_s <= signed(psg_a_audio_u2);
+   
+	psg_b : sn76489_audio
     generic map (
     	FAST_IO_G          => '0',
 		MIN_PERIOD_CNT_G   => 17
     )port map (
 		clk_i		=> clock_i,
 		en_clk_psg_i=> clk_en_3m58_i,
-		//res_n_i		=> reset_n_s,
+		--res_n_i		=> reset_n_s,
 		ce_n_i		=> psg_we_n_s,
-		we_n_i		=> psg_we_n_s,
+		wr_n_i		=> psg_we_n_s,
 		ready_o		=> psg_ready_s,
 		data_i		=> d_from_cpu_s,
-		mix_audio_o => psg_a_audio_u
-		pcm14s_o    => psg_a_audio_s
+		mix_audio_o => psg_a_audio_u,
+		pcm14s_o    => psg_a_audio_u2
 	);
 
 	audio_o			<= psg_a_audio_u + psg_a_audio_u;
@@ -418,9 +477,11 @@ begin
 	--  1111111
 	--  6543210
 		"0000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'															else
+		"00"      & cpu_addr_s(14 downto 0)	when ram_ce_s = '1'															else	-- 8K linear RAM
+
 --		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'															else	-- 8K linear RAM
-		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'	and multcart_q = '1'						else	-- 8K linear RAM
-		"0001100" & cpu_addr_s( 9 downto 0)	when ram_ce_s = '1'	and multcart_q = '0'						else	-- 1K mirrored RAM
+--		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'	and multcart_q = '1'						else	-- 8K linear RAM
+--		"0001100" & cpu_addr_s( 9 downto 0)	when ram_ce_s = '1'	and multcart_q = '0'						else	-- 1K mirrored RAM
 		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'							else
 		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_oe_s = '1'	else
 		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_we_s = '1'	else
