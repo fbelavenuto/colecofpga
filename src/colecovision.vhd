@@ -4,7 +4,7 @@
 --
 -- Copyright (c) 2006, Arnim Laeuger (arnim.laeuger@gmx.net)
 -- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
---
+-- Copyright (c) 2022, Ramon Martinez (rampa@encomix.org) (SGM module)
 -- All rights reserved
 --
 -- Redistribution and use in source and synthezised forms, with or without
@@ -466,22 +466,16 @@ begin
 	cart_we_s		<= (not wr_n_s) and cart_ce_s		when multcart_q = '1'	else '0';
 
 	-- RAM map
-	--														1111111
-	--														65432109876543210
-	-- 00000 - 01FFF = BIOS (8K)					0000xxxxxxxxxxxxx
-	-- 02000 - 03FFF = RAM  (8K)					0001xxxxxxxxxxxxx
+	--											1111111
+	--											65432109876543210
+	-- 00000 - 01FFF = BIOS (8K)				0000xxxxxxxxxxxxx
+	-- 02000 - 07FFF = RAM  (24K)			    00xxxxxxxxxxxxxxx
 	-- 08000 - 0FFFF = Multicart (32K)			01xxxxxxxxxxxxxxx
 	-- 10000 - 17FFF = Cartridge (32K)			10xxxxxxxxxxxxxxx
 	--
 	ram_addr_o		<=
-	--  1111111
-	--  6543210
-		"0000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'															else
-		"00"      & cpu_addr_s(14 downto 0)	when ram_ce_s = '1'															else	-- 8K linear RAM
-
---		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'															else	-- 8K linear RAM
---		"0001"    & cpu_addr_s(12 downto 0)	when ram_ce_s = '1'	and multcart_q = '1'						else	-- 8K linear RAM
---		"0001100" & cpu_addr_s( 9 downto 0)	when ram_ce_s = '1'	and multcart_q = '0'						else	-- 1K mirrored RAM
+		"0000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'											else
+		"00"      & cpu_addr_s(14 downto 0)	when ram_ce_s = '1'												else	-- 24K linear RAM						else	-- 1K mirrored RAM
 		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'							else
 		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_oe_s = '1'	else
 		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_we_s = '1'	else
