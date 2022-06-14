@@ -6,6 +6,9 @@
 
 __sfr __at 0x53 MACHINE_ID;
 __sfr __at 0x54 CFG_PAGE;
+__sfr __at 0x50 PSG_ADDRESS; 
+__sfr __at 0x51 PSG_VALUE;
+__sfr __at 0xFF SN_PORT;  
 //extern const sound_t *snd_table;
 
 // Variables
@@ -19,10 +22,33 @@ void nmi(void)
 }
 
 //-------------------------------------------------------------------------------
-void die(FRESULT rc)
+
+void silence(void)
+{
+	BYTE old_address = PSG_ADDRESS;
+	BYTE old_value = PSG_VALUE;
+	BYTE cnt;
+
+	for (cnt=0; cnt<14; cnt++){
+		PSG_ADDRESS=cnt;
+		PSG_VALUE=0x00;
+	}
+    
+	SN_PORT=0x9F;
+	SN_PORT=0xBF;
+	SN_PORT=0xDF;
+	SN_PORT=0xFF;
+	
+	PSG_ADDRESS=old_address;
+	PSG_VALUE=old_value;
+
+}
+
+//-------------------------------------------------------------------------------
+void die_sd(FRESULT rc)
 {
 	unsigned int dly1, dly2;
-	print_at(12, 18, "Error......Reset");
+	print_at(12, 18, "Error sd..Reset");
 	for (dly1=0; dly1 < 300; ) {
 		for(dly2 = 0; dly2 < 1000 ; ) {
 			dly2++;
@@ -32,7 +58,32 @@ void die(FRESULT rc)
 	}
 	__asm__("jp 0x0000");
 }
-
+void die_menu(FRESULT rc)
+{
+	unsigned int dly1, dly2;
+	print_at(12, 18, "Error menu..Reset");
+	for (dly1=0; dly1 < 300; ) {
+		for(dly2 = 0; dly2 < 1000 ; ) {
+			dly2++;
+			rc = rc;
+		}
+		dly1++;
+	}
+	__asm__("jp 0x0000");
+}
+void die_cart(FRESULT rc)
+{
+	unsigned int dly1, dly2;
+	print_at(12, 18, "Error cart..Reset");
+	for (dly1=0; dly1 < 300; ) {
+		for(dly2 = 0; dly2 < 1000 ; ) {
+			dly2++;
+			rc = rc;
+		}
+		dly1++;
+	}
+	__asm__("jp 0x0000");
+}
 //-------------------------------------------------------------------------------
 void main(void)
 {
@@ -49,7 +100,7 @@ void main(void)
 	BYTE			maxln, page, rcount, select;
 
 	macid = MACHINE_ID;
-
+    silence();
 	vdp_init();
 	set_mode1();
 	disable_nmi();
@@ -60,11 +111,11 @@ void main(void)
 
 	rc = pf_mount(&fatfs);
 	if (rc) {
-		die(rc);
+		die_sd(rc);
 	}
 	rc = pf_open("MENU.TXT");
 	if (rc) {
-		die(rc);
+		die_menu(rc);
 	}
 
 	select = 0;
@@ -155,20 +206,19 @@ void main(void)
 	if (sp) *sp = '\0';
 	strcpy(fn, buff);
 	strcat(fn, ".rom");
-
 	print_at(4, maxln+6, "Loading");
 	print_at(12, maxln+6, fn);
 
 	strcpy(cart_name, "Coleco/");
 	cartp = strcat(cart_name, fn);
 	rc = pf_open(cartp);
-	if (rc) die(rc);
+	if (rc) die_cart(rc);
 	cp = (unsigned char *)0x8000;		//cartram ptr;
 	for (;;) {
 		rc = pf_read(cp, 32768, &br);	/* Read a chunk of file */
 		if (rc || !br) break;			/* Error or end of file */
 	}
-	if (rc) die(rc);
+	if (rc) die_cart(rc);
 
 LOAD:
 	cp = (unsigned char *)0x7100;
