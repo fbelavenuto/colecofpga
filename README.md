@@ -45,3 +45,5 @@ In boards with VGA output (ZX-Uno), uses the HOME key to toggle VGA output.
 In this circuit the BIOS ROM is loaded from the SD card as well as the ROM multcart. In the source folder 'SD_Card' contains all necessary files to the SD card. Works in both FAT16 and FAT32.
 
 In multcart menu, use the directionals to navigate the ROMs and use FIRE 1 button to load the selected ROM.
+
+Added SGM module with 24K extra RAM and AY-3-8910 Chip.
