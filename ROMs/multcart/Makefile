@@ -9,8 +9,8 @@ SDIR = src
 IDIR = inc
 ODIR = obj
 
-CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -I..
-LDFLAGS = -mz80 --code-loc 0x8100 --data-loc 0x7000 --no-std-crt0
+CFLAGS  = -mz80 --sdcccall 0 --fomit-frame-pointer  -I$(IDIR) -I..
+LDFLAGS = -mz80 --sdcccall 0 --code-loc 0x8100 --data-loc 0x7000 --no-std-crt0
 
 _OBJS = crt0.rel mmc.rel pff.rel coleco.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
@@ -18,7 +18,7 @@ OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 all:  MULTCART.ROM
 
 MULTCART.ROM: MULTCART.ihx
-	$(H2B) -l 4000 -e ROM $<
+	makemegacart multcart.ihx multcart.rom
 
 MULTCART.ihx: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS)

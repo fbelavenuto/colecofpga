@@ -2,8 +2,8 @@
 #ifndef _MMC_H
 #define _MMC_H
 
-__sfr __at 0x50 SPI_CTRL;
-__sfr __at 0x51 SPI_DATA;
+__sfr __at 0x40 SPI_CTRL;
+__sfr __at 0x41 SPI_DATA;
 
 
 #define CS_L() SPI_CTRL = 0xFE
