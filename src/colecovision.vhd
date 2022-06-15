@@ -466,20 +466,20 @@ begin
 	cart_we_s		<= (not wr_n_s) and cart_ce_s		when multcart_q = '1'	else '0';
 
 	-- RAM map
-	--											1111111
-	--											65432109876543210
-	-- 00000 - 01FFF = BIOS (8K)				0000xxxxxxxxxxxxx
-	-- 02000 - 07FFF = RAM  (24K)			    00xxxxxxxxxxxxxxx
+	--											         1111111
+	--											         65432109876543210
+	-- 00000 - 01FFF = BIOS (8K)				   0000xxxxxxxxxxxxx
+	-- 02000 - 07FFF = RAM  (24K)			      00xxxxxxxxxxxxxxx
 	-- 08000 - 0FFFF = Multicart (32K)			01xxxxxxxxxxxxxxx
 	-- 10000 - 17FFF = Cartridge (32K)			10xxxxxxxxxxxxxxx
 	--
 	ram_addr_o		<=
-		"0000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'											else
-		"00"      & cpu_addr_s(14 downto 0)	when ram_ce_s = '1'												else	-- 24K linear RAM						else	-- 1K mirrored RAM
-		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'							else
+		"0000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'											            else
+		"00"      & cpu_addr_s(14 downto 0)	when ram_ce_s = '1'												         else	-- 24K linear RAM						else	-- 1K mirrored RAM
+		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'							   else
 		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_oe_s = '1'	else
 		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_we_s = '1'	else
-		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '0'						else
+		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '0'						      else
 		(others => '0');
 
 	ram_data_o		<= d_from_cpu_s;
@@ -501,20 +501,20 @@ begin
 	io_write_s		<= '1'	when iorq_n_s = '0' and m1_n_s = '1' and wr_n_s = '0'		else '0';
 
 	-- memory
-	bios_ce_s		<= '1'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "000"		else '0';	-- BIOS         => 0000 to 1FFF
-	ram_ce_s		<= '1'	when mem_access_s = '1' and ((cpu_addr_s(15 downto 13) = "001")
+	bios_ce_s		<= '1'	when mem_access_s = '1' and cpu_addr_s(15 downto 13)   = "000"		else '0';	-- BIOS         => 0000 to 1FFF
+	ram_ce_s		   <= '1'	when mem_access_s = '1' and ((cpu_addr_s(15 downto 13) = "001")
 	                                                  or (cpu_addr_s(15 downto 13) = "010")
-					                                  or (cpu_addr_s(15 downto 13) = "011"))	else '0';	-- RAM          => 2000 to 7FFF
+					                                  or (cpu_addr_s(15 downto 13)     = "011"))	else '0';	-- RAM          => 2000 to 7FFF
 	cart_en_80_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "100"		else '1';	-- Cartridge 80 => 8000 to 9FFF
 	cart_en_a0_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "101"		else '1';	-- Cartridge A0 => A000 to BFFF
 	cart_en_c0_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "110"		else '1';	-- Cartridge C0 => C000 to DFFF
 	cart_en_e0_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "111"		else '1';	-- Cartridge E0 => E000 to FFFF
 
 	-- I/O
-	spi_cs_s				<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 1) = "0101000"	else '0';	-- SPI (R/W)          => 50 to 51
-	cfg_port_cs_s		<= '1'	when io_write_s = '1'  and cpu_addr_s(7 downto 0) = X"52"		else '0';	-- Config Port        => 52
-	machine_id_cs_s	<= '1'	when io_read_s = '1'   and cpu_addr_s(7 downto 0) = X"53"		else '0';	-- Machine ID read    => 53
-	cfg_page_cs_s		<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 0) = X"54"		else '0';	-- Page port          => 54
+	spi_cs_s				<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 1) = "0100000"	else '0';	-- SPI (R/W)          => 40 to 41
+	cfg_port_cs_s		<= '1'	when io_write_s = '1'  and cpu_addr_s(7 downto 0) = X"42"		else '0';	-- Config Port        => 42
+	machine_id_cs_s	<= '1'	when io_read_s = '1'   and cpu_addr_s(7 downto 0) = X"43"		else '0';	-- Machine ID read    => 43
+	cfg_page_cs_s		<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 0) = X"44"		else '0';	-- Page port          => 44
 	ctrl_en_key_n_s	<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "100"		else '1';	-- Controller key set => 80 to 9F
 	vdp_w_n_s			<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "101"		else '1';	-- VDP write          => A0 to BF
 	vdp_r_n_s			<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 5) = "101"		else '1';	-- VDP read           => A0 to BF
