@@ -190,6 +190,7 @@ architecture Behavior of colecovision is
 	signal io_access_s		: std_logic;
 	signal io_read_s			: std_logic;
 	signal io_write_s			: std_logic;
+	signal bios_en_s        : std_logic;
 
 	-- machine id
 	signal machine_id_cs_s	: std_logic;
@@ -474,8 +475,8 @@ begin
 	-- 10000 - 17FFF = Cartridge (32K)			10xxxxxxxxxxxxxxx
 	--
 	ram_addr_o		<=
-		"0000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'											            else
-		"00"      & cpu_addr_s(14 downto 0)	when ram_ce_s = '1'												         else	-- 24K linear RAM						else	-- 1K mirrored RAM
+		"1100"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'											            else
+		"00"      & cpu_addr_s(14 downto 0)	when ram_ce_s =  '1'												         else	-- 32K linear RAM						else	-- 1K mirrored RAM
 		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'							   else
 		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_oe_s = '1'	else
 		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_we_s = '1'	else
@@ -500,11 +501,27 @@ begin
 	io_read_s		<= '1'	when iorq_n_s = '0' and m1_n_s = '1' and rd_n_s = '0'		else '0';
 	io_write_s		<= '1'	when iorq_n_s = '0' and m1_n_s = '1' and wr_n_s = '0'		else '0';
 
+---------------------------------------------------------
+ sgm: process (reset_n_s, clock_i)
+  begin
+        if reset_n_s = '0' then   bios_en_s <= '1';
+        elsif rising_edge( clock_i )
+		    then if io_write_s = '1' and cpu_addr_s(7 downto 0) = x"7f"
+            then
+                bios_en_s <= d_from_cpu_s(1);
+            end if;
+        end if;
+ end process sgm;
+---------------------------------------------------------
+
+
 	-- memory
-	bios_ce_s		<= '1'	when mem_access_s = '1' and cpu_addr_s(15 downto 13)   = "000"		else '0';	-- BIOS         => 0000 to 1FFF
-	ram_ce_s		   <= '1'	when mem_access_s = '1' and ((cpu_addr_s(15 downto 13) = "001")
-	                                                  or (cpu_addr_s(15 downto 13) = "010")
-					                                  or (cpu_addr_s(15 downto 13)     = "011"))	else '0';	-- RAM          => 2000 to 7FFF
+	bios_ce_s		<= '1'	when bios_en_s = '1' and mem_access_s = '1' and cpu_addr_s(15 downto 13)   = "000"		else '0';	-- BIOS         => 0000 to 1FFF
+	ram_ce_s		   <= '1'	when mem_access_s = '1' and ((cpu_addr_s(15 downto 13) = "000" and bios_en_s ='0')
+																    or (cpu_addr_s(15 downto 13) = "001")
+	                                                 or (cpu_addr_s(15 downto 13) = "010")
+					                                     or (cpu_addr_s(15 downto 13) = "011"))	else '0';   -- RAM          => 0000 to 7FFF
+
 	cart_en_80_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "100"		else '1';	-- Cartridge 80 => 8000 to 9FFF
 	cart_en_a0_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "101"		else '1';	-- Cartridge A0 => A000 to BFFF
 	cart_en_c0_n_s	<= '0'	when mem_access_s = '1' and cpu_addr_s(15 downto 13) = "110"		else '1';	-- Cartridge C0 => C000 to DFFF
