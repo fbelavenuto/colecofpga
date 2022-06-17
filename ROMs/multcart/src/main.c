@@ -6,6 +6,8 @@
 
 __sfr __at 0x43 MACHINE_ID;
 __sfr __at 0x44 CFG_PAGE;
+__sfr __at 0x45 CART_PAGE_PORT;
+__sfr __at 0x46 CART_TOTPAGE_PORT;
 __sfr __at 0x50 PSG_ADDRESS; 
 __sfr __at 0x51 PSG_VALUE;
 __sfr __at 0xFF SN_PORT;  
@@ -98,6 +100,8 @@ void main(void)
 	char			cart_name[25];
 	char			* cartp;
 	BYTE			maxln, page, rcount, select;
+	BYTE            act_page = 0;
+	long            page_address = 0x8000;
 
 	macid = MACHINE_ID;
     silence();
@@ -213,12 +217,21 @@ void main(void)
 	cartp = strcat(cart_name, fn);
 	rc = pf_open(cartp);
 	if (rc) die_cart(rc);
-	cp = (unsigned char *)0x8000;		//cartram ptr;
+     
+	
+
+	act_page=0; 
+	CART_TOTPAGE_PORT=0;
+	CART_PAGE_PORT=0;
 	for (;;) {
-		rc = pf_read(cp, 32768, &br);	/* Read a chunk of file */
-		if (rc || !br) break;			/* Error or end of file */
+		cp = (unsigned char *) 0x8000;
+		rc = pf_read(cp, 16384, &br);	/* Read a chunk of file */
+	    if (rc || !br) break;			/* Error or end of file */
+		act_page++;
+		CART_PAGE_PORT=act_page;
 	}
-	if (rc) die_cart(rc);
+    if (rc) die_cart(rc);
+	CART_TOTPAGE_PORT=act_page-1;
 
 LOAD:
 	cp = (unsigned char *)0x7100;
