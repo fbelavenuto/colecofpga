@@ -46,4 +46,9 @@ In this circuit the BIOS ROM is loaded from the SD card as well as the ROM multc
 
 In multcart menu, use the directionals to navigate the ROMs and use FIRE 1 button to load the selected ROM.
 
-Added SGM module with 24K extra RAM and AY-3-8910 Chip.
+==New in V1.3:
+
+* Added SGM module with 24K extra RAM and AY-3-8910 Chip.
+* Added megacarts uo to 256K.
+* SD card can be FAT16/FAT32
+
