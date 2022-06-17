@@ -132,7 +132,7 @@ architecture behavior of zxuno_top is
 	signal core_reload_s		: std_logic;
 
 	-- RAM memory
-	signal ram_addr_s			: std_logic_vector(16 downto 0);		-- 128K
+	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
 	signal d_from_ram_s		: std_logic_vector( 7 downto 0);
 	signal d_to_ram_s			: std_logic_vector( 7 downto 0);
 	signal ram_ce_s			: std_logic;
@@ -303,14 +303,14 @@ begin
 	port map (
 		clk_i				=> clock_mem_s,
 		-- Port 0
-		porta0_addr_i	=> "00" & ram_addr_s,
+		porta0_addr_i	=> ram_addr_s,
 		porta0_ce_i		=> ram_ce_s,
 		porta0_oe_i		=> ram_oe_s,
 		porta0_we_i		=> ram_we_s,
 		porta0_data_i	=> d_to_ram_s,
 		porta0_data_o	=> d_from_ram_s,
 		-- Port 1
-		porta1_addr_i	=> "11111" & vram_addr_s,
+		porta1_addr_i	=> "00111" & vram_addr_s,
 		porta1_ce_i		=> vram_ce_s,
 		porta1_oe_i		=> vram_oe_s,
 		porta1_we_i		=> vram_we_s,

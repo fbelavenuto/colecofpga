@@ -230,7 +230,7 @@ begin
 		ctrl_p8_o			=> ctrl_p8_s,
 		ctrl_p9_i			=> ctrl_p9_s,
 		-- CPU RAM Interface
-		ram_addr_o			=> ram_addr_s(16 downto 0),
+		ram_addr_o			=> ram_addr_s,
 		ram_ce_o				=> ram_ce_s,
 		ram_we_o				=> ram_we_s,
 		ram_oe_o				=> ram_oe_s,
@@ -273,8 +273,7 @@ begin
 		D_cpu_addr			=> open--D_cpu_addr
 	 );
 
-   ram_addr_s(18 downto 17) <= "00";
-   vram_addr_s(18 downto 14) <= "11111";
+   vram_addr_s(18 downto 14) <= "00111";
    
 	-- SRAM
 	sram0: entity work.dpSRAM_5128

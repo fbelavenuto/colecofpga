@@ -66,7 +66,7 @@ entity colecovision is
 		ctrl_p8_o		: out std_logic_vector( 1 downto 0);
 		ctrl_p9_i		: in  std_logic_vector( 1 downto 0);
 		-- CPU RAM Interface ------------------------------------------------------
-		ram_addr_o		: out std_logic_vector(16 downto 0);	-- 128K
+		ram_addr_o		: out std_logic_vector(18 downto 0);	-- 512K
 		ram_ce_o			: out std_logic;
 		ram_oe_o			: out std_logic;
 		ram_we_o			: out std_logic;
@@ -191,6 +191,13 @@ architecture Behavior of colecovision is
 	signal io_read_s			: std_logic;
 	signal io_write_s			: std_logic;
 	signal bios_en_s        : std_logic;
+	signal cart_page_s      : std_logic_vector(3 downto 0) := "0000";
+	signal cart_totpage_s   : std_logic_vector(3 downto 0);
+	signal cart_actpage_s   : std_logic_vector(3 downto 0);
+	signal cart_actpage_cs_s: std_logic;
+	signal cart_totpage_cs_s: std_logic;
+	signal megacart_en_s    : std_logic;
+	signal megacart_page_s  : std_logic_vector(3 downto 0);
 
 	-- machine id
 	signal machine_id_cs_s	: std_logic;
@@ -392,7 +399,7 @@ begin
 	-----------------------------------------------------------------------------
 	ctrl_b : entity work.cv_ctrl
 	port map (
-		clock_i					=> clock_i,
+		clock_i				=> clock_i,
 		clk_en_3m58_i		=> clk_en_3m58_i,
 		reset_n_i			=> reset_n_s,
 		ctrl_en_key_n_i	=> ctrl_en_key_n_s,
@@ -464,8 +471,8 @@ begin
 	cart_ce_s		<= not (cart_en_80_n_s and cart_en_A0_n_s and cart_en_C0_n_s and cart_en_E0_n_s) and not ext_cart_en_q;
 	ext_cart_ce_s	<= not (cart_en_80_n_s and cart_en_A0_n_s and cart_en_C0_n_s and cart_en_E0_n_s) and     ext_cart_en_q;
 	cart_oe_s		<= (not rd_n_s) and cart_ce_s;
-	cart_we_s		<= (not wr_n_s) and cart_ce_s		when multcart_q = '1'	else '0';
-
+	--cart_we_s		<= (not wr_n_s) and cart_ce_s		when multcart_q = '1'	else '0';
+   cart_we_s		<= mem_access_s and (not wr_n_s)  when multcart_q = '1'	else '0'; 
 	-- RAM map
 	--											         1111111
 	--											         65432109876543210
@@ -475,18 +482,19 @@ begin
 	-- 10000 - 17FFF = Cartridge (32K)			10xxxxxxxxxxxxxxx
 	--
 	ram_addr_o		<=
-		"1100"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'											            else
-		"00"      & cpu_addr_s(14 downto 0)	when ram_ce_s =  '1'												         else	-- 32K linear RAM						else	-- 1K mirrored RAM
-		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'							   else
-		"01"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_oe_s = '1'	else
-		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_we_s = '1'	else
-		"10"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '0'						      else
+		"000000"    & cpu_addr_s(12 downto 0)	when bios_ce_s = '1'											            else
+		"0001"      & cpu_addr_s(14 downto 0)	when ram_ce_s =  '1'												         else	-- 32K linear RAM
+		"0010"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and loader_q = '1'							   else
+		"0010"      & cpu_addr_s(14 downto 0)	when cart_ce_s = '1' and multcart_q = '1' and cart_oe_s = '1'	else
+		'1'& cart_actpage_s  & cpu_addr_s(13 downto 0)	when cart_we_s = '1'  else 
+		'1'& cart_page_s     & cpu_addr_s(13 downto 0)	when cart_ce_s = '1' and multcart_q = '0' else
 		(others => '0');
 
 	ram_data_o		<= d_from_cpu_s;
 	ram_ce_o			<= ram_ce_s or bios_ce_s or cart_ce_s;
 	ram_we_o			<= (not wr_n_s and ram_ce_s) or bios_we_s or cart_we_s;
 	ram_oe_o			<= (not rd_n_s and ram_ce_s) or bios_oe_s or cart_oe_s;
+   
 
 	cart_addr_o		<= cpu_addr_s(14 downto 0);
 	cart_oe_n_o		<= not cart_oe_s;
@@ -504,16 +512,52 @@ begin
 ---------------------------------------------------------
  sgm: process (reset_n_s, clock_i)
   begin
-        if reset_n_s = '0' then   bios_en_s <= '1';
+        if reset_n_s = '0' then  
+		    bios_en_s <= '1';
+			 megacart_page_s <= "0000";
         elsif rising_edge( clock_i )
 		    then if io_write_s = '1' and cpu_addr_s(7 downto 0) = x"7f"
             then
                 bios_en_s <= d_from_cpu_s(1);
             end if;
+		  
+		  if megacart_en_s = '1'  and mem_access_s ='1' and rd_n_s = '0' and cpu_addr_s(15 downto 6) = x"FF"&"11"
+            then
+               megacart_page_s <= cpu_addr_s(3 downto 0) and cart_totpage_s;
+            end if;
         end if;
  end process sgm;
 ---------------------------------------------------------
 
+ megacart: process (clock_i)  
+ begin
+
+    if (cart_totpage_s = "0011" or      --  64k
+        cart_totpage_s = "0111" or      -- 128k
+        cart_totpage_s = "1111") then   -- 256k
+        megacart_en_s <= '1';
+    else
+        megacart_en_s <= '0';
+    end if;
+	    
+	 case cpu_addr_s(15 downto 14) is
+        when "10" =>
+            if megacart_en_s = '1' then
+                cart_page_s <= cart_totpage_s; 
+            else
+                cart_page_s <= "0000";
+            end if;
+        when "11" =>
+            if megacart_en_s = '1' then
+                cart_page_s <= megacart_page_s;
+            else
+                cart_page_s <= "0001";
+            end if;
+        when others =>
+            cart_page_s     <= "0000";
+    end case;
+end process megacart;
+---------------------------------------------------------
 
 	-- memory
 	bios_ce_s		<= '1'	when bios_en_s = '1' and mem_access_s = '1' and cpu_addr_s(15 downto 13)   = "000"		else '0';	-- BIOS         => 0000 to 1FFF
@@ -529,20 +573,22 @@ begin
 
 	-- I/O
 	spi_cs_s				<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 1) = "0100000"	else '0';	-- SPI (R/W)          => 40 to 41
-	cfg_port_cs_s		<= '1'	when io_write_s = '1'  and cpu_addr_s(7 downto 0) = X"42"		else '0';	-- Config Port        => 42
-	machine_id_cs_s	<= '1'	when io_read_s = '1'   and cpu_addr_s(7 downto 0) = X"43"		else '0';	-- Machine ID read    => 43
+	cfg_port_cs_s		<= '1'	when io_write_s  = '1' and cpu_addr_s(7 downto 0) = X"42"		else '0';	-- Config Port        => 42
+	machine_id_cs_s	<= '1'	when io_read_s   = '1' and cpu_addr_s(7 downto 0) = X"43"		else '0';	-- Machine ID read    => 43
 	cfg_page_cs_s		<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 0) = X"44"		else '0';	-- Page port          => 44
-	ctrl_en_key_n_s	<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "100"		else '1';	-- Controller key set => 80 to 9F
-	vdp_w_n_s			<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "101"		else '1';	-- VDP write          => A0 to BF
-	vdp_r_n_s			<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 5) = "101"		else '1';	-- VDP read           => A0 to BF
-	ctrl_en_joy_n_s	<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "110"		else '1';	-- Controller joy set => C0 to DF
-	psg_we_n_s			<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 5) = "111"		else '1';	-- PSG write          => E0 to FF
-	ay_addr_we_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 0) = x"50"		else '1';	-- AY addr write       
-	ay_data_we_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 0) = x"51"		else '1';	-- AY data write       
-	ay_data_rd_n_s		<= '0'	when io_read_s  = '1'  and cpu_addr_s(7 downto 0) = x"52"		else '1';	-- AY data read       
-	ctrl_r_n_s			<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 5) = "111"		else '1';	-- Controller read    => E0 to FF
+	cart_actpage_cs_s	<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 0) = X"45"		else '0';	-- Cart page port     => 45
+	cart_totpage_cs_s	<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 0) = X"46"		else '0';	-- Cart page port     => 46
+	ctrl_en_key_n_s	<= '0'	when io_write_s  = '1' and cpu_addr_s(7 downto 5) = "100"		else '1';	-- Controller key set => 80 to 9F
+	vdp_w_n_s			<= '0'	when io_write_s  = '1' and cpu_addr_s(7 downto 5) = "101"		else '1';	-- VDP write          => A0 to BF
+	vdp_r_n_s			<= '0'	when io_read_s   = '1' and cpu_addr_s(7 downto 5) = "101"		else '1';	-- VDP read           => A0 to BF
+	ctrl_en_joy_n_s	<= '0'	when io_write_s  = '1' and cpu_addr_s(7 downto 5) = "110"		else '1';	-- Controller joy set => C0 to DF
+	psg_we_n_s			<= '0'	when io_write_s  = '1' and cpu_addr_s(7 downto 5) = "111"		else '1';	-- PSG write          => E0 to FF
+	ay_addr_we_n_s		<= '0'	when io_write_s  = '1' and cpu_addr_s(7 downto 0) = x"50"		else '1';	-- AY addr write       
+	ay_data_we_n_s		<= '0'	when io_write_s  = '1' and cpu_addr_s(7 downto 0) = x"51"		else '1';	-- AY data write       
+	ay_data_rd_n_s		<= '0'	when io_read_s   = '1' and cpu_addr_s(7 downto 0) = x"52"		else '1';	-- AY data read       
+	ctrl_r_n_s			<= '0'	when io_read_s   = '1' and cpu_addr_s(7 downto 5) = "111"		else '1';	-- Controller read    => E0 to FF
 
-	-- Write I/O port 52
+	-- Write I/O port 42
 	process (por_n_i, reset_i, clock_i)
 	begin
 		if por_n_i = '0' then
@@ -559,8 +605,8 @@ begin
 			end if;
 		end if;
 	end process;
-
-	-- Write I/O port 54
+	
+   -- Write I/O port 44
 	process (por_n_i, clock_i)
 	begin
 		if por_n_i = '0' then
@@ -571,21 +617,48 @@ begin
 			end if;
 		end if;
 	end process;
+	
+   -- Write I/O port 45
+	process (por_n_i, clock_i)
+	begin
+		if por_n_i = '0' then
+			cart_actpage_s <= (others => '0');
+		elsif rising_edge(clock_i) then
+			if clk_en_3m58_i = '1' and cart_actpage_cs_s = '1' and wr_n_s = '0' then
+				cart_actpage_s <= d_from_cpu_s (3 downto 0);
+			end if;
+		end if;
+	end process;
+
+  -- Write I/O port 46
+	process (por_n_i, clock_i)
+	begin
+		if por_n_i = '0' then
+			cart_totpage_s <= (others => '0');
+		elsif rising_edge(clock_i) then
+			if clk_en_3m58_i = '1' and cart_totpage_cs_s = '1' and wr_n_s = '0' then
+				cart_totpage_s <= d_from_cpu_s (3 downto 0);
+			end if;
+		end if;
+	end process;
+
 
 	-- MUX data CPU
 	d_to_cpu_s	<=	-- Memory
-						d_from_loader_s				    when loader_ce_s = '1'		else
-						ram_data_i						when bios_ce_s = '1'		else
-						ram_data_i						when ram_ce_s  = '1'		else
-						ram_data_i						when cart_ce_s = '1'		else
-						cart_data_i						when ext_cart_ce_s = '1'	else
+						d_from_loader_s				when loader_ce_s = '1'		 else
+						ram_data_i						when bios_ce_s = '1'		    else
+						ram_data_i						when ram_ce_s  = '1'		    else
+						ram_data_i						when cart_ce_s = '1'		    else
+						cart_data_i						when ext_cart_ce_s = '1'	 else
 						-- I/O
-						d_from_vdp_s					when vdp_r_n_s = '0'		else
-						d_from_ctrl_s					when ctrl_r_n_s = '0'		else
-						d_from_spi_s					when spi_cs_s = '1'			else
-						ay_d_s                          when ay_data_rd_n_s  ='0'   else
-						machine_id_c					when machine_id_cs_s = '1'	else
-						cfg_page_r						when cfg_page_cs_s = '1'	else
+						d_from_vdp_s					when vdp_r_n_s = '0'		    else
+						d_from_ctrl_s					when ctrl_r_n_s = '0'		 else
+						d_from_spi_s					when spi_cs_s = '1'			 else
+						ay_d_s                     when ay_data_rd_n_s  ='0'   else
+						machine_id_c					when machine_id_cs_s = '1'	 else
+						cfg_page_r						when cfg_page_cs_s = '1'	 else
+						"0000"& cart_totpage_s     when cart_totpage_cs_s ='1' else
+						"0000"& cart_actpage_s     when cart_actpage_cs_s ='1' else
 						(others => '1');
 
 	-- Debug
