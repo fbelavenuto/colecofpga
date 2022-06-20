@@ -9,8 +9,8 @@ mmc_type:
 
 	.area	_CODE
 
-SPI_CTRL = 0x50;
-SPI_DATA = 0x51;
+SPI_CTRL = 0x40;
+SPI_DATA = 0x41;
 
 ; Comandos SPI:
 CMD0	= 0  | 0x40
@@ -284,7 +284,7 @@ WAIT_RESP_FE:
 	push	bc
 	call	WAIT_RESP_NO_FF				; esperar resposta diferente de $FF
 	pop		bc
-	cp		#0xFE						; resposta é $FE ?
+	cp		#0xFE						; resposta ï¿½ $FE ?
 	ret	z								; sim, retornamos com carry=0
 	djnz	.loop1
 	scf									; erro, carry=1

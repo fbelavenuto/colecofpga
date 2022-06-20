@@ -128,12 +128,13 @@ architecture behavior of zxuno_top_vga2m is
 	-- Resets
 	signal por_cnt_s			: unsigned(7 downto 0)				:= (others => '1');
 	signal por_n_s				: std_logic;
+   signal por_s				: std_logic;
 	signal reset_s				: std_logic;
 	signal soft_reset_s		: std_logic;
 	signal core_reload_s		: std_logic;
 
 	-- RAM memory
-	signal ram_addr_s			: std_logic_vector(16 downto 0);		-- 128K
+	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 128K
 	signal d_from_ram_s		: std_logic_vector(7 downto 0);
 	signal d_to_ram_s			: std_logic_vector(7 downto 0);
 	signal ram_ce_s			: std_logic;
@@ -141,7 +142,7 @@ architecture behavior of zxuno_top_vga2m is
 	signal ram_we_s			: std_logic;
 
 	-- VRAM memory
-	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
+	signal vram_addr_s		: std_logic_vector(18 downto 0);		-- 16K
 	signal vram_do_s			: std_logic_vector(7 downto 0);
 	signal vram_di_s			: std_logic_vector(7 downto 0);
 	signal vram_ce_s			: std_logic;
@@ -149,8 +150,9 @@ architecture behavior of zxuno_top_vga2m is
 	signal vram_we_s			: std_logic;
 
 	-- Audio
-	signal audio_signed_s	: signed(7 downto 0);
-	signal audio_s				: std_logic_vector(7 downto 0);
+	signal audio_signed_s	: signed(13 downto 0);
+	signal audio_unsigned_s : unsigned(13 downto 0);
+   signal audio_s          : std_logic_vector(13 downto 0);
 	signal audio_dac_s		: std_logic;
 
 	-- Video
@@ -192,11 +194,13 @@ begin
 		CLK_OUT2	=> clock_mem_s					-- 42.857
 	);
 
+   por_s <= not por_n_s;
+   
 	-- Clocks
 	clks: entity work.clocks
 	port map (
 		clock_i			=> clock_master_s,
-		por_i				=> not por_n_s,
+		por_i				=> por_s,
 		clock_vdp_en_o	=> clock_vdp_en_s,
 		clock_5m_en_o	=> clock_5m_en_s,
 		clock_3m_en_o	=> clock_3m_en_s
@@ -233,7 +237,7 @@ begin
 		ram_data_i			=> d_from_ram_s,
 		ram_data_o			=> d_to_ram_s,
 		-- Video RAM Interface
-		vram_addr_o			=> vram_addr_s,
+		vram_addr_o			=> vram_addr_s(13 downto 0),
 		vram_ce_o			=> vram_ce_s,
 		vram_oe_o			=> vram_oe_s,
 		vram_we_o			=> vram_we_s,
@@ -247,7 +251,7 @@ begin
 		cart_en_c0_n_o		=> open,
 		cart_en_e0_n_o		=> open,
 		-- Audio Interface
-		audio_o				=> open,
+		audio_o				=> audio_unsigned_s,
 		audio_signed_o		=> audio_signed_s,
 		-- RGB Video Interface
 		col_o					=> rgb_col_s,
@@ -264,23 +268,26 @@ begin
 		spi_mosi_o			=> sd_mosi_o,
 		spi_sclk_o			=> sd_sclk_o,
 		spi_cs_n_o			=> sd_cs_n_s,
+      sd_cd_n_i         => '1',
 		-- DEBUG
 		D_cpu_addr			=> open--D_cpu_addr
 	 );
 
+   vram_addr_s(18 downto 14) <= "00111";
+   
 	-- SRAM
 	sram0: entity work.dpSRAM_5128
 	port map (
 		clk_i				=> clock_mem_s,
 		-- Port 0
-		porta0_addr_i	=> "00" & ram_addr_s,
+		porta0_addr_i	=> ram_addr_s,
 		porta0_ce_i		=> ram_ce_s,
 		porta0_oe_i		=> ram_oe_s,
 		porta0_we_i		=> ram_we_s,
 		porta0_data_i	=> d_to_ram_s,
 		porta0_data_o	=> d_from_ram_s,
 		-- Port 1
-		porta1_addr_i	=> "11111" & vram_addr_s,
+		porta1_addr_i	=> vram_addr_s,
 		porta1_ce_i		=> vram_ce_s,
 		porta1_oe_i		=> vram_oe_s,
 		porta1_we_i		=> vram_we_s,
@@ -295,11 +302,12 @@ begin
 	);
 	
 	sram_ceoe_n_o <= '0';
+   audio_s <= std_logic_vector(audio_unsigned_s);
 
 	-- Audio
 	audioout: entity work.dac
 	generic map (
-		msbi_g		=> 7
+		msbi_g		=> 13
 	)
 	port map (
 		clk_i		=> clock_master_s,
@@ -342,7 +350,6 @@ begin
 
 	por_n_s		<= '0' when por_cnt_s /= 0		else '1';
 	reset_s		<= not por_n_s or soft_reset_s or not key_nmi_n_i;
-	audio_s		<= std_logic_vector(unsigned(audio_signed_s + 128));
 	dac_l_o		<= audio_dac_s;
 	dac_r_o		<= audio_dac_s;
 

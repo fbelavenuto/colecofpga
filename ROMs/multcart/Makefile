@@ -1,4 +1,4 @@
-CP = copy
+CP = cp
 RM = rm -f
 CC = sdcc
 AS = sdasz80
@@ -9,19 +9,18 @@ SDIR = src
 IDIR = inc
 ODIR = obj
 
-CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -I..
-LDFLAGS = -mz80 --code-loc 0x8100 --data-loc 0x7000 --no-std-crt0
+CFLAGS  = -mz80 --sdcccall 0 --fomit-frame-pointer  -I$(IDIR) -I..
+LDFLAGS = -mz80 --sdcccall 0 --code-loc 0x8100 --data-loc 0x7000 --no-std-crt0
 
 _OBJS = crt0.rel mmc.rel pff.rel coleco.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
-all: dir MULTCART.ROM
+all:  MULTCART.ROM
 
 MULTCART.ROM: MULTCART.ihx
-	$(H2B) -e ROM $<
-	fillfile $@ 16384
+	makemegacart multcart.ihx multcart.rom
 
-multcart.ihx: $(OBJS)
+MULTCART.ihx: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
 .PHONY: clean dir
@@ -29,8 +28,6 @@ multcart.ihx: $(OBJS)
 clean:
 	$(RM) $(ODIR)/* *.map *.lk *.noi *.bin *.ihx
 
-dir:
-	if not exist obj mkdir obj
 
 $(ODIR)/%.rel: $(SDIR)/%.s
 	$(AS) -o $@ $<
